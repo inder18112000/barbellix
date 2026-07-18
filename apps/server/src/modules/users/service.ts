@@ -1,7 +1,18 @@
-import type { UserProfile } from '@fitpulse/shared';
+import type { UserProfile, NotificationPreferences } from '@fitpulse/shared';
 import { toDomainUser } from '../../lib/mappers.js';
 import { NotFoundError } from '../../lib/errors.js';
 import * as repo from './repository.js';
+
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  workoutReminders: true,
+  workoutReminderTime: '08:00',
+  streakAlerts: true,
+  aiTips: true,
+  checkInConfirmations: true,
+  weeklyReport: true,
+  personalRecords: true,
+  trainerMessages: true,
+};
 
 export async function getMe(userId: string) {
   const doc = await repo.findById(userId);
@@ -13,4 +24,34 @@ export async function updateMyProfile(userId: string, partialProfile: Partial<Us
   const doc = await repo.updateProfile(userId, partialProfile);
   if (!doc) throw new NotFoundError('User not found');
   return toDomainUser(doc);
+}
+
+export async function getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
+  const doc = await repo.findNotificationPreferences(userId);
+  if (!doc) return DEFAULT_NOTIFICATION_PREFERENCES;
+
+  return {
+    workoutReminders: doc.workoutReminders,
+    workoutReminderTime: doc.workoutReminderTime,
+    streakAlerts: doc.streakAlerts,
+    aiTips: doc.aiTips,
+    checkInConfirmations: doc.checkInConfirmations,
+    weeklyReport: doc.weeklyReport,
+    personalRecords: doc.personalRecords,
+    trainerMessages: doc.trainerMessages,
+  };
+}
+
+export async function updateNotificationPreferences(userId: string, partial: Partial<NotificationPreferences>) {
+  const doc = await repo.upsertNotificationPreferences(userId, partial);
+  return {
+    workoutReminders: doc.workoutReminders,
+    workoutReminderTime: doc.workoutReminderTime,
+    streakAlerts: doc.streakAlerts,
+    aiTips: doc.aiTips,
+    checkInConfirmations: doc.checkInConfirmations,
+    weeklyReport: doc.weeklyReport,
+    personalRecords: doc.personalRecords,
+    trainerMessages: doc.trainerMessages,
+  };
 }

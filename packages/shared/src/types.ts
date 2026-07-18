@@ -280,3 +280,27 @@ export interface TrainerStats {
   sessionsTodayCount: number;
   attendanceRate: number;
 }
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+export interface Message {
+  id: string;
+  senderId: string;
+  recipientId: string;
+  text: string;
+  createdAt: string;
+  read: boolean;
+}
+
+// ─── Notification Preferences ──────────────────────────────────────────────────
+
+export interface NotificationPreferences {
+  workoutReminders: boolean;
+  workoutReminderTime: string;
+  streakAlerts: boolean;
+  aiTips: boolean;
+  checkInConfirmations: boolean;
+  weeklyReport: boolean;
+  personalRecords: boolean;
+  trainerMessages: boolean;
+}
