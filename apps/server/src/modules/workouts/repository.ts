@@ -1,6 +1,7 @@
 import type { HydratedDocument } from 'mongoose';
-import type { WorkoutPlan } from '@fitpulse/shared';
+import type { WorkoutPlan, WorkoutSession } from '@fitpulse/shared';
 import { WorkoutPlanModel, type WorkoutPlanDocument } from '../../db/models/WorkoutPlan.js';
+import { WorkoutSessionModel, type WorkoutSessionDocument, type WorkoutSetSubdoc } from '../../db/models/WorkoutSession.js';
 
 export function toDomainPlan(doc: HydratedDocument<WorkoutPlanDocument>): WorkoutPlan {
   return {
@@ -31,4 +32,49 @@ export async function findByUser(userId: string) {
 
 export async function findByIdForUser(id: string, userId: string) {
   return WorkoutPlanModel.findOne({ _id: id, userId });
+}
+
+// ─── Sessions ─────────────────────────────────────────────────────────────────
+
+export function toDomainSession(doc: HydratedDocument<WorkoutSessionDocument>): WorkoutSession {
+  return {
+    id: doc._id.toString(),
+    userId: doc.userId.toString(),
+    planId: doc.planId?.toString(),
+    date: doc.date.toISOString(),
+    durationMins: doc.durationMins,
+    notes: doc.notes,
+    perceivedEffort: doc.perceivedEffort,
+    sets: doc.sets.map((set, i) => ({
+      id: `${doc._id.toString()}_${i}`,
+      sessionId: doc._id.toString(),
+      exerciseId: set.exerciseId.toString(),
+      setNumber: set.setNumber,
+      reps: set.reps,
+      weightKg: set.weightKg,
+      durationSecs: set.durationSecs,
+      restSecs: set.restSecs,
+      completed: set.completed,
+    })),
+  };
+}
+
+export async function findSessionsByUser(userId: string) {
+  return WorkoutSessionModel.find({ userId }).sort({ date: -1 });
+}
+
+export async function findRecentSessionsByUser(userId: string, limit: number) {
+  return WorkoutSessionModel.find({ userId }).sort({ date: -1 }).limit(limit);
+}
+
+export async function createSession(input: {
+  userId: string;
+  planId?: string;
+  date?: Date;
+  durationMins?: number;
+  notes?: string;
+  perceivedEffort?: number;
+  sets: Array<Omit<WorkoutSetSubdoc, 'exerciseId'> & { exerciseId: string }>;
+}) {
+  return WorkoutSessionModel.create(input);
 }
