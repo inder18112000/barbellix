@@ -1,22 +1,7 @@
-import { Types, type HydratedDocument } from 'mongoose';
-import type { User } from '@fitpulse/shared';
+import { Types } from 'mongoose';
 import { UserModel } from '../../db/models/User.js';
 import { TenantModel } from '../../db/models/Tenant.js';
-import type { UserDocument } from '../../db/models/User.js';
-
-function toDomainUser(doc: HydratedDocument<UserDocument>): User {
-  return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    branchId: doc.branchId?.toString(),
-    role: doc.role,
-    email: doc.email,
-    firstName: doc.firstName,
-    lastName: doc.lastName,
-    profile: doc.profile,
-    createdAt: doc.createdAt.toISOString(),
-  };
-}
+import { toDomainUser } from '../../lib/mappers.js';
 
 export async function findUserByEmail(email: string) {
   return UserModel.findOne({ email: email.toLowerCase() }).select('+passwordHash');

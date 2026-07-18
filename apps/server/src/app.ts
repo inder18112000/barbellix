@@ -8,6 +8,9 @@ import databasePlugin from './plugins/database.js';
 import authPlugin from './plugins/auth.js';
 import errorHandlerPlugin from './plugins/error-handler.js';
 import authRoutes from './modules/auth/routes.js';
+import usersRoutes from './modules/users/routes.js';
+import exercisesRoutes from './modules/exercises/routes.js';
+import workoutsRoutes from './modules/workouts/routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -27,6 +30,9 @@ export async function buildApp() {
   await app.register(authPlugin);
 
   await app.register(authRoutes, { prefix: '/auth' });
+  await app.register(usersRoutes);
+  await app.register(exercisesRoutes);
+  await app.register(workoutsRoutes);
 
   app.get('/health', async () => ({
     status: 'ok',
