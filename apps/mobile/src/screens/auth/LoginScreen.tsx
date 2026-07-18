@@ -11,8 +11,8 @@ import { glass } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { useAuthStore } from '../../store/authStore';
-import { api } from '../../api/client';
-import { loginSchema, type User, type LoginInput as LoginForm } from '@fitpulse/shared';
+import { login as loginRequest } from '../../api/auth';
+import { loginSchema, type LoginInput as LoginForm } from '@fitpulse/shared';
 import { styles } from './LoginScreen.styles';
 
 export function LoginScreen() {
@@ -26,9 +26,8 @@ export function LoginScreen() {
   });
 
   const { mutate: doLogin, isPending, isError } = useMutation({
-    mutationFn: (data: LoginForm) =>
-      api.post<{ user: User; accessToken: string }>('/auth/login', data),
-    onSuccess: ({ user, accessToken }) => login(user, accessToken),
+    mutationFn: (data: LoginForm) => loginRequest(data),
+    onSuccess: ({ user, accessToken, refreshToken }) => login(user, accessToken, refreshToken),
   });
 
   return (

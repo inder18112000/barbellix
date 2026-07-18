@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { WorkoutDay } from '@fitpulse/shared';
+import type { WorkoutDay, FitnessGoal } from '@fitpulse/shared';
 
 export type AuthStackParams = {
   Splash: undefined;
@@ -8,7 +8,7 @@ export type AuthStackParams = {
   Login: undefined;
   Register: undefined;
   GoalSelection: undefined;
-  BodyStats: { goals: string[] };
+  BodyStats: { goals: FitnessGoal[] };
   ForgotPassword: undefined;
 };
 

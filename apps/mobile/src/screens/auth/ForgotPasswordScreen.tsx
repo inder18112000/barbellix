@@ -9,7 +9,7 @@ import { useMutation } from '@tanstack/react-query';
 import { glow } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { api } from '../../api/client';
+import { forgotPassword } from '../../api/auth';
 import { forgotPasswordSchema as schema, type ForgotPasswordInput as Form } from '@fitpulse/shared';
 import { styles } from './ForgotPasswordScreen.styles';
 
@@ -51,7 +51,7 @@ export function ForgotPasswordScreen() {
   });
 
   const { mutate: sendReset, isPending, isError } = useMutation({
-    mutationFn: (data: Form) => api.post('/auth/forgot-password', data),
+    mutationFn: (data: Form) => forgotPassword(data),
     onSuccess: () => { setSentEmail(getValues('email')); setSent(true); },
   });
 

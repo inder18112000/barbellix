@@ -1,13 +1,6 @@
 import { z } from 'zod';
+import { aiCoachCompleteSchema } from '@fitpulse/shared';
 
-const historyMessageSchema = z.object({
-  role: z.enum(['user', 'assistant']),
-  content: z.string(),
-});
-
-export const completeChatSchema = z.object({
-  history: z.array(historyMessageSchema).default([]),
-  userMessage: z.string().min(1),
-});
+export { aiCoachCompleteSchema as completeChatSchema };
 
 export const recommendationIdParamSchema = z.object({ id: z.string() });

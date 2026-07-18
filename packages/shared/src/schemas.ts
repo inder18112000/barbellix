@@ -30,3 +30,15 @@ export const bodyStatsSchema = z.object({
   weightKg: z.coerce.number().min(30, 'Enter a valid weight').max(300, 'Enter a valid weight'),
 });
 export type BodyStatsInput = z.infer<typeof bodyStatsSchema>;
+
+export const aiMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string(),
+});
+export type AIMessage = z.infer<typeof aiMessageSchema>;
+
+export const aiCoachCompleteSchema = z.object({
+  history: z.array(aiMessageSchema).default([]),
+  userMessage: z.string().min(1),
+});
+export type AICoachCompleteInput = z.infer<typeof aiCoachCompleteSchema>;

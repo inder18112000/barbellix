@@ -10,9 +10,9 @@ import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { api } from '../../api/client';
+import { updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
-import { bodyStatsSchema, type User, type BodyStatsInput as BodyStatsForm } from '@fitpulse/shared';
+import { bodyStatsSchema, type BodyStatsInput as BodyStatsForm } from '@fitpulse/shared';
 import type { AuthStackParams } from '../../navigation/types';
 import { styles } from './BodyStatsScreen.styles';
 
@@ -54,7 +54,7 @@ export function BodyStatsScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<AuthStackParams, 'BodyStats'>>();
   const goals = route.params?.goals ?? [];
-  const { login } = useAuthStore();
+  const { setUser, completeOnboarding } = useAuthStore();
   const [experience, setExperience] = useState<ExperienceLevel>('beginner');
 
   const { control, handleSubmit, formState: { errors } } = useForm<BodyStatsForm>({
@@ -62,14 +62,20 @@ export function BodyStatsScreen() {
     defaultValues: { heightCm: undefined as any, weightKg: undefined as any },
   });
 
+  // The user was already issued real tokens back in RegisterScreen (beginRegistration) -
+  // this call is genuinely authenticated. Saving just updates the profile and finishes
+  // onboarding; it doesn't need to fake a login the way it used to.
   const { mutate: saveProfile, isPending } = useMutation({
     mutationFn: (data: BodyStatsForm) =>
-      api.put('/me/profile', { heightCm: data.heightCm, weightKg: data.weightKg, experienceLevel: experience, goals }),
-    onSuccess: (user) => login(user as User, 'mock_token'),
+      updateProfile({ heightCm: data.heightCm, weightKg: data.weightKg, experienceLevel: experience, goals }),
+    onSuccess: (user) => {
+      setUser(user);
+      completeOnboarding();
+    },
   });
 
   const handleSkip = () => {
-    login({ id: 'new_user', email: 'user@fitpulse.app', firstName: 'New', lastName: 'User', role: 'member' } as any, 'mock_token');
+    completeOnboarding();
   };
 
   return (

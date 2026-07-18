@@ -10,12 +10,14 @@ import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { api } from '../../api/client';
+import { register } from '../../api/auth';
+import { useAuthStore } from '../../store/authStore';
 import { registerSchema, type RegisterInput as RegisterForm } from '@fitpulse/shared';
 import { styles } from './RegisterScreen.styles';
 
 export function RegisterScreen() {
   const navigation = useNavigation<any>();
+  const { beginRegistration } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
@@ -24,8 +26,15 @@ export function RegisterScreen() {
   });
 
   const { mutate: doRegister, isPending } = useMutation({
-    mutationFn: (data: RegisterForm) => api.post('/auth/register', data),
-    onSuccess: () => navigation.navigate('GoalSelection'),
+    mutationFn: (data: RegisterForm) => register(data),
+    onSuccess: async ({ user, accessToken, refreshToken }) => {
+      // Real tokens now, not the hardcoded 'mock_token' BodyStatsScreen used to fake -
+      // the /me/profile update at the end of onboarding has a valid session to
+      // attach to. Not a full login() yet: that would jump straight past the
+      // remaining Goals/BodyStats onboarding screens.
+      await beginRegistration(user, accessToken, refreshToken);
+      navigation.navigate('GoalSelection');
+    },
   });
 
   return (

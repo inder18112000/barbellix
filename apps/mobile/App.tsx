@@ -1,21 +1,24 @@
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { queryClient } from './src/store/queryClient';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { startMockServer } from './src/mocks/setup';
-
-// Start MSW mock server in development
-if (__DEV__) {
-  startMockServer();
-}
+import { useAuthStore } from './src/store/authStore';
+import { colors } from './src/theme';
 
 export default function App() {
+  const hydrate = useAuthStore((s) => s.hydrate);
+  const isHydrating = useAuthStore((s) => s.isHydrating);
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
-        <RootNavigator />
+        {isHydrating ? <View style={styles.loadingRoot} /> : <RootNavigator />}
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
@@ -23,4 +26,5 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  loadingRoot: { flex: 1, backgroundColor: colors.background },
 });

@@ -11,10 +11,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { queryKeys, acceptRecommendation } from '../../api/queries';
+import { api } from '../../api/client';
 import { useAICoach } from '../../hooks/useAICoach';
 import { useLocalCoach, localCoachReply } from '../../hooks/useLocalCoach';
-import { useClientContext } from '../../hooks/useClientContext';
-import { aiCoachService, type AIMessage } from '../../ai';
+import type { AIMessage } from '@fitpulse/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { styles, CARD_WIDTH } from './AICoachScreen.styles';
 
@@ -119,7 +119,6 @@ export function AICoachScreen() {
   const qc = useQueryClient();
   const { recommendations, isLoading: recsLoading } = useAICoach();
   const localCoachData = useLocalCoach();
-  const systemContext = useClientContext();
   const scrollRef = useRef<ScrollView>(null);
   const { bottom: bottomInset } = useSafeAreaInsets();
 
@@ -166,11 +165,12 @@ export function AICoachScreen() {
     let provider = 'local';
 
     try {
-      const result = await aiCoachService.complete({
-        systemPrompt: systemContext,
-        history: conversationHistory,
-        userMessage: text,
-      });
+      // The server builds the system prompt itself from this user's own data and
+      // holds the real provider keys — the client only ever sends the conversation.
+      const result = await api.post<{ text: string; providerId: string; model: string }>(
+        '/ai/coach/complete',
+        { history: conversationHistory, userMessage: text },
+      );
       reply = result.text;
       provider = result.providerId;
       setConversationHistory(prev => [
@@ -179,7 +179,7 @@ export function AICoachScreen() {
         { role: 'assistant', content: reply },
       ]);
     } catch {
-      // All API providers failed or no keys — use on-device coach
+      // Server-side proxy failed (all providers down, rate limited, offline) — use on-device coach
       await new Promise(r => setTimeout(r, 600));
       reply = localCoachReply(text, localCoachData);
       provider = 'local';
