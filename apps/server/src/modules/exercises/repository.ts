@@ -25,3 +25,9 @@ export async function search(tenantId: string, query?: string) {
   }
   return ExerciseModel.find(filter);
 }
+
+/** id -> name lookup map, used wherever exercise names need to be resolved from just an id (e.g. the AI context builder). */
+export async function findNamesByIds(ids: string[]): Promise<Map<string, string>> {
+  const docs = await ExerciseModel.find({ _id: { $in: ids } }).select('name');
+  return new Map(docs.map((d) => [d._id.toString(), d.name]));
+}

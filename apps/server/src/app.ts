@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import mongoose from 'mongoose';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import configPlugin from './plugins/config.js';
@@ -18,6 +19,7 @@ import habitsRoutes from './modules/habits/routes.js';
 import trainerRoutes from './modules/trainer/routes.js';
 import adminRoutes from './modules/admin/routes.js';
 import messagingRoutes from './modules/messaging/routes.js';
+import aiCoachRoutes from './modules/ai-coach/routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -35,6 +37,8 @@ export async function buildApp() {
   await app.register(helmet);
   await app.register(databasePlugin);
   await app.register(authPlugin);
+  // global: false - only routes that explicitly opt in via config.rateLimit are limited
+  await app.register(rateLimit, { global: false });
 
   await app.register(authRoutes, { prefix: '/auth' });
   await app.register(usersRoutes);
@@ -47,6 +51,7 @@ export async function buildApp() {
   await app.register(trainerRoutes);
   await app.register(adminRoutes);
   await app.register(messagingRoutes);
+  await app.register(aiCoachRoutes);
 
   app.get('/health', async () => ({
     status: 'ok',

@@ -30,3 +30,9 @@ export class UnauthorizedError extends AppError {
     super(401, message);
   }
 }
+
+export class BadGatewayError extends AppError {
+  constructor(message = 'Upstream service unavailable') {
+    super(502, message);
+  }
+}
