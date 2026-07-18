@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 
 import { colors } from '../../theme';
@@ -13,14 +12,8 @@ import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../api/client';
-import type { User } from '../../types';
+import { loginSchema, type User, type LoginInput as LoginForm } from '@fitpulse/shared';
 import { styles } from './LoginScreen.styles';
-
-const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-type LoginForm = z.infer<typeof loginSchema>;
 
 export function LoginScreen() {
   const navigation = useNavigation<any>();

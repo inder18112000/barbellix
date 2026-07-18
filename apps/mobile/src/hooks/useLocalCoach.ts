@@ -15,7 +15,7 @@ import {
   fetchTodayHabits,
   fetchAttendanceSummary,
 } from '../api/queries';
-import type { WorkoutSession, PersonalRecord, MealEntry, HabitEntry } from '../types';
+import type { WorkoutSession, PersonalRecord, MealEntry, HabitEntry } from '@fitpulse/shared';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

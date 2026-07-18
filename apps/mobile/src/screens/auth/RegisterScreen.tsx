@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 
 import { colors } from '../../theme';
@@ -12,19 +11,8 @@ import { glass } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { api } from '../../api/client';
+import { registerSchema, type RegisterInput as RegisterForm } from '@fitpulse/shared';
 import { styles } from './RegisterScreen.styles';
-
-const registerSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
-type RegisterForm = z.infer<typeof registerSchema>;
 
 export function RegisterScreen() {
   const navigation = useNavigation<any>();

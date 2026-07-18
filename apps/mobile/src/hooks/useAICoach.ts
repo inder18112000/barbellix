@@ -7,7 +7,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys, fetchWorkoutSessions, fetchAttendanceSummary, fetchAIRecommendations } from '../api/queries';
-import type { AIRecommendation } from '../types';
+import type { AIRecommendation } from '@fitpulse/shared';
 
 // ─── Rule engine ──────────────────────────────────────────────────────────────
 

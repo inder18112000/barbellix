@@ -14,7 +14,7 @@ import type {
   TrainerStats,
   MealEntry,
   HabitEntry,
-} from '../types';
+} from '@fitpulse/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
 export const queryKeys = {

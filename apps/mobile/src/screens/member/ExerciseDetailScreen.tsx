@@ -8,7 +8,7 @@ import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { queryKeys, fetchExercises, fetchPersonalRecords } from '../../api/queries';
 import { ScreenShell } from '../../components/common/ScreenShell';
-import type { Exercise } from '../../types';
+import type { Exercise } from '@fitpulse/shared';
 import type { WorkoutStackParams } from '../../navigation/types';
 import { styles } from './ExerciseDetailScreen.styles';
 

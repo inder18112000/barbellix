@@ -21,9 +21,6 @@
       "@api/*": [
         "src/api/*"
       ],
-      "@types/*": [
-        "src/types/*"
-      ],
       "@store/*": [
         "src/store/*"
       ],

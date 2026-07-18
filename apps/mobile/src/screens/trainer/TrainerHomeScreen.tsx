@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useTrainerData } from '../../hooks/useTrainerData';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
-import type { TrainerMemberSummary } from '../../types';
+import type { TrainerMemberSummary } from '@fitpulse/shared';
 import { styles } from './TrainerHomeScreen.styles';
 
 function StatCard({ value, label, emoji }: { value: string; label: string; emoji: string }) {

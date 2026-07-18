@@ -10,7 +10,7 @@ import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { queryKeys, fetchWorkoutPlans, fetchWorkoutSessions, fetchAttendanceSummary } from '../../api/queries';
 import type { WorkoutStackParams } from '../../navigation/types';
-import type { WorkoutDay } from '../../types';
+import type { WorkoutDay } from '@fitpulse/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { styles } from './WorkoutHomeScreen.styles';

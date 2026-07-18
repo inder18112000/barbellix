@@ -5,7 +5,7 @@ import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 import { glass } from '../../theme/effects';
-import type { PersonalRecord } from '../../types';
+import type { PersonalRecord } from '@fitpulse/shared';
 import { format } from 'date-fns';
 
 interface PRCardProps {

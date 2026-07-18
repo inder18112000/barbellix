@@ -13,7 +13,7 @@ import type {
   TrainerStats,
   MealEntry,
   HabitEntry,
-} from '../types';
+} from '@fitpulse/shared';
 
 // ─── Current User ─────────────────────────────────────────────────────────────
 

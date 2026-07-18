@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 
 import { colors } from '../../theme';
@@ -13,15 +12,9 @@ import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { api } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
-import type { User } from '../../types';
+import { bodyStatsSchema, type User, type BodyStatsInput as BodyStatsForm } from '@fitpulse/shared';
 import type { AuthStackParams } from '../../navigation/types';
 import { styles } from './BodyStatsScreen.styles';
-
-const bodyStatsSchema = z.object({
-  heightCm: z.coerce.number().min(100, 'Enter a valid height').max(250, 'Enter a valid height'),
-  weightKg: z.coerce.number().min(30, 'Enter a valid weight').max(300, 'Enter a valid weight'),
-});
-type BodyStatsForm = z.infer<typeof bodyStatsSchema>;
 
 const EXPERIENCE_LEVELS = [
   { id: 'beginner',     label: 'Beginner',     desc: 'Less than 1 year', emoji: '🌱' },

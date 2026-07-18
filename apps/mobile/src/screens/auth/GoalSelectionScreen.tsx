@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { glass } from '../../theme/effects';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { styles } from './GoalSelectionScreen.styles';
-import type { FitnessGoal } from '../../types';
+import type { FitnessGoal } from '@fitpulse/shared';
 
 interface GoalOption {
   id: FitnessGoal;

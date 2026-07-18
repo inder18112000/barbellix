@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 import { glass } from '../../theme/effects';
 import { queryKeys, fetchTodayHabits, toggleHabit } from '../../api/queries';
-import type { HabitId } from '../../types';
+import type { HabitId } from '@fitpulse/shared';
 
 type HabitDef = {
   id: HabitId;

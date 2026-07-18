@@ -9,7 +9,7 @@ import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { queryKeys, fetchExercises } from '../../api/queries';
 import { ScreenShell } from '../../components/common/ScreenShell';
-import type { Exercise, MuscleGroup, WorkoutDay } from '../../types';
+import type { Exercise, MuscleGroup, WorkoutDay } from '@fitpulse/shared';
 import type { WorkoutStackParams } from '../../navigation/types';
 import { styles } from './ExercisePickerScreen.styles';
 

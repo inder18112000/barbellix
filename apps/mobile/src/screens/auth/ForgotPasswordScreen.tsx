@@ -4,19 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 
 import { glow } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { api } from '../../api/client';
+import { forgotPasswordSchema as schema, type ForgotPasswordInput as Form } from '@fitpulse/shared';
 import { styles } from './ForgotPasswordScreen.styles';
-
-const schema = z.object({
-  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
-});
-type Form = z.infer<typeof schema>;
 
 // ─── Success State (SRP) ──────────────────────────────────────────────────────
 
