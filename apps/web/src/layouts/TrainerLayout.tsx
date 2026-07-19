@@ -1,9 +1,10 @@
-import { LayoutDashboard, Users, MessageSquare } from 'lucide-react'
+import { LayoutDashboard, Users, MessageSquare, ClipboardList } from 'lucide-react'
 import { DashboardShell, type NavItem } from './DashboardShell'
 
 const TRAINER_NAV: NavItem[] = [
   { to: '/trainer', label: 'Dashboard', icon: <LayoutDashboard className="size-4" />, end: true },
   { to: '/trainer/members', label: 'Members', icon: <Users className="size-4" /> },
+  { to: '/trainer/plans/new', label: 'Create Plan', icon: <ClipboardList className="size-4" /> },
   { to: '/trainer/messages', label: 'Messages', icon: <MessageSquare className="size-4" /> },
 ]
 

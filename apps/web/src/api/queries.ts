@@ -7,6 +7,10 @@ import type {
   Branch,
   MembershipPlan,
   UserStatus,
+  WorkoutPlan,
+  Exercise,
+  Message,
+  FitnessGoal,
 } from '@fitpulse/shared'
 import { api } from './client'
 
@@ -15,6 +19,7 @@ export const queryKeys = {
   trainer: {
     members: ['trainer', 'members'] as const,
     stats: ['trainer', 'stats'] as const,
+    workoutPlans: ['trainer', 'workout-plans'] as const,
   },
   admin: {
     attendanceAnalytics: ['admin', 'analytics', 'attendance'] as const,
@@ -22,6 +27,8 @@ export const queryKeys = {
     branch: ['admin', 'branch'] as const,
     membershipPlans: ['admin', 'membership-plans'] as const,
   },
+  exercises: (q: string) => ['exercises', q] as const,
+  messages: (otherUserId: string) => ['messages', otherUserId] as const,
 }
 
 export const fetchMe = () => api.get<User>('/me')
@@ -67,3 +74,26 @@ export const createCheckoutSession = (memberId: string, planId: string) =>
 
 export const markMemberPaid = (memberId: string, planName: string) =>
   api.post(`/admin/members/${memberId}/membership/mark-paid`, { planName })
+
+// ─── Trainer: workout plans ─────────────────────────────────────────────────
+
+/** The caller's own template plans - a trainer's building blocks for assigning to members. */
+export const fetchWorkoutPlans = () => api.get<WorkoutPlan[]>('/workout-plans')
+
+export interface CreateWorkoutPlanInput {
+  name: string
+  goal: FitnessGoal
+  days: Array<{
+    dayLabel: string
+    exercises: Array<{ exerciseId: string; sets: number; reps: string; restSecs: number; notes?: string }>
+  }>
+}
+export const createWorkoutPlan = (input: CreateWorkoutPlanInput) => api.post<WorkoutPlan>('/workout-plans', input)
+
+export const fetchExercises = (q: string) => api.get<Exercise[]>(`/exercises?q=${encodeURIComponent(q)}`)
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+export const fetchMessageThread = (otherUserId: string) => api.get<Message[]>(`/messages/${otherUserId}`)
+export const sendMessage = (recipientId: string, text: string) => api.post<Message>('/messages', { recipientId, text })
+export const markMessageRead = (id: string) => api.put<Message>(`/messages/${id}/read`, {})

@@ -7,11 +7,16 @@ import { TrainerLayout } from '@/layouts/TrainerLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { AdminHomePage } from '@/pages/admin/AdminHomePage'
 import { AnalyticsPage } from '@/pages/admin/AnalyticsPage'
-import { MembersPage } from '@/pages/admin/MembersPage'
+import { MembersPage as AdminMembersPage } from '@/pages/admin/MembersPage'
 import { AttendanceFeedPage } from '@/pages/admin/AttendanceFeedPage'
 import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
 import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
 import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
+import { MembersPage as TrainerMembersPage } from '@/pages/trainer/MembersPage'
+import { MemberDetailPage } from '@/pages/trainer/MemberDetailPage'
+import { AssignPlanPage } from '@/pages/trainer/AssignPlanPage'
+import { CreatePlanPage } from '@/pages/trainer/CreatePlanPage'
+import { MessagesPage } from '@/pages/trainer/MessagesPage'
 import { authStore } from '@/store/authStore'
 
 // Sends an already-authenticated user straight to their own dashboard instead of the login form.
@@ -35,7 +40,7 @@ export const router = createBrowserRouter([
             element: <AdminLayout />,
             children: [
               { index: true, element: <AdminHomePage /> },
-              { path: 'members', element: <MembersPage /> },
+              { path: 'members', element: <AdminMembersPage /> },
               { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },
@@ -50,7 +55,15 @@ export const router = createBrowserRouter([
           {
             path: '/trainer',
             element: <TrainerLayout />,
-            children: [{ index: true, element: <TrainerHomePage /> }],
+            children: [
+              { index: true, element: <TrainerHomePage /> },
+              { path: 'members', element: <TrainerMembersPage /> },
+              { path: 'members/:memberId', element: <MemberDetailPage /> },
+              { path: 'members/:memberId/assign-plan', element: <AssignPlanPage /> },
+              { path: 'plans/new', element: <CreatePlanPage /> },
+              { path: 'messages', element: <MessagesPage /> },
+              { path: 'messages/:otherUserId', element: <MessagesPage /> },
+            ],
           },
         ],
       },
