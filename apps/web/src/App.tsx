@@ -1,15 +1,19 @@
-import { Button } from '@/components/ui/button'
+import { useEffect } from 'react'
+import { RouterProvider } from 'react-router-dom'
+import { observer } from 'mobx-react-lite'
+import { router } from '@/router'
+import { authStore } from '@/store/authStore'
 
-function App() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
-      <div className="glass-card rounded-xl p-8 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">FitPulse Management</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Workspace scaffold verified.</p>
-        <Button className="mt-4">It works</Button>
-      </div>
-    </div>
-  )
-}
+const App = observer(function App() {
+  useEffect(() => {
+    authStore.hydrate()
+  }, [])
+
+  if (authStore.isHydrating) {
+    return <div className="min-h-screen bg-background" />
+  }
+
+  return <RouterProvider router={router} />
+})
 
 export default App
