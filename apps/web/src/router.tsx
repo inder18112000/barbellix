@@ -6,6 +6,11 @@ import { AdminLayout } from '@/layouts/AdminLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { AdminHomePage } from '@/pages/admin/AdminHomePage'
+import { AnalyticsPage } from '@/pages/admin/AnalyticsPage'
+import { MembersPage } from '@/pages/admin/MembersPage'
+import { AttendanceFeedPage } from '@/pages/admin/AttendanceFeedPage'
+import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
+import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
 import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
 import { authStore } from '@/store/authStore'
 
@@ -28,7 +33,14 @@ export const router = createBrowserRouter([
           {
             path: '/admin',
             element: <AdminLayout />,
-            children: [{ index: true, element: <AdminHomePage /> }],
+            children: [
+              { index: true, element: <AdminHomePage /> },
+              { path: 'members', element: <MembersPage /> },
+              { path: 'analytics', element: <AnalyticsPage /> },
+              { path: 'attendance', element: <AttendanceFeedPage /> },
+              { path: 'plans', element: <MembershipPlansPage /> },
+              { path: 'branch', element: <BranchSettingsPage /> },
+            ],
           },
         ],
       },
