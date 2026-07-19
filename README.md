@@ -1,94 +1,80 @@
 # ⚡ FitPulse
 
-> *Feel every rep.* — Cross-platform gym & AI training app built with React Native + Expo.
+Gym management platform: a React Native member app, a React web dashboard for gym owners and
+trainers, and a Node.js/Fastify backend with MongoDB — sharing one real API, one database, and
+one set of TypeScript types. Real JWT auth, real attendance/workout tracking, real Stripe
+subscription billing, and a rate-limited AI coaching proxy (no client-side AI keys).
 
-## Quick Start
-
-```bash
-cd "E:\Personal Projects\fitpulse"
-npm install
-npx expo start
-```
-
-Press `a` for Android, `i` for iOS, `w` for web.
-
-## Project Structure
+## Monorepo structure
 
 ```
 fitpulse/
-├── App.tsx                    # Entry point — QueryClient + MSW + Navigation
-├── src/
-│   ├── api/
-│   │   ├── client.ts          # Fetch wrapper with auth header injection
-│   │   └── queries.ts         # All query/mutation functions + queryKeys
-│   ├── components/
-│   │   └── common/
-│   │       ├── ScreenShell.tsx      # Base screen wrapper (safe area + header)
-│   │       └── PlaceholderScreen.tsx # Stub used during UI-first phase
-│   ├── mocks/
-│   │   ├── data.ts            # All mock data (users, sessions, exercises…)
-│   │   ├── setup.ts           # MSW server bootstrap
-│   │   └── handlers/
-│   │       └── index.ts       # MSW request handlers for every API endpoint
-│   ├── navigation/
-│   │   ├── types.ts           # All navigator param types (TypeScript)
-│   │   ├── RootNavigator.tsx  # Auth-aware root — routes by user role
-│   │   ├── AuthNavigator.tsx  # Splash → Onboarding → Login/Register flow
-│   │   ├── MemberNavigator.tsx # Bottom tabs + nested stacks
-│   │   ├── TrainerNavigator.tsx
-│   │   └── AdminNavigator.tsx
-│   ├── screens/
-│   │   ├── auth/              # Splash, Onboarding, Login, Register, Goals, Stats
-│   │   ├── member/            # Home, Workout, Progress, AI Coach, Profile
-│   │   ├── trainer/           # Trainer dashboard, member management
-│   │   └── admin/             # Admin dashboard, analytics, attendance feed
-│   ├── store/
-│   │   ├── authStore.ts       # Zustand auth state (auto-authenticated in DEV)
-│   │   └── queryClient.ts     # TanStack Query client config
-│   ├── theme/
-│   │   ├── index.ts           # Colors, spacing, typography, border radius, shadows
-│   │   └── effects.ts         # Glassmorphism, glow, gradient presets, pulse config
-│   └── types/
-│       └── index.ts           # All TypeScript types (User, Exercise, Session…)
+├── apps/
+│   ├── mobile/     # React Native + Expo — member-facing app
+│   ├── server/     # Fastify + Mongoose/MongoDB — the one real backend both clients talk to
+│   └── web/        # Vite + React — management dashboard for gym owners (admin) and trainers
+└── packages/
+    └── shared/     # Types, Zod schemas, and constants shared across all three apps
 ```
 
-## SOLID Principles Applied
+- **apps/mobile** — Expo Router-free React Navigation app for members: onboarding, workout
+  logging, progress tracking, nutrition/habits, AI coach, QR check-in. State via Zustand.
+- **apps/server** — the single source of truth for both clients. Fastify 5, Mongoose 8, JWT
+  access+refresh auth with rotation/theft detection, Zod-validated routes, role-based guards
+  (`member` / `trainer` / `admin` / `superadmin`), Stripe Checkout + webhooks for billing.
+- **apps/web** — the staff-only dashboard. "Gym owner" is the `admin`/`superadmin` role; trainers
+  get their own scoped views. Tailwind + shadcn/ui, MobX for state, TanStack Query, real-time-ish
+  polling for attendance.
+- **packages/shared** — the contract between all three: TypeScript interfaces and Zod schemas
+  built once (`npm run build --workspace=@fitpulse/shared`) and consumed by every app.
 
-- **S** — Each component/hook has one job. `ScreenShell` wraps, `PlaceholderScreen` stubs, `HomeScreen` composes.
-- **O** — Screens extend `ScreenShell` without modifying it. Mock handlers extend the `handlers` array.
-- **L** — All screens accept the same `navigation` contract via React Navigation.
-- **I** — Query keys, fetchers, and mutators are separate exports — import only what you need.
-- **D** — Screens call custom hooks / TanStack queries, never `fetch()` directly.
+## Quick start
 
-## Dev Workflow
+```bash
+git clone https://github.com/inder18112000/fitpulse.git
+cd fitpulse
+npm install
+npm run build --workspace=@fitpulse/shared
+```
 
-### Switching a stub to a real screen
-1. Open `src/screens/member/WorkoutHomeScreen.tsx`
-2. Replace `PlaceholderScreen` with your actual UI
-3. The navigation, types, and mock data are already wired
+**Backend** (needs a local or remote MongoDB — see `apps/server/.env.example`):
 
-### Adding a new API endpoint
-1. Add mock data to `src/mocks/data.ts`
-2. Add an MSW handler in `src/mocks/handlers/index.ts`
-3. Add a query key + fetch function in `src/api/queries.ts`
-4. Use `useQuery` in your screen
+```bash
+cp apps/server/.env.example apps/server/.env   # fill in MONGODB_URI, JWT secrets, etc.
+npm run server                                  # starts Fastify on :4000
+npm run seed --workspace=@fitpulse/server       # seeds a tenant + admin/trainer/member accounts
+```
 
-### Disabling mocks (connect real backend)
-In `App.tsx`, remove or gate the `startMockServer()` call. Point `BASE_URL` in `src/api/client.ts` to your real API.
+**Web dashboard** (owner + trainer login):
 
-## Creative Effects
+```bash
+cp apps/web/.env.example apps/web/.env
+npm run dev --workspace=@fitpulse/web           # :5173, log in with a seeded admin/trainer account
+```
 
-All visual effects are in `src/theme/effects.ts`:
-- `glass.card` / `glass.cardStrong` — glassmorphism surfaces
-- `glow.primary` / `glow.accent` — neon shadow glows
-- `gradients.*` — gradient color arrays for `expo-linear-gradient`
-- `pulseConfig` — animated pulse ring parameters (Reanimated)
-- `shimmerConfig` — shimmer loading skeleton parameters
+**Mobile app** (member login):
 
-## Next Screens to Build (priority order)
+```bash
+cp apps/mobile/.env.example apps/mobile/.env
+npm run mobile                                  # expo start — press a/i/w
+```
 
-1. `WorkoutHomeScreen` — today's plan + start button
-2. `ActiveWorkoutScreen` — live logger with set/rep/weight input + rest timer
-3. `ProgressHomeScreen` — body weight chart + volume chart
-4. `AICoachScreen` — recommendation cards + rule-based suggestions
-5. `LoginScreen` + `RegisterScreen` — auth forms with Zod validation
+Stripe billing (`apps/web`'s membership plans + checkout links) works without any Stripe keys for
+everything except creating a real Checkout session — set `STRIPE_SECRET_KEY` /
+`STRIPE_WEBHOOK_SECRET` in `apps/server/.env` to enable that part.
+
+## Roles
+
+| Role | Client | Notes |
+|---|---|---|
+| `member` | mobile | self-registers; rejected from the web dashboard |
+| `trainer` | web | manages assigned members, builds/assigns workout plans, messaging |
+| `admin` / `superadmin` | web | "gym owner" — everything trainers can do, plus billing, branch settings, member status |
+
+## Development notes
+
+- Workspaces are npm workspaces (not pnpm — Expo/Metro's module resolution doesn't play well
+  with pnpm's hoisting).
+- After changing anything in `packages/shared`, rebuild it before the other apps will pick up the
+  change: `npm run build --workspace=@fitpulse/shared`.
+- `npm run lint` runs lint across every workspace that defines a `lint` script.
