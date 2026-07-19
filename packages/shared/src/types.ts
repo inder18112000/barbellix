@@ -71,14 +71,32 @@ export interface User {
   createdAt: string;
 }
 
+export interface MembershipPlan {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  priceCents: number;
+  currency: string;
+  billingInterval: 'month' | 'year';
+  stripeProductId?: string;
+  stripePriceId?: string;
+  active: boolean;
+}
+
 export interface Membership {
   id: string;
   userId: string;
   tenantId: string;
+  planId?: string;
   plan: string;
-  startDate: string;
-  endDate: string;
   status: MembershipStatus;
+  paymentStatus: PaymentStatus;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  currentPeriodEnd?: string;
+  startDate: string;
+  endDate?: string;
 }
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
@@ -290,6 +308,10 @@ export interface TrainerMemberSummary {
   lastSeenAt?: string;
   sessionsCount: number;
   joinDate: string;
+  /** Billing membership - distinct from `plan` above, which is the workout plan name. */
+  membershipPlan?: string;
+  membershipStatus?: MembershipStatus;
+  paymentStatus?: PaymentStatus;
 }
 
 export interface TrainerStats {

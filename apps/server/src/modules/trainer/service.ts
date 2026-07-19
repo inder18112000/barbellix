@@ -1,6 +1,7 @@
 import type { TrainerMemberSummary } from '@fitpulse/shared';
 import { NotFoundError } from '../../lib/errors.js';
 import { computeSummary } from '../attendance/service.js';
+import { getMembershipSummary } from '../billing/service.js';
 import * as repo from './repository.js';
 
 export async function listMembers(tenantId: string): Promise<TrainerMemberSummary[]> {
@@ -9,10 +10,11 @@ export async function listMembers(tenantId: string): Promise<TrainerMemberSummar
   return Promise.all(
     members.map(async (member) => {
       const userId = member._id.toString();
-      const [activePlan, sessionsCount, attendance] = await Promise.all([
+      const [activePlan, sessionsCount, attendance, membership] = await Promise.all([
         repo.findActivePlanForUser(userId),
         repo.countSessionsForUser(userId),
         computeSummary(userId),
+        getMembershipSummary(userId),
       ]);
 
       return {
@@ -26,6 +28,9 @@ export async function listMembers(tenantId: string): Promise<TrainerMemberSummar
         sessionsCount,
         lastSeenAt: attendance.lastCheckedIn,
         joinDate: member.createdAt.toISOString(),
+        membershipPlan: membership.plan,
+        membershipStatus: membership.status,
+        paymentStatus: membership.paymentStatus,
       };
     }),
   );

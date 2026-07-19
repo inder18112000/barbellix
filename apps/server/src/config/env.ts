@@ -18,6 +18,12 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+  // Stripe: STRIPE_SECRET_KEY absent -> billing module still works for plan CRUD/manual
+  // mark-paid, just without real checkout sessions (see lib/stripe.ts's isConfigured()).
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_SUCCESS_URL: z.string().default('http://localhost:5173/billing/success'),
+  STRIPE_CANCEL_URL: z.string().default('http://localhost:5173/billing/cancel'),
 });
 
 export type Env = z.infer<typeof envSchema>;
