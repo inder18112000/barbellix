@@ -1,11 +1,13 @@
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export type UserRole = 'member' | 'trainer' | 'admin' | 'superadmin';
+export type UserStatus = 'active' | 'inactive' | 'suspended';
 export type PlanTier = 'free' | 'pro' | 'gym_starter' | 'gym_business' | 'enterprise';
 export type CheckInMethod = 'qr' | 'nfc' | 'pin' | 'manual';
 export type RecommendationType = 'workout' | 'nutrition' | 'recovery';
 export type WorkoutGeneratedBy = 'ai' | 'trainer' | 'user';
-export type MembershipStatus = 'active' | 'expired' | 'cancelled' | 'paused';
+export type MembershipStatus = 'active' | 'expired' | 'cancelled' | 'paused' | 'incomplete';
+export type PaymentStatus = 'paid' | 'due' | 'overdue' | 'comp';
 
 // ─── Tenant / Gym ─────────────────────────────────────────────────────────────
 
@@ -29,6 +31,11 @@ export interface Branch {
   name: string;
   location: string;
   qrCodeToken: string;
+  capacity?: number;
+  checkInMethods: CheckInMethod[];
+  autoCheckoutEnabled: boolean;
+  autoCheckoutAfterMins: number;
+  guestPassEnabled: boolean;
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
@@ -56,6 +63,7 @@ export interface User {
   tenantId: string;
   branchId?: string;
   role: UserRole;
+  status: UserStatus;
   email: string;
   firstName: string;
   lastName: string;
@@ -254,6 +262,14 @@ export interface AttendanceAnalytics {
   count: number;
 }
 
+export interface RecentCheckIn {
+  id: string;
+  memberId: string;
+  memberName: string;
+  method: CheckInMethod;
+  checkedInAt: string;
+}
+
 export interface RetentionMetrics {
   activeMembers: number;
   newThisMonth: number;
@@ -268,6 +284,7 @@ export interface TrainerMemberSummary {
   firstName: string;
   lastName: string;
   email: string;
+  status: UserStatus;
   plan: string;
   streak: number;
   lastSeenAt?: string;

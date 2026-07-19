@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { logSessionSchema } from './schemas.js';
+import { logSessionSchema, createPlanSchema } from './schemas.js';
 import * as workoutsService from './service.js';
 
 const idParamSchema = z.object({ id: z.string() });
@@ -12,6 +12,15 @@ export default async function workoutsRoutes(fastify: FastifyInstance) {
   app.get('/workout-plans', { preHandler: [fastify.authenticate] }, async (request) => {
     return workoutsService.listPlans(request.user.sub);
   });
+
+  app.post(
+    '/workout-plans',
+    { schema: { body: createPlanSchema }, preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const plan = await workoutsService.createPlan(request.user.sub, request.user.role, request.body);
+      return reply.status(201).send(plan);
+    },
+  );
 
   app.get(
     '/workout-plans/:id',

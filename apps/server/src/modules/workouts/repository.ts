@@ -34,6 +34,23 @@ export async function findByIdForUser(id: string, userId: string) {
   return WorkoutPlanModel.findOne({ _id: id, userId });
 }
 
+interface CreatePlanDayInput {
+  dayLabel: string;
+  exercises: Array<{ exerciseId: string; sets: number; reps: string; restSecs: number; notes?: string }>;
+}
+
+export async function createPlan(input: {
+  userId: string;
+  name: string;
+  goal: WorkoutPlanDocument['goal'];
+  generatedBy: WorkoutPlanDocument['generatedBy'];
+  days: CreatePlanDayInput[];
+}) {
+  // Mongoose casts the exerciseId strings to ObjectId on write - this input shape matches
+  // what the client actually sends, not the hydrated document shape.
+  return WorkoutPlanModel.create({ ...input, active: true });
+}
+
 // ─── Sessions ─────────────────────────────────────────────────────────────────
 
 export function toDomainSession(doc: HydratedDocument<WorkoutSessionDocument>): WorkoutSession {

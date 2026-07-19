@@ -20,6 +20,7 @@ export async function listMembers(tenantId: string): Promise<TrainerMemberSummar
         firstName: member.firstName,
         lastName: member.lastName,
         email: member.email,
+        status: member.status,
         plan: activePlan?.name ?? 'No active plan',
         streak: attendance.streak,
         sessionsCount,
@@ -53,6 +54,12 @@ export async function getStats(tenantId: string) {
     sessionsTodayCount,
     attendanceRate: memberIds.length > 0 ? Math.round((checkedInThisMonth / memberIds.length) * 100) : 0,
   };
+}
+
+export async function updateMemberStatus(tenantId: string, memberId: string, status: 'active' | 'inactive' | 'suspended') {
+  const updated = await repo.updateMemberStatus(memberId, tenantId, status);
+  if (!updated) throw new NotFoundError('Member not found');
+  return { memberId, status: updated.status };
 }
 
 export async function assignPlan(trainerId: string, tenantId: string, memberId: string, planId: string) {

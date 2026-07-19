@@ -8,6 +8,7 @@ export function toDomainUser(doc: HydratedDocument<UserDocument>): User {
     tenantId: doc.tenantId.toString(),
     branchId: doc.branchId?.toString(),
     role: doc.role,
+    status: doc.status,
     email: doc.email,
     firstName: doc.firstName,
     lastName: doc.lastName,

@@ -18,3 +18,29 @@ export const logSessionSchema = z.object({
   perceivedEffort: z.number().min(1).max(10).optional(),
   sets: z.array(setInputSchema).default([]),
 });
+
+const plannedExerciseInputSchema = z.object({
+  exerciseId: z.string(),
+  sets: z.number(),
+  reps: z.string(),
+  restSecs: z.number(),
+  notes: z.string().optional(),
+});
+
+const workoutDayInputSchema = z.object({
+  dayLabel: z.string().min(1),
+  exercises: z.array(plannedExerciseInputSchema).default([]),
+});
+
+export const createPlanSchema = z.object({
+  name: z.string().min(1),
+  goal: z.enum([
+    'lose_weight',
+    'build_muscle',
+    'improve_endurance',
+    'increase_strength',
+    'general_fitness',
+    'sport_performance',
+  ]),
+  days: z.array(workoutDayInputSchema).default([]),
+});

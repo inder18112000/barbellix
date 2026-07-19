@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import type { UserRole } from '@fitpulse/shared';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken } from '../../lib/refreshToken.js';
-import { ConflictError, UnauthorizedError } from '../../lib/errors.js';
+import { ConflictError, UnauthorizedError, ForbiddenError } from '../../lib/errors.js';
 import * as repo from './repository.js';
 
 function signAccessToken(fastify: FastifyInstance, user: { id: string; tenantId: string; role: UserRole; branchId?: string }) {
@@ -47,6 +47,8 @@ export async function login(fastify: FastifyInstance, input: { email: string; pa
   const valid = await verifyPassword(doc.passwordHash, input.password);
   if (!valid) throw new UnauthorizedError('Invalid email or password');
 
+  if (doc.status === 'suspended') throw new ForbiddenError('This account has been suspended');
+
   const user = repo.toDomainUser(doc);
   const accessToken = signAccessToken(fastify, user);
   const refreshToken = await issueRefreshToken(doc._id, fastify.config.JWT_REFRESH_EXPIRES_IN_DAYS);
@@ -60,6 +62,10 @@ export async function refresh(fastify: FastifyInstance, presentedToken: string) 
 
   const doc = await repo.findUserById(rotated.userId.toString());
   if (!doc) throw new UnauthorizedError('Invalid or expired refresh token');
+
+  // Re-checked on every silent refresh (not just at login) so a suspension takes
+  // effect within one access-token lifetime, not only on the user's next fresh login.
+  if (doc.status === 'suspended') throw new ForbiddenError('This account has been suspended');
 
   const user = repo.toDomainUser(doc);
   const accessToken = signAccessToken(fastify, user);

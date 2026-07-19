@@ -11,6 +11,10 @@ export async function findMemberByIdInTenant(memberId: string, tenantId: string)
   return UserModel.findOne({ _id: memberId, tenantId, role: 'member' });
 }
 
+export async function updateMemberStatus(memberId: string, tenantId: string, status: 'active' | 'inactive' | 'suspended') {
+  return UserModel.findOneAndUpdate({ _id: memberId, tenantId, role: 'member' }, { $set: { status } }, { new: true });
+}
+
 export async function findActivePlanForUser(userId: string) {
   return WorkoutPlanModel.findOne({ userId, active: true }).sort({ createdAt: -1 });
 }

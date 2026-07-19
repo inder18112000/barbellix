@@ -1,3 +1,4 @@
+import type { FitnessGoal, UserRole } from '@fitpulse/shared';
 import { isValidObjectId } from '../../lib/objectId.js';
 import { NotFoundError } from '../../lib/errors.js';
 import { recordIfPR } from '../progress/service.js';
@@ -12,6 +13,30 @@ export async function getPlan(id: string, userId: string) {
   if (!isValidObjectId(id)) throw new NotFoundError('Workout plan not found');
   const doc = await repo.findByIdForUser(id, userId);
   if (!doc) throw new NotFoundError('Workout plan not found');
+  return repo.toDomainPlan(doc);
+}
+
+interface CreatePlanInput {
+  name: string;
+  goal: FitnessGoal;
+  days: Array<{
+    dayLabel: string;
+    exercises: Array<{ exerciseId: string; sets: number; reps: string; restSecs: number; notes?: string }>;
+  }>;
+}
+
+export async function createPlan(userId: string, role: UserRole, input: CreatePlanInput) {
+  // Reflects who actually built it - this endpoint has no role gate (a member can build
+  // their own plan same as a trainer building a template for their roster).
+  const generatedBy = role === 'trainer' || role === 'admin' || role === 'superadmin' ? 'trainer' : 'user';
+
+  const doc = await repo.createPlan({
+    userId,
+    name: input.name,
+    goal: input.goal,
+    generatedBy,
+    days: input.days,
+  });
   return repo.toDomainPlan(doc);
 }
 

@@ -8,7 +8,12 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 characters'),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN_DAYS: z.coerce.number().default(30),
-  CORS_ORIGIN: z.string().default('*'),
+  // Comma-separated list, e.g. "http://localhost:8081,http://localhost:5173" so the mobile
+  // (Expo web, :8081) and web (Vite, :5173) dev servers can both hit the API at once.
+  CORS_ORIGIN: z
+    .string()
+    .default('*')
+    .transform((val) => (val === '*' ? true : val.split(',').map((origin) => origin.trim()))),
   GROQ_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),

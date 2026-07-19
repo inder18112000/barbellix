@@ -1,7 +1,8 @@
 import { Schema, model, Types } from 'mongoose';
-import type { UserRole, FitnessGoal, UserProfile } from '@fitpulse/shared';
+import type { UserRole, UserStatus, FitnessGoal, UserProfile } from '@fitpulse/shared';
 
 const USER_ROLES: UserRole[] = ['member', 'trainer', 'admin', 'superadmin'];
+const USER_STATUSES: UserStatus[] = ['active', 'inactive', 'suspended'];
 const FITNESS_GOALS: FitnessGoal[] = [
   'lose_weight',
   'build_muscle',
@@ -16,6 +17,7 @@ export interface UserDocument {
   tenantId: Types.ObjectId;
   branchId?: Types.ObjectId;
   role: UserRole;
+  status: UserStatus;
   email: string;
   firstName: string;
   lastName: string;
@@ -42,6 +44,7 @@ const userSchema = new Schema<UserDocument>(
     tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', required: true, index: true },
     branchId: { type: Schema.Types.ObjectId, ref: 'Branch' },
     role: { type: String, enum: USER_ROLES, required: true, default: 'member' },
+    status: { type: String, enum: USER_STATUSES, required: true, default: 'active' },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
