@@ -427,3 +427,64 @@ export interface NotificationPreferences {
   personalRecords: boolean;
   trainerMessages: boolean;
 }
+
+// ─── Group Classes ──────────────────────────────────────────────────────────────
+
+/** 0-6, 0 = Sunday, matches JS Date.getDay() - kept as a plain number (not a literal union) so it
+ * round-trips cleanly through Zod's z.number() and Mongoose's Number type without extra casting. */
+export type DayOfWeek = number;
+
+export interface ClassTemplateOccurrence {
+  dayOfWeek: DayOfWeek;
+  startTime: string; // "HH:MM", 24h
+  durationMins: number;
+}
+
+export interface ClassTemplate {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  name: string;
+  trainerId: string;
+  trainerName?: string;
+  occurrences: ClassTemplateOccurrence[];
+  capacity: number;
+  active: boolean;
+}
+
+export type ClassSessionStatus = 'scheduled' | 'cancelled';
+
+export interface ClassSession {
+  id: string;
+  tenantId: string;
+  branchId: string;
+  templateId: string;
+  name: string;
+  trainerId: string;
+  trainerName?: string;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:MM"
+  durationMins: number;
+  capacity: number;
+  bookedCount: number;
+  waitlistCount: number;
+  status: ClassSessionStatus;
+  /** Present only when the requesting member has a booking for this session. */
+  myBookingStatus?: BookingStatus;
+}
+
+export type BookingStatus = 'booked' | 'waitlisted' | 'cancelled';
+
+export interface Booking {
+  id: string;
+  tenantId: string;
+  sessionId: string;
+  userId: string;
+  status: BookingStatus;
+  createdAt: string;
+}
+
+/** A booking joined with its session's display info, for "My Bookings" style views. */
+export interface BookingWithSession extends Booking {
+  session: ClassSession;
+}
