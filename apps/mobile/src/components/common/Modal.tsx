@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { Modal as RNModal, View, Text, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, typography } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 import { glass } from '../../theme/effects';
 
 interface BottomSheetProps {

@@ -3,11 +3,12 @@ import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType } from 
 import { MembershipPlanModel, type MembershipPlanDocument } from '../../db/models/MembershipPlan.js';
 import { MembershipModel, type MembershipDocument } from '../../db/models/Membership.js';
 import { PaymentEventModel, type PaymentEventDocument } from '../../db/models/PaymentEvent.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainPlan(doc: HydratedDocument<MembershipPlanDocument>): MembershipPlan {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
     name: doc.name,
     description: doc.description,
     priceCents: doc.priceCents,
@@ -21,19 +22,19 @@ export function toDomainPlan(doc: HydratedDocument<MembershipPlanDocument>): Mem
 
 export function toDomainMembership(doc: HydratedDocument<MembershipDocument>): Membership {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    tenantId: doc.tenantId.toString(),
-    planId: doc.planId?.toString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    tenantId: idStr(doc.tenantId),
+    planId: doc.planId ? idStr(doc.planId) : undefined,
     plan: doc.planName,
     status: doc.status,
     paymentStatus: doc.paymentStatus,
     paymentMethod: doc.paymentMethod,
     stripeCustomerId: doc.stripeCustomerId,
     stripeSubscriptionId: doc.stripeSubscriptionId,
-    currentPeriodEnd: doc.currentPeriodEnd?.toISOString(),
-    startDate: doc.startDate.toISOString(),
-    endDate: doc.endDate?.toISOString(),
+    currentPeriodEnd: isoStr(doc.currentPeriodEnd),
+    startDate: isoStr(doc.startDate),
+    endDate: isoStr(doc.endDate),
   };
 }
 
@@ -120,14 +121,14 @@ export async function getMembershipCounts(tenantId: string) {
 
 export function toDomainPaymentEvent(doc: HydratedDocument<PaymentEventDocument>): PaymentEvent {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    userId: doc.userId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
+    userId: idStr(doc.userId),
     type: doc.type,
     amountCents: doc.amountCents,
     currency: doc.currency,
     planName: doc.planName,
-    occurredAt: doc.occurredAt.toISOString(),
+    occurredAt: isoStr(doc.occurredAt),
   };
 }
 

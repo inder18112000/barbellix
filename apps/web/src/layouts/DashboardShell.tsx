@@ -1,10 +1,23 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
 import { LogOut, Zap } from 'lucide-react'
 import { authStore } from '@/store/authStore'
 import { ROLE_LABELS } from '@/lib/roleLabels'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Route-level code-split pages (see router.tsx) suspend here while their chunk loads - a single
+// shared fallback for every admin/trainer page instead of repeating one per route.
+function PageFallback() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  )
+}
 
 export interface NavItem {
   to: string
@@ -69,7 +82,9 @@ export const DashboardShell = observer(function DashboardShell({ navItems }: Pro
       </aside>
 
       <main className="flex-1 overflow-y-auto p-8">
-        <Outlet />
+        <Suspense fallback={<PageFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )

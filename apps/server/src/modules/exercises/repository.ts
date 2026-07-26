@@ -1,17 +1,18 @@
 import type { Exercise } from '@fitpulse/shared';
 import { ExerciseModel, type ExerciseDocument } from '../../db/models/Exercise.js';
 import type { HydratedDocument } from 'mongoose';
+import { idStr } from '../../lib/mappers-base.js';
 
 export function toDomainExercise(doc: HydratedDocument<ExerciseDocument>): Exercise {
   return {
-    id: doc._id.toString(),
+    id: idStr(doc._id),
     name: doc.name,
     muscleGroups: doc.muscleGroups,
     equipment: doc.equipment,
     instructions: doc.instructions,
     mediaUrl: doc.mediaUrl,
     isCustom: doc.isCustom,
-    tenantId: doc.tenantId?.toString(),
+    tenantId: doc.tenantId ? idStr(doc.tenantId) : undefined,
   };
 }
 

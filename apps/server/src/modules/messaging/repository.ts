@@ -2,14 +2,15 @@ import type { HydratedDocument } from 'mongoose';
 import type { Message } from '@fitpulse/shared';
 import { MessageModel, type MessageDocument } from '../../db/models/Message.js';
 import { UserModel } from '../../db/models/User.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainMessage(doc: HydratedDocument<MessageDocument>): Message {
   return {
-    id: doc._id.toString(),
-    senderId: doc.senderId.toString(),
-    recipientId: doc.recipientId.toString(),
+    id: idStr(doc._id),
+    senderId: idStr(doc.senderId),
+    recipientId: idStr(doc.recipientId),
     text: doc.text,
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: isoStr(doc.createdAt),
     read: doc.read,
   };
 }

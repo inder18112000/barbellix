@@ -4,6 +4,7 @@ import { UserModel } from '../../db/models/User.js';
 import { AttendanceRecordModel } from '../../db/models/AttendanceRecord.js';
 import { BranchModel, type BranchDocument } from '../../db/models/Branch.js';
 import { getOrCreateDefaultBranch } from '../attendance/repository.js';
+import { idStr } from '../../lib/mappers-base.js';
 
 interface DailyCount {
   _id: string;
@@ -27,8 +28,8 @@ export async function attendanceByDay(tenantId: string, since: Date) {
 
 export function toDomainBranch(doc: HydratedDocument<BranchDocument>): Branch {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
     name: doc.name,
     location: doc.location,
     qrCodeToken: doc.qrCodeToken,

@@ -2,12 +2,13 @@ import type { HydratedDocument } from 'mongoose';
 import type { WorkoutPlan, WorkoutSession } from '@fitpulse/shared';
 import { WorkoutPlanModel, type WorkoutPlanDocument } from '../../db/models/WorkoutPlan.js';
 import { WorkoutSessionModel, type WorkoutSessionDocument, type WorkoutSetSubdoc } from '../../db/models/WorkoutSession.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainPlan(doc: HydratedDocument<WorkoutPlanDocument>): WorkoutPlan {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    trainerId: doc.trainerId?.toString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    trainerId: doc.trainerId ? idStr(doc.trainerId) : undefined,
     name: doc.name,
     goal: doc.goal,
     generatedBy: doc.generatedBy,
@@ -15,14 +16,14 @@ export function toDomainPlan(doc: HydratedDocument<WorkoutPlanDocument>): Workou
     days: doc.days.map((day) => ({
       dayLabel: day.dayLabel,
       exercises: day.exercises.map((ex) => ({
-        exerciseId: ex.exerciseId.toString(),
+        exerciseId: idStr(ex.exerciseId),
         sets: ex.sets,
         reps: ex.reps,
         restSecs: ex.restSecs,
         notes: ex.notes,
       })),
     })),
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: isoStr(doc.createdAt),
   };
 }
 
@@ -55,17 +56,17 @@ export async function createPlan(input: {
 
 export function toDomainSession(doc: HydratedDocument<WorkoutSessionDocument>): WorkoutSession {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    planId: doc.planId?.toString(),
-    date: doc.date.toISOString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    planId: doc.planId ? idStr(doc.planId) : undefined,
+    date: isoStr(doc.date),
     durationMins: doc.durationMins,
     notes: doc.notes,
     perceivedEffort: doc.perceivedEffort,
     sets: doc.sets.map((set, i) => ({
-      id: `${doc._id.toString()}_${i}`,
-      sessionId: doc._id.toString(),
-      exerciseId: set.exerciseId.toString(),
+      id: `${idStr(doc._id)}_${i}`,
+      sessionId: idStr(doc._id),
+      exerciseId: idStr(set.exerciseId),
       setNumber: set.setNumber,
       reps: set.reps,
       weightKg: set.weightKg,

@@ -2,12 +2,13 @@ import { Types, type HydratedDocument } from 'mongoose';
 import type { BodyMetric, PersonalRecord } from '@fitpulse/shared';
 import { BodyMetricModel, type BodyMetricDocument } from '../../db/models/BodyMetric.js';
 import { PersonalRecordModel, type PersonalRecordDocument, type PRUnit } from '../../db/models/PersonalRecord.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainMetric(doc: HydratedDocument<BodyMetricDocument>): BodyMetric {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    recordedAt: doc.recordedAt.toISOString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    recordedAt: isoStr(doc.recordedAt),
     weightKg: doc.weightKg,
     bodyFatPct: doc.bodyFatPct,
     measurements: doc.measurements,
@@ -16,12 +17,12 @@ export function toDomainMetric(doc: HydratedDocument<BodyMetricDocument>): BodyM
 
 export function toDomainPR(doc: PersonalRecordDocument): PersonalRecord {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    exerciseId: doc.exerciseId.toString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    exerciseId: idStr(doc.exerciseId),
     value: doc.value,
     unit: doc.unit,
-    achievedAt: doc.achievedAt.toISOString(),
+    achievedAt: isoStr(doc.achievedAt),
   };
 }
 

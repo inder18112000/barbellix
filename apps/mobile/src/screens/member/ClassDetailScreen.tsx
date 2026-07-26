@@ -1,13 +1,12 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 
 import { Card } from '../../components/common/Card';
 import { ScreenShell } from '../../components/common/ScreenShell';
-import { queryKeys, bookClassSession } from '../../api/queries';
+import { bookClassSession } from '../../api/queries';
 import { scheduleClassReminder } from '../../lib/localNotifications';
 import type { HomeStackParams } from '../../navigation/types';
 import { styles } from './ClassDetailScreen.styles';

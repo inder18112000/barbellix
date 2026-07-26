@@ -4,14 +4,15 @@ import { ClassTemplateModel, type ClassTemplateDocument } from '../../db/models/
 import { ClassSessionModel, type ClassSessionDocument } from '../../db/models/ClassSession.js';
 import { BookingModel, type BookingDocument } from '../../db/models/Booking.js';
 import { UserModel } from '../../db/models/User.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainTemplate(doc: HydratedDocument<ClassTemplateDocument>): ClassTemplate {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    branchId: doc.branchId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
+    branchId: idStr(doc.branchId),
     name: doc.name,
-    trainerId: doc.trainerId.toString(),
+    trainerId: idStr(doc.trainerId),
     occurrences: doc.occurrences,
     capacity: doc.capacity,
     active: doc.active,
@@ -20,12 +21,12 @@ export function toDomainTemplate(doc: HydratedDocument<ClassTemplateDocument>): 
 
 export function toDomainSession(doc: HydratedDocument<ClassSessionDocument>, myBookingStatus?: BookingStatus): ClassSession {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    branchId: doc.branchId.toString(),
-    templateId: doc.templateId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
+    branchId: idStr(doc.branchId),
+    templateId: idStr(doc.templateId),
     name: doc.name,
-    trainerId: doc.trainerId.toString(),
+    trainerId: idStr(doc.trainerId),
     date: doc.date,
     startTime: doc.startTime,
     durationMins: doc.durationMins,
@@ -39,12 +40,12 @@ export function toDomainSession(doc: HydratedDocument<ClassSessionDocument>, myB
 
 export function toDomainBooking(doc: HydratedDocument<BookingDocument>): Booking {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    sessionId: doc.sessionId.toString(),
-    userId: doc.userId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
+    sessionId: idStr(doc.sessionId),
+    userId: idStr(doc.userId),
     status: doc.status,
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: isoStr(doc.createdAt),
   };
 }
 

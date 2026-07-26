@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
 import { RequireAuth } from '@/routes/RequireAuth'
@@ -5,24 +6,36 @@ import { RequireRole } from '@/routes/RequireRole'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
-import { AdminHomePage } from '@/pages/admin/AdminHomePage'
-import { AnalyticsPage } from '@/pages/admin/AnalyticsPage'
-import { MembersPage as AdminMembersPage } from '@/pages/admin/MembersPage'
-import { MemberDetailPage as AdminMemberDetailPage } from '@/pages/admin/MemberDetailPage'
-import { AttendanceFeedPage } from '@/pages/admin/AttendanceFeedPage'
-import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
-import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
-import { SettingsPage as AdminSettingsPage } from '@/pages/admin/SettingsPage'
-import { SponsorsPage } from '@/pages/admin/SponsorsPage'
-import { ClassesPage } from '@/pages/admin/ClassesPage'
-import { ClassRosterPage } from '@/pages/admin/ClassRosterPage'
-import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
-import { MembersPage as TrainerMembersPage } from '@/pages/trainer/MembersPage'
-import { MemberDetailPage } from '@/pages/trainer/MemberDetailPage'
-import { AssignPlanPage } from '@/pages/trainer/AssignPlanPage'
-import { CreatePlanPage } from '@/pages/trainer/CreatePlanPage'
-import { MessagesPage } from '@/pages/trainer/MessagesPage'
 import { authStore } from '@/store/authStore'
+
+// Every page below is code-split (see DashboardShell's <Suspense> boundary) - only LoginPage,
+// needed immediately on first load, stays a static import. This is what took the app from one
+// 1.1MB bundle to one chunk per page.
+const AdminHomePage = lazy(() => import('@/pages/admin/AdminHomePage').then((m) => ({ default: m.AdminHomePage })))
+const AnalyticsPage = lazy(() => import('@/pages/admin/AnalyticsPage').then((m) => ({ default: m.AnalyticsPage })))
+const AdminMembersPage = lazy(() => import('@/pages/admin/MembersPage').then((m) => ({ default: m.MembersPage })))
+const AdminMemberDetailPage = lazy(() =>
+  import('@/pages/admin/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage })),
+)
+const AttendanceFeedPage = lazy(() =>
+  import('@/pages/admin/AttendanceFeedPage').then((m) => ({ default: m.AttendanceFeedPage })),
+)
+const MembershipPlansPage = lazy(() =>
+  import('@/pages/admin/MembershipPlansPage').then((m) => ({ default: m.MembershipPlansPage })),
+)
+const BranchSettingsPage = lazy(() =>
+  import('@/pages/admin/BranchSettingsPage').then((m) => ({ default: m.BranchSettingsPage })),
+)
+const AdminSettingsPage = lazy(() => import('@/pages/admin/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const SponsorsPage = lazy(() => import('@/pages/admin/SponsorsPage').then((m) => ({ default: m.SponsorsPage })))
+const ClassesPage = lazy(() => import('@/pages/admin/ClassesPage').then((m) => ({ default: m.ClassesPage })))
+const ClassRosterPage = lazy(() => import('@/pages/admin/ClassRosterPage').then((m) => ({ default: m.ClassRosterPage })))
+const TrainerHomePage = lazy(() => import('@/pages/trainer/TrainerHomePage').then((m) => ({ default: m.TrainerHomePage })))
+const TrainerMembersPage = lazy(() => import('@/pages/trainer/MembersPage').then((m) => ({ default: m.MembersPage })))
+const MemberDetailPage = lazy(() => import('@/pages/trainer/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage })))
+const AssignPlanPage = lazy(() => import('@/pages/trainer/AssignPlanPage').then((m) => ({ default: m.AssignPlanPage })))
+const CreatePlanPage = lazy(() => import('@/pages/trainer/CreatePlanPage').then((m) => ({ default: m.CreatePlanPage })))
+const MessagesPage = lazy(() => import('@/pages/trainer/MessagesPage').then((m) => ({ default: m.MessagesPage })))
 
 // Sends an already-authenticated user straight to their own dashboard instead of the login form.
 const IndexRedirect = observer(function IndexRedirect() {

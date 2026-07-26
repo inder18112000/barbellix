@@ -1,12 +1,13 @@
 import type { HydratedDocument } from 'mongoose';
 import type { User } from '@fitpulse/shared';
 import type { UserDocument } from '../db/models/User.js';
+import { idStr, isoStr } from './mappers-base.js';
 
 export function toDomainUser(doc: HydratedDocument<UserDocument>): User {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
-    branchId: doc.branchId?.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
+    branchId: doc.branchId ? idStr(doc.branchId) : undefined,
     role: doc.role,
     status: doc.status,
     email: doc.email,
@@ -14,6 +15,6 @@ export function toDomainUser(doc: HydratedDocument<UserDocument>): User {
     firstName: doc.firstName,
     lastName: doc.lastName,
     profile: doc.profile,
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: isoStr(doc.createdAt),
   };
 }

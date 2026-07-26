@@ -3,14 +3,15 @@ import { Types } from 'mongoose';
 import type { AttendanceRecord } from '@fitpulse/shared';
 import { AttendanceRecordModel, type AttendanceRecordDocument } from '../../db/models/AttendanceRecord.js';
 import { BranchModel } from '../../db/models/Branch.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainRecord(doc: HydratedDocument<AttendanceRecordDocument>): AttendanceRecord {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    branchId: doc.branchId.toString(),
-    checkedInAt: doc.checkedInAt.toISOString(),
-    checkOutAt: doc.checkOutAt?.toISOString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    branchId: idStr(doc.branchId),
+    checkedInAt: isoStr(doc.checkedInAt),
+    checkOutAt: isoStr(doc.checkOutAt),
     method: doc.method,
   };
 }

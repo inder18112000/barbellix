@@ -1,11 +1,12 @@
 import type { HydratedDocument } from 'mongoose';
 import type { Sponsor } from '@fitpulse/shared';
 import { SponsorModel, type SponsorDocument } from '../../db/models/Sponsor.js';
+import { idStr } from '../../lib/mappers-base.js';
 
 export function toDomainSponsor(doc: HydratedDocument<SponsorDocument>): Sponsor {
   return {
-    id: doc._id.toString(),
-    tenantId: doc.tenantId.toString(),
+    id: idStr(doc._id),
+    tenantId: idStr(doc.tenantId),
     name: doc.name,
     description: doc.description,
     logoUrl: doc.logoUrl,

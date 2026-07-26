@@ -3,12 +3,13 @@ import type { MealEntry, DietPlan } from '@fitpulse/shared';
 import { MealEntryModel, type MealEntryDocument } from '../../db/models/MealEntry.js';
 import { DietPlanModel, type DietPlanDocument, type DietPlanMealSubdoc } from '../../db/models/DietPlan.js';
 import { isValidObjectId } from '../../lib/objectId.js';
+import { idStr, isoStr } from '../../lib/mappers-base.js';
 
 export function toDomainMeal(doc: HydratedDocument<MealEntryDocument>): MealEntry {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
-    loggedAt: doc.loggedAt.toISOString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
+    loggedAt: isoStr(doc.loggedAt),
     name: doc.name,
     mealType: doc.mealType,
     calories: doc.calories,
@@ -49,8 +50,8 @@ export async function deleteForUser(id: string, userId: string) {
 
 export function toDomainDietPlan(doc: HydratedDocument<DietPlanDocument>): DietPlan {
   return {
-    id: doc._id.toString(),
-    userId: doc.userId.toString(),
+    id: idStr(doc._id),
+    userId: idStr(doc.userId),
     name: doc.name,
     goal: doc.goal,
     generatedBy: doc.generatedBy,
@@ -60,7 +61,7 @@ export function toDomainDietPlan(doc: HydratedDocument<DietPlanDocument>): DietP
     dailyFatG: doc.dailyFatG,
     meals: doc.meals,
     active: doc.active,
-    createdAt: doc.createdAt.toISOString(),
+    createdAt: isoStr(doc.createdAt),
   };
 }
 
