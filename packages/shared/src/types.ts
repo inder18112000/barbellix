@@ -426,6 +426,7 @@ export interface NotificationPreferences {
   weeklyReport: boolean;
   personalRecords: boolean;
   trainerMessages: boolean;
+  classBookings: boolean;
 }
 
 // ─── Group Classes ──────────────────────────────────────────────────────────────

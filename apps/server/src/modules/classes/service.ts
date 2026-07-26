@@ -1,5 +1,7 @@
 import type { ClassTemplateOccurrence } from '@fitpulse/shared';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '../../lib/errors.js';
+import { sendPushToUser } from '../../lib/push.js';
+import { getNotificationPreferences } from '../users/service.js';
 import * as repo from './repository.js';
 
 const MAX_SCHEDULE_RANGE_DAYS = 42; // ~6 weeks - keeps lazy generation bounded, see repo.generateSessionsForRange
@@ -73,14 +75,24 @@ export async function bookSession(tenantId: string, userId: string, sessionId: s
   if (existing) throw new ConflictError('You already have a booking for this class');
 
   const claimed = await repo.tryClaimSeat(sessionId);
-  if (claimed) {
-    const booking = await repo.createBooking({ tenantId, sessionId, userId, status: 'booked' });
-    return { booking: repo.toDomainBooking(booking), status: 'booked' as const };
-  }
+  const status = claimed ? ('booked' as const) : ('waitlisted' as const);
+  if (!claimed) await repo.incrementWaitlist(sessionId);
 
-  await repo.incrementWaitlist(sessionId);
-  const booking = await repo.createBooking({ tenantId, sessionId, userId, status: 'waitlisted' });
-  return { booking: repo.toDomainBooking(booking), status: 'waitlisted' as const };
+  const booking = await repo.createBooking({ tenantId, sessionId, userId, status });
+  await notifyBookingStatus(userId, session.name, status);
+
+  return { booking: repo.toDomainBooking(booking), status };
+}
+
+async function notifyBookingStatus(userId: string, className: string, status: 'booked' | 'waitlisted') {
+  const prefs = await getNotificationPreferences(userId);
+  if (!prefs.classBookings) return;
+
+  await sendPushToUser(userId, {
+    title: status === 'booked' ? "You're in!" : 'Added to waitlist',
+    body: status === 'booked' ? `You're booked into ${className}.` : `${className} is full - you'll be notified if a spot opens up.`,
+    data: { type: 'class_booking', status },
+  });
 }
 
 export async function cancelMyBooking(tenantId: string, userId: string, bookingId: string) {
@@ -110,13 +122,12 @@ export async function cancelMyBooking(tenantId: string, userId: string, bookingI
       await repo.decrementWaitlistCount(session._id.toString());
       await repo.incrementBookedCount(session._id.toString());
       promotedUserId = promoted.userId.toString();
+      await notifyBookingStatus(promotedUserId, session.name, 'booked');
     }
   } else {
     await repo.decrementWaitlistCount(session._id.toString());
   }
 
-  // Hook point for M2 (push notifications): if promotedUserId is set, that member just moved
-  // from waitlisted to booked and should get a "you're in!" push.
   return { cancelled: true, promotedUserId };
 }
 

@@ -1,26 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { NotificationPreferences } from '@fitpulse/shared';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
+import { queryKeys, fetchNotificationPreferences, updateNotificationPreferences } from '../../api/queries';
+import { scheduleWorkoutReminder, cancelWorkoutReminder } from '../../lib/localNotifications';
 import { styles } from './NotificationsScreen.styles';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface NotifPrefs {
-  workoutReminders: boolean;
-  workoutReminderTime: string;
-  streakAlerts: boolean;
-  aiTips: boolean;
-  checkInConfirmations: boolean;
-  weeklyReport: boolean;
-  personalRecords: boolean;
-  trainerMessages: boolean;
-}
-
-const DEFAULT_PREFS: NotifPrefs = {
+const DEFAULT_PREFS: NotificationPreferences = {
   workoutReminders: true,
   workoutReminderTime: '08:00',
   streakAlerts: true,
@@ -29,6 +20,7 @@ const DEFAULT_PREFS: NotifPrefs = {
   weeklyReport: true,
   personalRecords: true,
   trainerMessages: true,
+  classBookings: true,
 };
 
 // ─── Toggle Row (SRP) ─────────────────────────────────────────────────────────
@@ -75,8 +67,8 @@ function TimeSelector({
   enabled: boolean;
 }) {
   const idx = REMINDER_TIMES.indexOf(value);
-  const next = () => onChange(REMINDER_TIMES[(idx + 1) % REMINDER_TIMES.length]);
-  const prev = () => onChange(REMINDER_TIMES[(idx - 1 + REMINDER_TIMES.length) % REMINDER_TIMES.length]);
+  const next = () => onChange(REMINDER_TIMES[(idx + 1) % REMINDER_TIMES.length]!);
+  const prev = () => onChange(REMINDER_TIMES[(idx - 1 + REMINDER_TIMES.length) % REMINDER_TIMES.length]!);
 
   return (
     <View style={[styles.timeRow, glass.card, !enabled && styles.timeRowDisabled]}>
@@ -98,12 +90,34 @@ function TimeSelector({
 
 export function NotificationsScreen() {
   const navigation = useNavigation<any>();
-  const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
+  const qc = useQueryClient();
+  const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS);
 
-  const toggle = (key: keyof NotifPrefs) => {
-    if (typeof prefs[key] === 'boolean') {
-      setPrefs((p) => ({ ...p, [key]: !p[key] }));
-    }
+  const { data: remotePrefs } = useQuery({ queryKey: queryKeys.notificationPreferences, queryFn: fetchNotificationPreferences });
+  useEffect(() => { if (remotePrefs) setPrefs(remotePrefs); }, [remotePrefs]);
+
+  const { mutate: savePrefs } = useMutation({
+    mutationFn: (updates: Partial<NotificationPreferences>) => updateNotificationPreferences(updates),
+    onSuccess: (updated) => qc.setQueryData(queryKeys.notificationPreferences, updated),
+  });
+
+  const toggle = (key: keyof NotificationPreferences) => {
+    setPrefs((p) => {
+      const value = !p[key];
+      const updated = { ...p, [key]: value };
+      savePrefs({ [key]: value });
+      if (key === 'workoutReminders') {
+        if (value) scheduleWorkoutReminder(updated.workoutReminderTime);
+        else cancelWorkoutReminder();
+      }
+      return updated;
+    });
+  };
+
+  const changeReminderTime = (time: string) => {
+    setPrefs((p) => ({ ...p, workoutReminderTime: time }));
+    savePrefs({ workoutReminderTime: time });
+    if (prefs.workoutReminders) scheduleWorkoutReminder(time);
   };
 
   return (
@@ -127,7 +141,7 @@ export function NotificationsScreen() {
         />
         <TimeSelector
           value={prefs.workoutReminderTime}
-          onChange={(t) => setPrefs((p) => ({ ...p, workoutReminderTime: t }))}
+          onChange={changeReminderTime}
           enabled={prefs.workoutReminders}
         />
         <ToggleRow
@@ -141,7 +155,7 @@ export function NotificationsScreen() {
         <Text style={styles.sectionLabel}>Streaks & Progress</Text>
         <ToggleRow
           label="Streak Alerts"
-          sub="Warning when your streak is at risk"
+          sub="Celebration push at 3, 7, 14, 30, 60, and 100 days"
           value={prefs.streakAlerts}
           onToggle={() => toggle('streakAlerts')}
         />
@@ -175,10 +189,16 @@ export function NotificationsScreen() {
           value={prefs.trainerMessages}
           onToggle={() => toggle('trainerMessages')}
         />
+        <ToggleRow
+          label="Class Booking Updates"
+          sub="Booking confirmed, waitlist promotion, and a reminder before class starts"
+          value={prefs.classBookings}
+          onToggle={() => toggle('classBookings')}
+        />
 
         <View style={[styles.footer, glass.card]}>
           <Text style={styles.footerText}>
-            Notification preferences are saved locally. Push notifications require device permission — you may be prompted the first time a notification is sent.
+            Push notifications require device permission — you may be prompted the first time a notification is sent.
           </Text>
         </View>
 

@@ -13,6 +13,7 @@ const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   weeklyReport: true,
   personalRecords: true,
   trainerMessages: true,
+  classBookings: true,
 };
 
 export async function getMe(userId: string) {
@@ -58,6 +59,7 @@ export async function getNotificationPreferences(userId: string): Promise<Notifi
     weeklyReport: doc.weeklyReport,
     personalRecords: doc.personalRecords,
     trainerMessages: doc.trainerMessages,
+    classBookings: doc.classBookings,
   };
 }
 
@@ -72,5 +74,6 @@ export async function updateNotificationPreferences(userId: string, partial: Par
     weeklyReport: doc.weeklyReport,
     personalRecords: doc.personalRecords,
     trainerMessages: doc.trainerMessages,
+    classBookings: doc.classBookings,
   };
 }

@@ -1,5 +1,9 @@
 import { NotFoundError } from '../../lib/errors.js';
+import { sendPushToUser } from '../../lib/push.js';
+import { getNotificationPreferences } from '../users/service.js';
 import * as repo from './repository.js';
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
 
 function toCalendarDateKey(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -92,6 +96,17 @@ export async function checkIn(
   const doc = await repo.createRecord({ userId, branchId: branch._id.toString(), method });
   const record = repo.toDomainRecord(doc);
   const summary = await computeSummary(userId);
+
+  if (STREAK_MILESTONES.includes(summary.streak)) {
+    const prefs = await getNotificationPreferences(userId);
+    if (prefs.streakAlerts) {
+      await sendPushToUser(userId, {
+        title: `🔥 ${summary.streak}-day streak!`,
+        body: `You've checked in ${summary.streak} days in a row - keep it going.`,
+        data: { type: 'streak_milestone', streak: summary.streak },
+      });
+    }
+  }
 
   return { record, summary };
 }

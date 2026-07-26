@@ -9,6 +9,7 @@ import { Card } from '../../components/common/Card';
 import { Badge } from '../../components/common/Badge';
 import { ScreenShell } from '../../components/common/ScreenShell';
 import { queryKeys, fetchMyBookings, cancelClassBooking } from '../../api/queries';
+import { cancelClassReminder } from '../../lib/localNotifications';
 import { styles } from './MyBookingsScreen.styles';
 
 export function MyBookingsScreen() {
@@ -17,18 +18,19 @@ export function MyBookingsScreen() {
   const { data: bookings, isPending } = useQuery({ queryKey: queryKeys.classes.myBookings, queryFn: fetchMyBookings });
 
   const { mutate: cancel } = useMutation({
-    mutationFn: (bookingId: string) => cancelClassBooking(bookingId),
-    onSuccess: () => {
+    mutationFn: ({ bookingId }: { bookingId: string; sessionId: string }) => cancelClassBooking(bookingId),
+    onSuccess: (_, { sessionId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.classes.myBookings });
       qc.invalidateQueries({ queryKey: ['classes', 'schedule'] });
+      cancelClassReminder(sessionId);
     },
     onError: (err: Error) => Alert.alert("Can't cancel", err.message),
   });
 
-  const confirmCancel = (bookingId: string, name: string) => {
+  const confirmCancel = (bookingId: string, sessionId: string, name: string) => {
     Alert.alert('Cancel booking?', `You'll give up your spot in ${name}.`, [
       { text: 'Keep it', style: 'cancel' },
-      { text: 'Cancel booking', style: 'destructive', onPress: () => cancel(bookingId) },
+      { text: 'Cancel booking', style: 'destructive', onPress: () => cancel({ bookingId, sessionId }) },
     ]);
   };
 
@@ -53,7 +55,7 @@ export function MyBookingsScreen() {
                 </Text>
                 {b.status === 'waitlisted' && <Badge label="Waitlisted" tone="warning" style={{ marginTop: 6 }} />}
               </View>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => confirmCancel(b.id, b.session.name)}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => confirmCancel(b.id, b.session.id, b.session.name)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             </Card>

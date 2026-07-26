@@ -5,15 +5,19 @@ import { StyleSheet, View } from 'react-native';
 import { queryClient } from './src/store/queryClient';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
+import { usePushRegistration } from './src/hooks/usePushRegistration';
 import { colors } from './src/theme';
 
 export default function App() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const isHydrating = useAuthStore((s) => s.isHydrating);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  usePushRegistration(isAuthenticated);
 
   return (
     <GestureHandlerRootView style={styles.root}>

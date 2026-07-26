@@ -31,6 +31,7 @@ const NOTIFICATION_LABELS: Record<keyof NotificationPreferences, string> = {
   weeklyReport: 'Weekly report',
   personalRecords: 'Personal record celebrations',
   trainerMessages: 'Trainer messages',
+  classBookings: 'Class booking updates',
 }
 const NOTIFICATION_TOGGLE_KEYS = Object.keys(NOTIFICATION_LABELS).filter((k) => k !== 'workoutReminderTime') as Array<
   keyof NotificationPreferences

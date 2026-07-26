@@ -22,6 +22,7 @@ import type {
   ClassSession,
   ClassTemplate,
   BookingWithSession,
+  NotificationPreferences,
 } from '@fitpulse/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -64,6 +65,7 @@ export const queryKeys = {
     myBookings: ['classes', 'my-bookings'] as const,
     roster: (sessionId: string) => ['classes', 'roster', sessionId] as const,
   },
+  notificationPreferences: ['me', 'notification-preferences'] as const,
 };
 
 // ─── Query Functions ──────────────────────────────────────────────────────────
@@ -178,6 +180,13 @@ export const createClassTemplate = (input: Omit<ClassTemplate, 'id' | 'tenantId'
   api.post<ClassTemplate>('/admin/class-templates', input);
 export const updateClassTemplate = (templateId: string, updates: Partial<Omit<ClassTemplate, 'id' | 'tenantId'>>) =>
   api.put<ClassTemplate>(`/admin/class-templates/${templateId}`, updates);
+export const registerDeviceToken = (expoPushToken: string, platform: 'ios' | 'android' | 'web') =>
+  api.post<{ id: string; registered: boolean }>('/me/device-tokens', { expoPushToken, platform });
+
+export const fetchNotificationPreferences = () => api.get<NotificationPreferences>('/me/notification-preferences');
+export const updateNotificationPreferences = (updates: Partial<NotificationPreferences>) =>
+  api.put<NotificationPreferences>('/me/notification-preferences', updates);
+
 export const fetchClassRoster = (sessionId: string) =>
   api.get<{ session: ClassSession; bookings: { id: string; userId: string; status: string; memberName?: string; memberEmail?: string }[] }>(
     `/admin/class-sessions/${sessionId}/roster`,

@@ -37,4 +37,5 @@ export const updateNotificationPreferencesSchema = z.object({
   weeklyReport: z.boolean().optional(),
   personalRecords: z.boolean().optional(),
   trainerMessages: z.boolean().optional(),
+  classBookings: z.boolean().optional(),
 });

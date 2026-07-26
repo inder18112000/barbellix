@@ -8,6 +8,7 @@ import { format, parseISO } from 'date-fns';
 import { Card } from '../../components/common/Card';
 import { ScreenShell } from '../../components/common/ScreenShell';
 import { queryKeys, bookClassSession } from '../../api/queries';
+import { scheduleClassReminder } from '../../lib/localNotifications';
 import type { HomeStackParams } from '../../navigation/types';
 import { styles } from './ClassDetailScreen.styles';
 
@@ -23,6 +24,10 @@ export function ClassDetailScreen() {
     mutationFn: () => bookClassSession(session.id),
     onSuccess: ({ status }) => {
       qc.invalidateQueries({ queryKey: ['classes', 'schedule'] });
+      if (status === 'booked') {
+        const startsAt = parseISO(`${session.date}T${session.startTime}:00`);
+        scheduleClassReminder(session.id, session.name, startsAt);
+      }
       Alert.alert(
         status === 'booked' ? "You're in!" : 'Added to waitlist',
         status === 'booked'

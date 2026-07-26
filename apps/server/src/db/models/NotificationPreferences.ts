@@ -10,6 +10,7 @@ export interface NotificationPreferencesDocument {
   weeklyReport: boolean;
   personalRecords: boolean;
   trainerMessages: boolean;
+  classBookings: boolean;
 }
 
 const notificationPreferencesSchema = new Schema<NotificationPreferencesDocument>({
@@ -22,6 +23,7 @@ const notificationPreferencesSchema = new Schema<NotificationPreferencesDocument
   weeklyReport: { type: Boolean, default: true },
   personalRecords: { type: Boolean, default: true },
   trainerMessages: { type: Boolean, default: true },
+  classBookings: { type: Boolean, default: true },
 });
 
 export const NotificationPreferencesModel = model<NotificationPreferencesDocument>(
