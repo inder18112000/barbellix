@@ -10,10 +10,13 @@ import type {
   PersonalRecord,
   AIRecommendation,
   AttendanceAnalytics,
+  RecentCheckIn,
   TrainerMemberSummary,
   TrainerStats,
   MealEntry,
   HabitEntry,
+  UserStatus,
+  Message,
 } from '@fitpulse/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -36,11 +39,13 @@ export const queryKeys = {
   },
   admin: {
     attendanceAnalytics: ['admin', 'analytics', 'attendance'] as const,
+    recentAttendance: ['admin', 'attendance', 'recent'] as const,
   },
   trainer: {
     members: ['trainer', 'members'] as const,
     stats:   ['trainer', 'stats'] as const,
   },
+  messages: (otherUserId: string) => ['messages', otherUserId] as const,
   nutrition: {
     today: ['nutrition', 'today'] as const,
   },
@@ -83,6 +88,12 @@ export const fetchAIRecommendations = () =>
 export const fetchAdminAttendanceAnalytics = () =>
   api.get<AttendanceAnalytics[]>('/admin/analytics/attendance');
 
+export const fetchRecentAttendance = (limit = 30) =>
+  api.get<RecentCheckIn[]>(`/admin/attendance/recent?limit=${limit}`);
+
+export const fetchMessageThread = (otherUserId: string) =>
+  api.get<Message[]>(`/messages/${otherUserId}`);
+
 // ─── Mutation Functions ───────────────────────────────────────────────────────
 
 export const checkIn = (payload: { qrToken?: string; pin?: string }) =>
@@ -114,6 +125,15 @@ export const assignPlanToMember = (memberId: string, planId: string) =>
     `/trainer/members/${memberId}/assign-plan`,
     { planId },
   );
+
+export const updateMemberStatus = (memberId: string, status: UserStatus) =>
+  api.patch<{ memberId: string; status: UserStatus }>(`/trainer/members/${memberId}/status`, { status });
+
+export const sendMessage = (recipientId: string, text: string) =>
+  api.post<Message>('/messages', { recipientId, text });
+
+export const markMessageRead = (id: string) =>
+  api.put<Message>(`/messages/${id}/read`, {});
 
 export const fetchTodayMeals = () => api.get<MealEntry[]>('/nutrition/meals/today');
 export const logMeal = (meal: Partial<MealEntry>) => api.post<MealEntry>('/nutrition/meals', meal);

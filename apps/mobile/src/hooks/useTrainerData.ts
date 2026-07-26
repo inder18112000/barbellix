@@ -4,12 +4,14 @@
  * Screens consume this hook; no direct useQuery calls in trainer screens.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { UserStatus } from '@fitpulse/shared';
 import {
   queryKeys,
   fetchTrainerMembers,
   fetchTrainerStats,
   fetchWorkoutPlans,
   assignPlanToMember,
+  updateMemberStatus,
 } from '../api/queries';
 
 export function useTrainerData() {
@@ -49,6 +51,14 @@ export function useTrainerData() {
     },
   });
 
+  const { mutate: setMemberStatus, isPending: updatingStatus } = useMutation({
+    mutationFn: ({ memberId, status }: { memberId: string; status: UserStatus }) =>
+      updateMemberStatus(memberId, status),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.trainer.members });
+    },
+  });
+
   return {
     members,
     membersLoading,
@@ -60,6 +70,8 @@ export function useTrainerData() {
     plansLoading,
     assignPlan,
     assigning,
+    setMemberStatus,
+    updatingStatus,
     isLoading: membersLoading || statsLoading,
   };
 }
