@@ -42,3 +42,21 @@ export const aiCoachCompleteSchema = z.object({
   userMessage: z.string().min(1),
 });
 export type AICoachCompleteInput = z.infer<typeof aiCoachCompleteSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+    confirmNewPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmNewPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  });
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+export const generateWorkoutPlanSchema = z.object({
+  goal: z.string().min(1, 'Tell the AI your goal'),
+  daysPerWeek: z.coerce.number().min(1).max(7),
+});
+export type GenerateWorkoutPlanInput = z.infer<typeof generateWorkoutPlanSchema>;

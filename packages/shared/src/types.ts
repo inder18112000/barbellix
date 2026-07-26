@@ -8,6 +8,10 @@ export type RecommendationType = 'workout' | 'nutrition' | 'recovery';
 export type WorkoutGeneratedBy = 'ai' | 'trainer' | 'user';
 export type MembershipStatus = 'active' | 'expired' | 'cancelled' | 'paused' | 'incomplete';
 export type PaymentStatus = 'paid' | 'due' | 'overdue' | 'comp';
+export type PaymentMethod = 'online' | 'cash';
+/** A simplified 3-state view of MembershipStatus + PaymentStatus, for the client-facing
+ * traffic-light display (Active/Pending/Expired) - derived server-side, never stored. */
+export type SubscriptionStatus = 'active' | 'pending' | 'expired';
 
 // ─── Tenant / Gym ─────────────────────────────────────────────────────────────
 
@@ -48,6 +52,7 @@ export interface UserProfile {
   experienceLevel: 'beginner' | 'intermediate' | 'advanced';
   gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   avatarUrl?: string;
+  bio?: string;
 }
 
 export type FitnessGoal =
@@ -65,6 +70,7 @@ export interface User {
   role: UserRole;
   status: UserStatus;
   email: string;
+  phone?: string;
   firstName: string;
   lastName: string;
   profile: UserProfile;
@@ -92,6 +98,7 @@ export interface Membership {
   plan: string;
   status: MembershipStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   currentPeriodEnd?: string;
@@ -302,6 +309,7 @@ export interface TrainerMemberSummary {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   status: UserStatus;
   plan: string;
   streak: number;
@@ -312,12 +320,24 @@ export interface TrainerMemberSummary {
   membershipPlan?: string;
   membershipStatus?: MembershipStatus;
   paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  subscriptionStatus?: SubscriptionStatus;
+  membershipStartDate?: string;
+  membershipEndDate?: string;
 }
 
 export interface TrainerStats {
   activeMembersCount: number;
   sessionsTodayCount: number;
   attendanceRate: number;
+}
+
+export interface AdminDashboardStats {
+  expiredSubscriptions: number;
+  newEnrollmentsThisMonth: number;
+  pendingPayments: number;
+  onlinePayments: number;
+  cashPayments: number;
 }
 
 // ─── Messaging ────────────────────────────────────────────────────────────────

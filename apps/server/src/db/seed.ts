@@ -122,6 +122,65 @@ async function main() {
   const row = await upsertExercise('Dumbbell Row', ['back'], ['dumbbell']);
   await upsertExercise('Push-Up', ['chest', 'triceps'], ['bodyweight']);
 
+  // A broader library so the AI plan generator (see ai-coach/plan-generator.ts) has enough real,
+  // varied exercises per muscle group to build a convincing multi-day split from - five exercises
+  // total isn't enough to avoid awkward repetition across a 5-day/6-exercise-per-day plan.
+  await Promise.all([
+    // Chest
+    upsertExercise('Incline Dumbbell Press', ['chest'], ['dumbbell']),
+    upsertExercise('Decline Barbell Bench Press', ['chest'], ['barbell']),
+    upsertExercise('Dumbbell Flyes', ['chest'], ['dumbbell']),
+    upsertExercise('Cable Crossover', ['chest'], ['cable']),
+    upsertExercise('Chest Dip', ['chest', 'triceps'], ['bodyweight']),
+    // Back
+    upsertExercise('Pull-Up', ['back', 'biceps'], ['bodyweight']),
+    upsertExercise('Lat Pulldown', ['back'], ['cable']),
+    upsertExercise('Seated Cable Row', ['back'], ['cable']),
+    upsertExercise('T-Bar Row', ['back'], ['barbell']),
+    upsertExercise('Single-Arm Dumbbell Row', ['back'], ['dumbbell']),
+    // Shoulders
+    upsertExercise('Standing Overhead Press', ['shoulders'], ['barbell']),
+    upsertExercise('Dumbbell Shoulder Press', ['shoulders'], ['dumbbell']),
+    upsertExercise('Lateral Raises', ['shoulders'], ['dumbbell']),
+    upsertExercise('Front Raise', ['shoulders'], ['dumbbell']),
+    upsertExercise('Rear Delt Fly', ['shoulders'], ['dumbbell']),
+    upsertExercise('Arnold Press', ['shoulders'], ['dumbbell']),
+    // Biceps
+    upsertExercise('Barbell Curl', ['biceps'], ['barbell']),
+    upsertExercise('Dumbbell Curl', ['biceps'], ['dumbbell']),
+    upsertExercise('Hammer Curl', ['biceps', 'forearms'], ['dumbbell']),
+    upsertExercise('Preacher Curl', ['biceps'], ['barbell']),
+    upsertExercise('Concentration Curl', ['biceps'], ['dumbbell']),
+    // Triceps
+    upsertExercise('Tricep Pushdown', ['triceps'], ['cable']),
+    upsertExercise('Overhead Tricep Extension', ['triceps'], ['dumbbell']),
+    upsertExercise('Skull Crusher', ['triceps'], ['barbell']),
+    upsertExercise('Close-Grip Bench Press', ['triceps', 'chest'], ['barbell']),
+    upsertExercise('Tricep Dips', ['triceps'], ['bodyweight']),
+    // Forearms / core
+    upsertExercise("Farmer's Carry", ['forearms', 'core'], ['dumbbell']),
+    upsertExercise('Plank', ['core'], ['bodyweight']),
+    upsertExercise('Hanging Leg Raise', ['core'], ['bodyweight']),
+    upsertExercise('Cable Crunch', ['core'], ['cable']),
+    upsertExercise('Russian Twist', ['core'], ['bodyweight']),
+    // Quads
+    upsertExercise('Leg Press', ['quads', 'glutes'], ['machine']),
+    upsertExercise('Leg Extension', ['quads'], ['machine']),
+    upsertExercise('Front Squat', ['quads'], ['barbell']),
+    upsertExercise('Walking Lunge', ['quads', 'glutes'], ['dumbbell']),
+    upsertExercise('Bulgarian Split Squat', ['quads', 'glutes'], ['dumbbell']),
+    // Hamstrings / glutes
+    upsertExercise('Romanian Deadlift', ['hamstrings', 'glutes'], ['barbell']),
+    upsertExercise('Leg Curl', ['hamstrings'], ['machine']),
+    upsertExercise('Hip Thrust', ['glutes'], ['barbell']),
+    upsertExercise('Glute Bridge', ['glutes'], ['bodyweight']),
+    // Calves / full body
+    upsertExercise('Standing Calf Raise', ['calves'], ['machine']),
+    upsertExercise('Seated Calf Raise', ['calves'], ['machine']),
+    upsertExercise('Kettlebell Swing', ['full_body', 'glutes'], ['kettlebell']),
+    upsertExercise('Burpee', ['full_body'], ['bodyweight']),
+  ]);
+
   const memberIds = members.map((m) => m._id);
   await Promise.all([
     WorkoutPlanModel.deleteMany({ userId: { $in: memberIds } }),

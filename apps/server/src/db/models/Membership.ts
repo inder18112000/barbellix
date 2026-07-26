@@ -1,8 +1,9 @@
 import { Schema, model, Types } from 'mongoose';
-import type { MembershipStatus, PaymentStatus } from '@fitpulse/shared';
+import type { MembershipStatus, PaymentStatus, PaymentMethod } from '@fitpulse/shared';
 
 const MEMBERSHIP_STATUSES: MembershipStatus[] = ['active', 'expired', 'cancelled', 'paused', 'incomplete'];
 const PAYMENT_STATUSES: PaymentStatus[] = ['paid', 'due', 'overdue', 'comp'];
+const PAYMENT_METHODS: PaymentMethod[] = ['online', 'cash'];
 
 export interface MembershipDocument {
   _id: Types.ObjectId;
@@ -12,6 +13,7 @@ export interface MembershipDocument {
   planName: string;
   status: MembershipStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   currentPeriodEnd?: Date;
@@ -26,6 +28,7 @@ const membershipSchema = new Schema<MembershipDocument>({
   planName: { type: String, required: true },
   status: { type: String, enum: MEMBERSHIP_STATUSES, required: true, default: 'incomplete' },
   paymentStatus: { type: String, enum: PAYMENT_STATUSES, required: true, default: 'due' },
+  paymentMethod: { type: String, enum: PAYMENT_METHODS },
   stripeCustomerId: { type: String },
   stripeSubscriptionId: { type: String },
   currentPeriodEnd: { type: Date },

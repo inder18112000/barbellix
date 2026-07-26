@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { updateProfileSchema, updateNotificationPreferencesSchema } from './schemas.js';
+import { changePasswordSchema } from '@fitpulse/shared';
+import { updateProfileSchema, updateNotificationPreferencesSchema, updateMyInfoSchema } from './schemas.js';
 import * as usersService from './service.js';
 
 export default async function usersRoutes(fastify: FastifyInstance) {
@@ -9,6 +10,22 @@ export default async function usersRoutes(fastify: FastifyInstance) {
   app.get('/me', { preHandler: [fastify.authenticate] }, async (request) => {
     return usersService.getMe(request.user.sub);
   });
+
+  app.put(
+    '/me',
+    { schema: { body: updateMyInfoSchema }, preHandler: [fastify.authenticate] },
+    async (request) => {
+      return usersService.updateMyInfo(request.user.sub, request.body);
+    },
+  );
+
+  app.put(
+    '/me/password',
+    { schema: { body: changePasswordSchema }, preHandler: [fastify.authenticate] },
+    async (request) => {
+      return usersService.changeMyPassword(request.user.sub, request.body.currentPassword, request.body.newPassword);
+    },
+  );
 
   app.put(
     '/me/profile',

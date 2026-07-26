@@ -22,6 +22,7 @@ export async function listMembers(tenantId: string): Promise<TrainerMemberSummar
         firstName: member.firstName,
         lastName: member.lastName,
         email: member.email,
+        phone: member.phone,
         status: member.status,
         plan: activePlan?.name ?? 'No active plan',
         streak: attendance.streak,
@@ -31,6 +32,10 @@ export async function listMembers(tenantId: string): Promise<TrainerMemberSummar
         membershipPlan: membership.plan,
         membershipStatus: membership.status,
         paymentStatus: membership.paymentStatus,
+        paymentMethod: membership.paymentMethod,
+        subscriptionStatus: membership.subscriptionStatus,
+        membershipStartDate: membership.startDate,
+        membershipEndDate: membership.endDate,
       };
     }),
   );

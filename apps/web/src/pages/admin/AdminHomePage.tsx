@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
 import { useQuery } from '@tanstack/react-query'
-import { Users, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
+import { Users, CalendarCheck, TrendingUp, Activity, ShieldAlert, UserPlus, Clock, CreditCard, Banknote } from 'lucide-react'
 import { authStore } from '@/store/authStore'
-import { queryKeys, fetchTrainerStats, fetchAttendanceAnalytics, fetchRecentAttendance } from '@/api/queries'
+import { queryKeys, fetchTrainerStats, fetchAttendanceAnalytics, fetchRecentAttendance, fetchDashboardStats } from '@/api/queries'
 import { StatCard } from '@/components/common/StatCard'
 import { ErrorState } from '@/components/common/ErrorState'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -13,6 +13,7 @@ export const AdminHomePage = observer(function AdminHomePage() {
   const statsQuery = useQuery({ queryKey: queryKeys.trainer.stats, queryFn: fetchTrainerStats })
   const analyticsQuery = useQuery({ queryKey: queryKeys.admin.attendanceAnalytics, queryFn: fetchAttendanceAnalytics })
   const recentQuery = useQuery({ queryKey: [...queryKeys.admin.recentAttendance, 5], queryFn: () => fetchRecentAttendance(5) })
+  const dashboardStatsQuery = useQuery({ queryKey: queryKeys.admin.dashboardStats, queryFn: fetchDashboardStats })
 
   const checkinsLast30d = analyticsQuery.data?.reduce((sum, row) => sum + row.count, 0) ?? 0
 
@@ -55,6 +56,50 @@ export const AdminHomePage = observer(function AdminHomePage() {
                 label="Check-ins (30d)"
                 value={checkinsLast30d}
                 icon={<CalendarCheck className="size-5" />}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {dashboardStatsQuery.isError ? (
+        <ErrorState message="Couldn't load membership & payment stats." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {dashboardStatsQuery.isPending ? (
+            <>
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+              <Skeleton className="h-28" />
+            </>
+          ) : (
+            <>
+              <StatCard
+                label="Expired subscriptions"
+                value={dashboardStatsQuery.data.expiredSubscriptions}
+                icon={<ShieldAlert className="size-5" />}
+              />
+              <StatCard
+                label="New enrollments (30d)"
+                value={dashboardStatsQuery.data.newEnrollmentsThisMonth}
+                icon={<UserPlus className="size-5" />}
+              />
+              <StatCard
+                label="Pending payments"
+                value={dashboardStatsQuery.data.pendingPayments}
+                icon={<Clock className="size-5" />}
+              />
+              <StatCard
+                label="Online payments"
+                value={dashboardStatsQuery.data.onlinePayments}
+                icon={<CreditCard className="size-5" />}
+              />
+              <StatCard
+                label="Cash payments"
+                value={dashboardStatsQuery.data.cashPayments}
+                icon={<Banknote className="size-5" />}
               />
             </>
           )}

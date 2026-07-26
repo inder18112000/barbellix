@@ -1,10 +1,18 @@
 import type Stripe from 'stripe';
-import type { MembershipPlan, MembershipStatus, PaymentStatus } from '@fitpulse/shared';
+import type { MembershipPlan, MembershipStatus, PaymentStatus, SubscriptionStatus } from '@fitpulse/shared';
 import type { Env } from '../../config/env.js';
 import { NotFoundError, BadGatewayError } from '../../lib/errors.js';
 import * as stripeLib from '../../lib/stripe.js';
 import { findMemberByIdInTenant } from '../trainer/repository.js';
 import * as repo from './repository.js';
+
+/** Simplified 3-state traffic-light view of status+paymentStatus, for client-facing display. */
+export function deriveSubscriptionStatus(status?: MembershipStatus, paymentStatus?: PaymentStatus): SubscriptionStatus {
+  if (!status) return 'expired';
+  if (status === 'expired' || status === 'cancelled' || paymentStatus === 'overdue') return 'expired';
+  if (status === 'incomplete' || status === 'paused' || paymentStatus === 'due') return 'pending';
+  return 'active';
+}
 
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
@@ -14,10 +22,40 @@ export async function listPlans(tenantId: string): Promise<MembershipPlan[]> {
 }
 
 /** Lightweight lookup for embedding into other rosters (e.g. the trainer/admin member list) - a member with no Membership doc yet just shows as unset, not an error. */
-export async function getMembershipSummary(userId: string): Promise<{ plan?: string; status?: MembershipStatus; paymentStatus?: PaymentStatus }> {
+export async function getMembershipSummary(userId: string) {
   const doc = await repo.findMembershipByUserId(userId);
   if (!doc) return {};
-  return { plan: doc.planName, status: doc.status, paymentStatus: doc.paymentStatus };
+  return {
+    plan: doc.planName,
+    status: doc.status,
+    paymentStatus: doc.paymentStatus,
+    paymentMethod: doc.paymentMethod,
+    subscriptionStatus: deriveSubscriptionStatus(doc.status, doc.paymentStatus),
+    startDate: doc.startDate?.toISOString(),
+    endDate: doc.endDate?.toISOString(),
+  };
+}
+
+export async function getMembershipCounts(tenantId: string) {
+  return repo.getMembershipCounts(tenantId);
+}
+
+export async function updateMembershipDates(tenantId: string, memberId: string, input: { startDate?: string; endDate?: string }) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  // upsertMembership's $setOnInsert doesn't cover the required `planName` field, so creating a
+  // membership from scratch here (rather than updating dates on an existing one) would fail
+  // Mongoose validation with a confusing error - give a clear one instead.
+  const existing = await repo.findMembershipByUserId(memberId);
+  if (!existing) throw new NotFoundError('This member has no membership yet - send a checkout link or mark them as paid first');
+
+  const updates: Record<string, unknown> = {};
+  if (input.startDate) updates.startDate = new Date(input.startDate);
+  if (input.endDate) updates.endDate = new Date(input.endDate);
+
+  const doc = await repo.upsertMembership(memberId, { tenantId, ...updates });
+  return repo.toDomainMembership(doc);
 }
 
 interface CreatePlanInput {
@@ -133,6 +171,7 @@ export async function markPaid(tenantId: string, memberId: string, planName: str
     planName,
     status: 'active' as MembershipStatus,
     paymentStatus: 'comp' as PaymentStatus,
+    paymentMethod: 'cash',
   });
   return repo.toDomainMembership(doc);
 }
@@ -154,6 +193,7 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         planName: plan?.name ?? 'Membership',
         status: 'active' as MembershipStatus,
         paymentStatus: 'paid' as PaymentStatus,
+        paymentMethod: 'online',
         stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
         stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
       });

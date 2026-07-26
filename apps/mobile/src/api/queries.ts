@@ -70,6 +70,9 @@ export const fetchExercises = (search?: string) =>
 export const fetchWorkoutPlans = () =>
   api.get<WorkoutPlan[]>('/workout-plans');
 
+export const generateWorkoutPlan = (goal: string, daysPerWeek: number) =>
+  api.post<WorkoutPlan>('/ai/coach/generate-plan', { goal, daysPerWeek });
+
 export const fetchWorkoutPlan = (id: string) =>
   api.get<WorkoutPlan>(`/workout-plans/${id}`);
 

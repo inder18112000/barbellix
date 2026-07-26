@@ -8,9 +8,11 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { AdminHomePage } from '@/pages/admin/AdminHomePage'
 import { AnalyticsPage } from '@/pages/admin/AnalyticsPage'
 import { MembersPage as AdminMembersPage } from '@/pages/admin/MembersPage'
+import { MemberDetailPage as AdminMemberDetailPage } from '@/pages/admin/MemberDetailPage'
 import { AttendanceFeedPage } from '@/pages/admin/AttendanceFeedPage'
 import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
 import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
+import { SettingsPage as AdminSettingsPage } from '@/pages/admin/SettingsPage'
 import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
 import { MembersPage as TrainerMembersPage } from '@/pages/trainer/MembersPage'
 import { MemberDetailPage } from '@/pages/trainer/MemberDetailPage'
@@ -41,10 +43,12 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <AdminHomePage /> },
               { path: 'members', element: <AdminMembersPage /> },
+              { path: 'members/:memberId', element: <AdminMemberDetailPage /> },
               { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },
               { path: 'branch', element: <BranchSettingsPage /> },
+              { path: 'settings', element: <AdminSettingsPage /> },
             ],
           },
         ],

@@ -1,19 +1,88 @@
-import React, { useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Animated, FlatList } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Animated, FlatList, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
-import { queryKeys, fetchWorkoutPlans, fetchWorkoutSessions, fetchAttendanceSummary } from '../../api/queries';
+import { queryKeys, fetchWorkoutPlans, fetchWorkoutSessions, fetchAttendanceSummary, generateWorkoutPlan } from '../../api/queries';
 import type { WorkoutStackParams } from '../../navigation/types';
 import type { WorkoutDay } from '@fitpulse/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { styles } from './WorkoutHomeScreen.styles';
+
+const DAY_OPTIONS = [3, 4, 5, 6, 7];
+
+// ─── AI plan generator sheet (SRP) ───────────────────────────────────────────
+
+function GeneratePlanSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [goal, setGoal] = useState('');
+  const [daysPerWeek, setDaysPerWeek] = useState(5);
+
+  const { mutate: generate, isPending } = useMutation({
+    mutationFn: () => generateWorkoutPlan(goal.trim(), daysPerWeek),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.workoutPlans });
+      setGoal('');
+      onClose();
+    },
+  });
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View style={[styles.sheet, glass.card]}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.sheetTitle}>Generate Plan</Text>
+
+            <View>
+              <Text style={styles.fieldLabel}>Your Goal</Text>
+              <TextInput
+                style={[styles.goalInput, { marginTop: 6 }]}
+                value={goal}
+                onChangeText={setGoal}
+                placeholder="e.g. gain weight and build muscle"
+                placeholderTextColor={colors.textMuted}
+                editable={!isPending}
+              />
+            </View>
+
+            <View>
+              <Text style={styles.fieldLabel}>Days Per Week</Text>
+              <View style={[styles.daysRow, { marginTop: 6 }]}>
+                {DAY_OPTIONS.map((d) => (
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.dayChip, d === daysPerWeek && styles.dayChipActive]}
+                    onPress={() => setDaysPerWeek(d)}
+                    disabled={isPending}
+                  >
+                    <Text style={[styles.dayChipText, d === daysPerWeek && styles.dayChipTextActive]}>{d}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.generateSubmitBtn, (!goal.trim() || isPending) && { opacity: 0.5 }]}
+              onPress={() => generate()}
+              disabled={!goal.trim() || isPending}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.generateSubmitBtnText}>{isPending ? 'Generating…' : '✨ Generate with AI'}</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
 
 type Nav = NativeStackNavigationProp<WorkoutStackParams, 'WorkoutHome'>;
 
@@ -79,6 +148,7 @@ function RecentSummaryCard({ date, duration, sets }: { date: string; duration: n
 
 export function WorkoutHomeScreen() {
   const navigation = useNavigation<Nav>();
+  const [showGenerate, setShowGenerate] = useState(false);
   const { data: plans = [], isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.workoutPlans, queryFn: fetchWorkoutPlans });
   const { data: sessions = [] } = useQuery({ queryKey: queryKeys.workoutSessions, queryFn: fetchWorkoutSessions });
   const { data: attendance } = useQuery({ queryKey: queryKeys.attendance.summary, queryFn: fetchAttendanceSummary });
@@ -125,7 +195,12 @@ export function WorkoutHomeScreen() {
 
         {plan ? (
           <>
-            <Text style={styles.sectionTitle}>Your Plan</Text>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { marginHorizontal: 0, marginBottom: 0 }]}>Your Plan</Text>
+              <TouchableOpacity style={[styles.regenerateBtn, glass.card]} onPress={() => setShowGenerate(true)}>
+                <Text style={styles.regenerateBtnText}>✨ Regenerate with AI</Text>
+              </TouchableOpacity>
+            </View>
             <FlatList
               horizontal
               data={plan.days}
@@ -146,13 +221,16 @@ export function WorkoutHomeScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>📋</Text>
             <Text style={styles.emptyTitle}>No Plan Yet</Text>
-            <Text style={styles.emptyBody}>Ask your trainer to assign a plan, or start a quick workout.</Text>
+            <Text style={styles.emptyBody}>Ask the AI Coach to build a customized weekly plan tailored to your goal.</Text>
+            <TouchableOpacity style={styles.aiGenerateBtn} onPress={() => setShowGenerate(true)} activeOpacity={0.85}>
+              <Text style={styles.aiGenerateBtnText}>✨ Generate with AI</Text>
+            </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.quickWorkoutCta, { backgroundColor: colors.primary }]}
+              style={[styles.quickWorkoutCta, { backgroundColor: colors.surfaceElevated }]}
               onPress={() => navigation.navigate('ExercisePicker')}
               activeOpacity={0.85}
             >
-              <Text style={styles.quickWorkoutCtaText}>⚡ Start Quick Workout</Text>
+              <Text style={[styles.quickWorkoutCtaText, { color: colors.textPrimary }]}>⚡ Start Quick Workout</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -167,6 +245,8 @@ export function WorkoutHomeScreen() {
         )}
 
       </ScrollView>
+
+      <GeneratePlanSheet visible={showGenerate} onClose={() => setShowGenerate(false)} />
     </SafeAreaView>
   );
 }

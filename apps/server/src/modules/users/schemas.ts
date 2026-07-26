@@ -19,6 +19,13 @@ export const updateProfileSchema = z.object({
   experienceLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
   avatarUrl: z.string().optional(),
+  bio: z.string().max(280).optional(),
+});
+
+export const updateMyInfoSchema = z.object({
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  phone: z.string().optional(),
 });
 
 export const updateNotificationPreferencesSchema = z.object({

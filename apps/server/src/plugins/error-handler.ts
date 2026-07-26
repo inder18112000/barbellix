@@ -13,7 +13,7 @@ export default fp(async function errorHandlerPlugin(fastify: FastifyInstance) {
       return reply.status(400).send({ message: error.message });
     }
 
-    if (error.statusCode === 401 || error.code?.startsWith('FST_JWT')) {
+    if (error.statusCode === 401 || (typeof error.code === 'string' && error.code.startsWith('FST_JWT'))) {
       return reply.status(401).send({ message: 'Unauthorized' });
     }
 

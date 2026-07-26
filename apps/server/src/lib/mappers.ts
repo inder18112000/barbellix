@@ -10,6 +10,7 @@ export function toDomainUser(doc: HydratedDocument<UserDocument>): User {
     role: doc.role,
     status: doc.status,
     email: doc.email,
+    phone: doc.phone,
     firstName: doc.firstName,
     lastName: doc.lastName,
     profile: doc.profile,

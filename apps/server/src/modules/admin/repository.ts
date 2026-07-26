@@ -67,3 +67,7 @@ export async function findRecentAttendance(tenantId: string, limit: number) {
 
   return rows;
 }
+
+export async function countNewEnrollments(tenantId: string, since: Date) {
+  return UserModel.countDocuments({ tenantId, role: 'member', createdAt: { $gte: since } });
+}

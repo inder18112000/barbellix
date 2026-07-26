@@ -11,7 +11,12 @@ import type {
   Exercise,
   Message,
   FitnessGoal,
+  AdminDashboardStats,
+  BodyMetric,
+  PersonalRecord,
+  WorkoutSession,
 } from '@fitpulse/shared'
+import type { ChangePasswordInput } from '@fitpulse/shared'
 import { api } from './client'
 
 export const queryKeys = {
@@ -26,6 +31,8 @@ export const queryKeys = {
     recentAttendance: ['admin', 'attendance', 'recent'] as const,
     branch: ['admin', 'branch'] as const,
     membershipPlans: ['admin', 'membership-plans'] as const,
+    dashboardStats: ['admin', 'dashboard-stats'] as const,
+    memberProgress: (memberId: string) => ['admin', 'members', memberId, 'progress'] as const,
   },
   exercises: (q: string) => ['exercises', q] as const,
   messages: (otherUserId: string) => ['messages', otherUserId] as const,
@@ -74,6 +81,27 @@ export const createCheckoutSession = (memberId: string, planId: string) =>
 
 export const markMemberPaid = (memberId: string, planName: string) =>
   api.post(`/admin/members/${memberId}/membership/mark-paid`, { planName })
+
+export const updateMembershipDates = (memberId: string, dates: { startDate?: string; endDate?: string }) =>
+  api.put(`/admin/members/${memberId}/membership/dates`, dates)
+
+// ─── Admin dashboard + client progress ─────────────────────────────────────────
+
+export const fetchDashboardStats = () => api.get<AdminDashboardStats>('/admin/dashboard-stats')
+
+export interface MemberProgress {
+  metrics: BodyMetric[]
+  prs: PersonalRecord[]
+  sessions: WorkoutSession[]
+}
+export const fetchMemberProgress = (memberId: string) => api.get<MemberProgress>(`/admin/members/${memberId}/progress`)
+
+// ─── My account (Settings) ─────────────────────────────────────────────────────
+
+export const updateMyInfo = (updates: { firstName?: string; lastName?: string; phone?: string }) =>
+  api.put<User>('/me', updates)
+
+export const changeMyPassword = (input: ChangePasswordInput) => api.put<{ message: string }>('/me/password', input)
 
 // ─── Trainer: workout plans ─────────────────────────────────────────────────
 

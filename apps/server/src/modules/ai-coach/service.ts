@@ -3,10 +3,15 @@ import type { AIMessage } from './providers/index.js';
 import { aiCoachService } from './providers/index.js';
 import { buildSystemPrompt } from './context-builder.js';
 import { getRecommendations } from './recommendations.js';
+import { generateWorkoutPlan as generatePlan } from './plan-generator.js';
 import { BadGatewayError } from '../../lib/errors.js';
 import * as repo from './repository.js';
 
 export { getRecommendations };
+
+export async function generateWorkoutPlan(fastify: FastifyInstance, userId: string, tenantId: string, goal: string, daysPerWeek: number) {
+  return generatePlan(fastify, userId, tenantId, goal, daysPerWeek);
+}
 
 export async function acceptRecommendation(userId: string, recommendationId: string) {
   await repo.markAccepted(userId, recommendationId);

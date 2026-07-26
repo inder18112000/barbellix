@@ -27,6 +27,7 @@ export function toDomainMembership(doc: HydratedDocument<MembershipDocument>): M
     plan: doc.planName,
     status: doc.status,
     paymentStatus: doc.paymentStatus,
+    paymentMethod: doc.paymentMethod,
     stripeCustomerId: doc.stripeCustomerId,
     stripeSubscriptionId: doc.stripeSubscriptionId,
     currentPeriodEnd: doc.currentPeriodEnd?.toISOString(),
@@ -84,9 +85,25 @@ type UpsertMembershipInput = Omit<Partial<MembershipDocument>, 'tenantId' | 'pla
 };
 
 export async function upsertMembership(userId: string, updates: UpsertMembershipInput) {
+  // $set and $setOnInsert can't both touch the same field path - Mongo rejects the whole
+  // update with a "conflict at" error if they do. Callers that explicitly set startDate
+  // (e.g. admin date edits) would otherwise collide with the default below on every call.
+  const setOnInsert: Record<string, unknown> = { userId };
+  if (!('startDate' in updates)) setOnInsert.startDate = new Date();
+
   return MembershipModel.findOneAndUpdate(
     { userId },
-    { $set: updates, $setOnInsert: { userId, startDate: new Date() } },
+    { $set: updates, $setOnInsert: setOnInsert },
     { new: true, upsert: true },
   );
+}
+
+export async function getMembershipCounts(tenantId: string) {
+  const [expiredSubscriptions, pendingPayments, onlinePayments, cashPayments] = await Promise.all([
+    MembershipModel.countDocuments({ tenantId, status: { $in: ['expired', 'cancelled'] } }),
+    MembershipModel.countDocuments({ tenantId, paymentStatus: 'due' }),
+    MembershipModel.countDocuments({ tenantId, paymentMethod: 'online' }),
+    MembershipModel.countDocuments({ tenantId, paymentMethod: 'cash' }),
+  ]);
+  return { expiredSubscriptions, pendingPayments, onlinePayments, cashPayments };
 }

@@ -50,4 +50,50 @@ export const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   quickBtnText: { ...typography.label, color: colors.primary },
+
+  aiGenerateBtn: {
+    marginTop: spacing.sm, paddingHorizontal: spacing.xl, paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg, backgroundColor: colors.primary,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+  },
+  aiGenerateBtnText: { ...typography.label, color: '#fff', fontWeight: '700' },
+  sectionHeaderRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginHorizontal: spacing.md, marginBottom: spacing.sm,
+  },
+  regenerateBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full,
+  },
+  regenerateBtnText: { ...typography.caption, color: colors.primary, fontWeight: '600' },
+
+  overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+  sheet: {
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: spacing.lg, paddingTop: spacing.sm, gap: spacing.md,
+  },
+  sheetHandle: {
+    width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border,
+    alignSelf: 'center', marginBottom: spacing.sm,
+  },
+  sheetTitle: { ...typography.h3, color: colors.textPrimary },
+  fieldLabel: { ...typography.label, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1 },
+  goalInput: {
+    height: 48, paddingHorizontal: spacing.md,
+    ...typography.body, color: colors.textPrimary,
+    borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  daysRow: { flexDirection: 'row', gap: spacing.sm },
+  dayChip: {
+    flex: 1, height: 44, alignItems: 'center', justifyContent: 'center',
+    borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  dayChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  dayChipText: { ...typography.body, color: colors.textSecondary },
+  dayChipTextActive: { color: '#fff', fontWeight: '700' },
+  generateSubmitBtn: {
+    height: 52, alignItems: 'center', justifyContent: 'center',
+    borderRadius: borderRadius.lg, backgroundColor: colors.primary,
+  },
+  generateSubmitBtnText: { ...typography.h4, color: '#fff' },
 });

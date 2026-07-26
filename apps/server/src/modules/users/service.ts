@@ -1,6 +1,7 @@
 import type { UserProfile, NotificationPreferences } from '@fitpulse/shared';
 import { toDomainUser } from '../../lib/mappers.js';
-import { NotFoundError } from '../../lib/errors.js';
+import { NotFoundError, UnauthorizedError } from '../../lib/errors.js';
+import { hashPassword, verifyPassword } from '../../lib/password.js';
 import * as repo from './repository.js';
 
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
@@ -24,6 +25,24 @@ export async function updateMyProfile(userId: string, partialProfile: Partial<Us
   const doc = await repo.updateProfile(userId, partialProfile);
   if (!doc) throw new NotFoundError('User not found');
   return toDomainUser(doc);
+}
+
+export async function updateMyInfo(userId: string, updates: { firstName?: string; lastName?: string; phone?: string }) {
+  const doc = await repo.updateInfo(userId, updates);
+  if (!doc) throw new NotFoundError('User not found');
+  return toDomainUser(doc);
+}
+
+export async function changeMyPassword(userId: string, currentPassword: string, newPassword: string) {
+  const doc = await repo.findByIdWithPasswordHash(userId);
+  if (!doc) throw new NotFoundError('User not found');
+
+  const valid = await verifyPassword(doc.passwordHash, currentPassword);
+  if (!valid) throw new UnauthorizedError('Current password is incorrect');
+
+  const passwordHash = await hashPassword(newPassword);
+  await repo.updatePasswordHash(userId, passwordHash);
+  return { message: 'Password updated' };
 }
 
 export async function getNotificationPreferences(userId: string): Promise<NotificationPreferences> {

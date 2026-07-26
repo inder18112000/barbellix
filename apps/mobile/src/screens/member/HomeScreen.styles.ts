@@ -23,6 +23,25 @@ export const styles = StyleSheet.create({
     elevation: 2,
   },
 
+  profileCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    padding: spacing.md, borderRadius: borderRadius.xl,
+    marginTop: spacing.md, marginBottom: spacing.md,
+  },
+  profileAvatar: {
+    width: 56, height: 56, borderRadius: 28,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
+  profileAvatarText: { ...typography.h4, color: '#fff' },
+  profileName: { ...typography.h4, color: colors.textPrimary },
+  profileBio: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  profileBioInput: {
+    ...typography.caption, color: colors.textPrimary, marginTop: 2,
+    borderBottomWidth: 1, borderBottomColor: colors.primary, paddingVertical: 2,
+  },
+  profileEditBtn: { padding: spacing.xs },
+
   datePill: {
     alignSelf: 'flex-start',
     backgroundColor: colors.primary + '15',

@@ -26,3 +26,8 @@ export const checkoutSessionSchema = z.object({
 export const markPaidSchema = z.object({
   planName: z.string().min(1),
 });
+
+export const updateMembershipDatesSchema = z.object({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});

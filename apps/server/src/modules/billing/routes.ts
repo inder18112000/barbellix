@@ -7,6 +7,7 @@ import {
   memberIdParamSchema,
   checkoutSessionSchema,
   markPaidSchema,
+  updateMembershipDatesSchema,
 } from './schemas.js';
 import * as billingService from './service.js';
 
@@ -55,6 +56,14 @@ export default async function billingRoutes(fastify: FastifyInstance) {
     { schema: { params: memberIdParamSchema, body: markPaidSchema }, preHandler },
     async (request) => {
       return billingService.markPaid(request.user.tenantId, request.params.memberId, request.body.planName);
+    },
+  );
+
+  app.put(
+    '/admin/members/:memberId/membership/dates',
+    { schema: { params: memberIdParamSchema, body: updateMembershipDatesSchema }, preHandler },
+    async (request) => {
+      return billingService.updateMembershipDates(request.user.tenantId, request.params.memberId, request.body);
     },
   );
 }

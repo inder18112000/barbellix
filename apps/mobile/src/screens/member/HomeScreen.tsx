@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, Animated, Dimensions,
+  View, Text, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
-import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions } from '../../api/queries';
+import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
 import { format } from 'date-fns';
 import { styles } from './HomeScreen.styles';
@@ -116,6 +116,62 @@ function QuickAction({ emoji, label, onPress, glowColor }: { emoji: string; labe
   );
 }
 
+// ─── Profile Card (SRP) - photo/name/editable bio, per the client's Home screen spec ────────
+
+function ProfileCard() {
+  const { user, setUser } = useAuthStore();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(user?.profile.bio ?? '');
+
+  const { mutate: saveBio, isPending } = useMutation({
+    mutationFn: (bio: string) => updateProfile({ bio }),
+    onSuccess: (updated) => {
+      setUser(updated);
+      setEditing(false);
+    },
+  });
+
+  const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`;
+
+  return (
+    <View style={[styles.profileCard, glass.card]}>
+      <View style={styles.profileAvatar}>
+        <Text style={styles.profileAvatarText}>{initials}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
+        {editing ? (
+          <TextInput
+            style={styles.profileBioInput}
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="Add a short bio…"
+            placeholderTextColor={colors.textMuted}
+            autoFocus
+            maxLength={280}
+            onSubmitEditing={() => saveBio(draft)}
+            onBlur={() => saveBio(draft)}
+            editable={!isPending}
+          />
+        ) : (
+          <Text style={styles.profileBio} numberOfLines={2}>
+            {user?.profile.bio || 'Tap the pencil to add a bio'}
+          </Text>
+        )}
+      </View>
+      <TouchableOpacity
+        style={styles.profileEditBtn}
+        onPress={() => {
+          if (editing) saveBio(draft);
+          else setEditing(true);
+        }}
+      >
+        <Text style={{ fontSize: 16 }}>{editing ? '✓' : '✏️'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning';
@@ -162,6 +218,8 @@ export function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
+        <ProfileCard />
+
         <View style={styles.datePill}>
           <Text style={styles.datePillText}>{format(new Date(), 'EEEE, MMMM d')}</Text>
         </View>
@@ -191,10 +249,10 @@ export function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <QuickAction emoji="📷" label="Check In"    onPress={() => navigation.navigate('Profile', { screen: 'QRCheckIn' })}     glowColor={colors.accent} />
-            <QuickAction emoji="🏋️" label="Log Workout" onPress={() => navigation.navigate('Workout')}                               glowColor={colors.primary} />
-            <QuickAction emoji="📊" label="Progress"    onPress={() => navigation.navigate('Progress')}                              glowColor={'#FFB347'} />
-            <QuickAction emoji="💬" label="AI Coach"    onPress={() => navigation.navigate('AICoach')}                               glowColor={colors.success} />
+            <QuickAction emoji="🏋️" label="Workout"   onPress={() => navigation.navigate('Workout')}                                  glowColor={colors.primary} />
+            <QuickAction emoji="🥗" label="Diet"       onPress={() => navigation.navigate('Progress', { screen: 'Nutrition' })}        glowColor={colors.success} />
+            <QuickAction emoji="⚖️" label="Weight"     onPress={() => navigation.navigate('Progress', { screen: 'BodyMetrics' })}      glowColor={'#FFB347'} />
+            <QuickAction emoji="📊" label="Progress"   onPress={() => navigation.navigate('Progress')}                                 glowColor={colors.accent} />
           </View>
         </View>
 
