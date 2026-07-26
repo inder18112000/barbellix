@@ -70,6 +70,13 @@ export async function findMembershipByUserId(userId: string) {
   return MembershipModel.findOne({ userId });
 }
 
+/** Batched sibling of findMembershipByUserId - one query for every member's membership instead
+ * of one per member. userId is unique on the Membership schema, so this is a safe 1:1 map. */
+export async function findMembershipsByUserIds(userIds: string[]) {
+  const docs = await MembershipModel.find({ userId: { $in: userIds } });
+  return new Map(docs.map((doc) => [doc.userId.toString(), doc]));
+}
+
 export async function findMembershipByStripeCustomerId(stripeCustomerId: string) {
   return MembershipModel.findOne({ stripeCustomerId });
 }

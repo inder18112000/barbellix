@@ -3,46 +3,52 @@ import type { TrainerMemberSummary } from '@fitpulse/shared';
 import { NotFoundError } from '../../lib/errors.js';
 import { toDomainUser } from '../../lib/mappers.js';
 import { issuePairingToken } from '../../lib/pairingToken.js';
-import { computeSummary } from '../attendance/service.js';
-import { getMembershipSummary } from '../billing/service.js';
+import { computeSummariesForUsers } from '../attendance/service.js';
+import { getMembershipSummariesForUsers } from '../billing/service.js';
 import { updateInfo as updateUserInfo } from '../users/repository.js';
 import * as repo from './repository.js';
 
+/** Fetches every member's plan/sessions/attendance/membership in a handful of batched queries
+ * total (see the *ForUsers repository/service functions this calls) rather than the ~5 queries
+ * per member this used to run - a 100-member roster used to fire 500+ queries, now it's ~6. */
 export async function listMembers(tenantId: string): Promise<TrainerMemberSummary[]> {
   const members = await repo.findMembersByTenant(tenantId);
+  const userIds = members.map((m) => m._id.toString());
 
-  return Promise.all(
-    members.map(async (member) => {
-      const userId = member._id.toString();
-      const [activePlan, sessionsCount, attendance, membership] = await Promise.all([
-        repo.findActivePlanForUser(userId),
-        repo.countSessionsForUser(userId),
-        computeSummary(userId),
-        getMembershipSummary(userId),
-      ]);
+  const [activePlans, sessionCounts, attendanceSummaries, membershipSummaries] = await Promise.all([
+    repo.findActivePlansForUsers(userIds),
+    repo.countSessionsForUsers(userIds),
+    computeSummariesForUsers(userIds),
+    getMembershipSummariesForUsers(userIds),
+  ]);
 
-      return {
-        id: userId,
-        firstName: member.firstName,
-        lastName: member.lastName,
-        email: member.email,
-        phone: member.phone,
-        status: member.status,
-        plan: activePlan?.name ?? 'No active plan',
-        streak: attendance.streak,
-        sessionsCount,
-        lastSeenAt: attendance.lastCheckedIn,
-        joinDate: member.createdAt.toISOString(),
-        membershipPlan: membership.plan,
-        membershipStatus: membership.status,
-        paymentStatus: membership.paymentStatus,
-        paymentMethod: membership.paymentMethod,
-        subscriptionStatus: membership.subscriptionStatus,
-        membershipStartDate: membership.startDate,
-        membershipEndDate: membership.endDate,
-      };
-    }),
-  );
+  return members.map((member) => {
+    const userId = member._id.toString();
+    const activePlan = activePlans.get(userId);
+    const attendance = attendanceSummaries.get(userId)!;
+    const membership = membershipSummaries.get(userId)!;
+
+    return {
+      id: userId,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      email: member.email,
+      phone: member.phone,
+      status: member.status,
+      plan: activePlan?.name ?? 'No active plan',
+      streak: attendance.streak,
+      sessionsCount: sessionCounts.get(userId) ?? 0,
+      lastSeenAt: attendance.lastCheckedIn,
+      joinDate: member.createdAt.toISOString(),
+      membershipPlan: membership.plan,
+      membershipStatus: membership.status,
+      paymentStatus: membership.paymentStatus,
+      paymentMethod: membership.paymentMethod,
+      subscriptionStatus: membership.subscriptionStatus,
+      membershipStartDate: membership.startDate,
+      membershipEndDate: membership.endDate,
+    };
+  });
 }
 
 export async function getStats(tenantId: string) {

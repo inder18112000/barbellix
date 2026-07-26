@@ -41,9 +41,7 @@ export async function listPlans(tenantId: string): Promise<MembershipPlan[]> {
   return docs.map(repo.toDomainPlan);
 }
 
-/** Lightweight lookup for embedding into other rosters (e.g. the trainer/admin member list) - a member with no Membership doc yet just shows as unset, not an error. */
-export async function getMembershipSummary(userId: string) {
-  const doc = await repo.findMembershipByUserId(userId);
+function toMembershipSummary(doc: Awaited<ReturnType<typeof repo.findMembershipByUserId>> | undefined) {
   if (!doc) return {};
   return {
     plan: doc.planName,
@@ -54,6 +52,23 @@ export async function getMembershipSummary(userId: string) {
     startDate: doc.startDate?.toISOString(),
     endDate: doc.endDate?.toISOString(),
   };
+}
+
+/** Lightweight lookup for embedding into other rosters (e.g. the trainer/admin member list) - a member with no Membership doc yet just shows as unset, not an error. */
+export async function getMembershipSummary(userId: string) {
+  const doc = await repo.findMembershipByUserId(userId);
+  return toMembershipSummary(doc);
+}
+
+/** Batched sibling of getMembershipSummary - one query for every member's membership instead of
+ * one per member (see trainer/service.ts's listMembers), reusing the exact same summary shape. */
+export async function getMembershipSummariesForUsers(userIds: string[]) {
+  const docsByUser = await repo.findMembershipsByUserIds(userIds);
+  const summaries = new Map<string, ReturnType<typeof toMembershipSummary>>();
+  for (const userId of userIds) {
+    summaries.set(userId, toMembershipSummary(docsByUser.get(userId)));
+  }
+  return summaries;
 }
 
 export async function getMembershipCounts(tenantId: string) {

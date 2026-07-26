@@ -45,6 +45,32 @@ export async function computeSummary(userId: string) {
   };
 }
 
+/** Batched sibling of computeSummary - fetches every member's monthly count and recent check-in
+ * dates in two aggregations total (see attendance/repository.ts) instead of two queries per
+ * member, then runs the same pure computeStreak() per user in memory. Used by roster-style pages
+ * (trainer/service.ts's listMembers) that need this summary for every member at once. */
+export async function computeSummariesForUsers(userIds: string[]) {
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const [monthCounts, recentDatesByUser] = await Promise.all([
+    repo.findThisMonthCountsForUsers(userIds, startOfMonth),
+    repo.findRecentCheckInDatesForUsers(userIds),
+  ]);
+
+  const summaries = new Map<string, { totalThisMonth: number; streak: number; lastCheckedIn?: string }>();
+  for (const userId of userIds) {
+    const recentDates = recentDatesByUser.get(userId) ?? [];
+    summaries.set(userId, {
+      totalThisMonth: monthCounts.get(userId) ?? 0,
+      streak: computeStreak(recentDates),
+      lastCheckedIn: recentDates[0]?.toISOString(),
+    });
+  }
+  return summaries;
+}
+
 export async function getHistory(userId: string) {
   const docs = await repo.findHistory(userId);
   return docs.map(repo.toDomainRecord);
