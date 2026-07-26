@@ -11,6 +11,7 @@ import { glass, glow } from '../../theme/effects';
 import { useAuthStore } from '../../store/authStore';
 import { queryKeys, fetchAttendanceSummary, fetchWorkoutSessions } from '../../api/queries';
 import type { ProfileStackParams } from '../../navigation/types';
+import { Badge } from '../../components/common/Badge';
 import { styles } from './ProfileHomeScreen.styles';
 
 type Nav = NativeStackNavigationProp<ProfileStackParams, 'ProfileHome'>;
@@ -117,15 +118,7 @@ export function ProfileHomeScreen() {
           </View>
           <View style={styles.goals}>
             {(user?.profile?.goals ?? []).map((g) => (
-              <View
-                key={g}
-                style={[
-                  styles.goalChip,
-                  { backgroundColor: colors.primary + '20', borderColor: colors.primary + '40' },
-                ]}
-              >
-                <Text style={styles.goalChipText}>{GOAL_LABELS[g] ?? g}</Text>
-              </View>
+              <Badge key={g} label={GOAL_LABELS[g] ?? g} tone="primary" />
             ))}
           </View>
         </Animated.View>

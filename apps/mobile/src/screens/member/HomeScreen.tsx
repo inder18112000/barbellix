@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, Image, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions, Alert,
+  View, Text, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
+import { Card } from '../../components/common/Card';
+import { Avatar } from '../../components/common/Avatar';
 import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
 import type { User } from '@fitpulse/shared';
@@ -167,17 +169,14 @@ function ProfileCard() {
   };
 
   return (
-    <View style={[styles.profileCard, glass.card]}>
-      <TouchableOpacity style={styles.profileAvatar} onPress={handlePickPhoto} disabled={pickingPhoto} activeOpacity={0.8}>
-        {user?.profile.avatarUrl ? (
-          <Image source={{ uri: user.profile.avatarUrl }} style={styles.profileAvatarImage} />
-        ) : (
-          <Text style={styles.profileAvatarText}>{initials}</Text>
-        )}
-        <View style={styles.profileAvatarCameraBadge}>
-          <Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>
-        </View>
-      </TouchableOpacity>
+    <Card style={styles.profileCard}>
+      <Avatar
+        uri={user?.profile.avatarUrl}
+        initials={initials}
+        onPress={handlePickPhoto}
+        disabled={pickingPhoto}
+        badge={<Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>}
+      />
       <View style={{ flex: 1 }}>
         <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
         {editing ? (
@@ -208,7 +207,7 @@ function ProfileCard() {
       >
         <Text style={{ fontSize: 16 }}>{editing ? '✓' : '✏️'}</Text>
       </TouchableOpacity>
-    </View>
+    </Card>
   );
 }
 

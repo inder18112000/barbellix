@@ -27,11 +27,6 @@ export const styles = StyleSheet.create({
   },
   expBadgeText: { ...typography.label, color: colors.textSecondary },
   goals: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
-  goalChip: {
-    paddingHorizontal: spacing.sm, paddingVertical: 4,
-    borderRadius: borderRadius.full, borderWidth: 1,
-  },
-  goalChipText: { ...typography.label, color: colors.primaryLight },
 
   statsRow: {
     flexDirection: 'row', gap: spacing.sm,

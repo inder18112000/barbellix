@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { DataTable, type DataTableColumn } from '@/components/common/DataTable'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -87,6 +87,96 @@ export const MembersPage = observer(function MembersPage() {
     onError: (err: Error) => toast.error(err.message),
   })
 
+  const columns: DataTableColumn<TrainerMemberSummary>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (member) => (
+        <Link to={`/admin/members/${member.id}`} className="flex flex-col hover:text-primary">
+          <span className="font-medium">{member.firstName} {member.lastName}</span>
+          <span className="text-xs text-muted-foreground">{member.email}</span>
+          {member.phone && <span className="text-xs text-muted-foreground">{member.phone}</span>}
+        </Link>
+      ),
+    },
+    { key: 'status', header: 'Status', render: (member) => <UserStatusBadge status={member.status} /> },
+    {
+      key: 'subscription',
+      header: 'Subscription',
+      render: (member) => (
+        <div className="flex flex-col gap-1">
+          <SubscriptionStatusBadge status={member.subscriptionStatus} />
+          {member.membershipPlan && <span className="text-xs text-muted-foreground">{member.membershipPlan}</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'payment',
+      header: 'Payment',
+      render: (member) => (
+        <div className="flex flex-col gap-1">
+          <PaymentStatusBadge status={member.paymentStatus} />
+          {member.paymentMethod && <span className="text-xs text-muted-foreground capitalize">{member.paymentMethod}</span>}
+        </div>
+      ),
+    },
+    {
+      key: 'expiry',
+      header: 'Expiry',
+      className: 'text-sm text-muted-foreground',
+      render: (member) => (member.membershipEndDate ? new Date(member.membershipEndDate).toLocaleDateString() : '—'),
+    },
+    {
+      key: 'joined',
+      header: 'Joined',
+      className: 'text-sm text-muted-foreground',
+      render: (member) => new Date(member.joinDate).toLocaleDateString(),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-10',
+      render: (member) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Membership</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setCheckoutTarget(member)}>Send checkout link</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMarkPaidTarget(member)}>Mark as paid</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDatesTarget(member)}>Edit membership dates</DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setInfoTarget(member)}>Edit name / phone</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPairingTarget(member)}>
+                  <QrCode className="size-4" />
+                  Generate sign-in QR
+                </DropdownMenuItem>
+                {member.status === 'suspended' ? (
+                  <DropdownMenuItem onClick={() => statusMutation.mutate({ memberId: member.id, status: 'active' })}>
+                    Reactivate member
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => statusMutation.mutate({ memberId: member.id, status: 'suspended' })}
+                  >
+                    Suspend member
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ]
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -136,91 +226,7 @@ export const MembersPage = observer(function MembersPage() {
         <EmptyState icon={<Users className="size-5" />} title="No members found" description={search ? 'Try a different search.' : 'No members match this filter.'} />
       ) : (
         <div className="rounded-xl border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Expiry</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <Link to={`/admin/members/${member.id}`} className="flex flex-col hover:text-primary">
-                      <span className="font-medium">
-                        {member.firstName} {member.lastName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{member.email}</span>
-                      {member.phone && <span className="text-xs text-muted-foreground">{member.phone}</span>}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <UserStatusBadge status={member.status} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <SubscriptionStatusBadge status={member.subscriptionStatus} />
-                      {member.membershipPlan && <span className="text-xs text-muted-foreground">{member.membershipPlan}</span>}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <PaymentStatusBadge status={member.paymentStatus} />
-                      {member.paymentMethod && <span className="text-xs text-muted-foreground capitalize">{member.paymentMethod}</span>}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {member.membershipEndDate ? new Date(member.membershipEndDate).toLocaleDateString() : '—'}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{new Date(member.joinDate).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="size-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Membership</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => setCheckoutTarget(member)}>Send checkout link</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setMarkPaidTarget(member)}>Mark as paid</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDatesTarget(member)}>Edit membership dates</DropdownMenuItem>
-                        {isAdmin && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Account</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setInfoTarget(member)}>Edit name / phone</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPairingTarget(member)}>
-                              <QrCode className="size-4" />
-                              Generate sign-in QR
-                            </DropdownMenuItem>
-                            {member.status === 'suspended' ? (
-                              <DropdownMenuItem onClick={() => statusMutation.mutate({ memberId: member.id, status: 'active' })}>
-                                Reactivate member
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => statusMutation.mutate({ memberId: member.id, status: 'suspended' })}
-                              >
-                                Suspend member
-                              </DropdownMenuItem>
-                            )}
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable columns={columns} data={filtered} getRowKey={(member) => member.id} />
         </div>
       )}
 

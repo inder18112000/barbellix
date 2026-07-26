@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,8 @@ import { queryKeys, fetchDietPlans, generateDietPlan } from '../../api/queries';
 import type { DietPlanMeal, MealType } from '@fitpulse/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
+import { Card } from '../../components/common/Card';
+import { BottomSheet } from '../../components/common/Modal';
 import { styles } from './DietPlanScreen.styles';
 
 const MEAL_META: Record<MealType, { emoji: string; color: string }> = {
@@ -36,37 +38,28 @@ function GenerateDietSheet({ visible, onClose }: { visible: boolean; onClose: ()
   });
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <View style={[styles.sheet, glass.card]}>
-            <View style={styles.sheetHandle} />
-            <Text style={styles.sheetTitle}>Generate Diet Plan</Text>
-
-            <View>
-              <Text style={styles.fieldLabel}>Your Goal</Text>
-              <TextInput
-                style={[styles.goalInput, { marginTop: 6 }]}
-                value={goal}
-                onChangeText={setGoal}
-                placeholder="e.g. lose fat while keeping strength"
-                placeholderTextColor={colors.textMuted}
-                editable={!isPending}
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.generateSubmitBtn, (!goal.trim() || isPending) && { opacity: 0.5 }]}
-              onPress={() => generate()}
-              disabled={!goal.trim() || isPending}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.generateSubmitBtnText}>{isPending ? 'Generating…' : '✨ Generate with AI'}</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
+    <BottomSheet visible={visible} onClose={onClose} title="Generate Diet Plan">
+      <View>
+        <Text style={styles.fieldLabel}>Your Goal</Text>
+        <TextInput
+          style={[styles.goalInput, { marginTop: 6 }]}
+          value={goal}
+          onChangeText={setGoal}
+          placeholder="e.g. lose fat while keeping strength"
+          placeholderTextColor={colors.textMuted}
+          editable={!isPending}
+        />
       </View>
-    </Modal>
+
+      <TouchableOpacity
+        style={[styles.generateSubmitBtn, (!goal.trim() || isPending) && { opacity: 0.5 }]}
+        onPress={() => generate()}
+        disabled={!goal.trim() || isPending}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.generateSubmitBtnText}>{isPending ? 'Generating…' : '✨ Generate with AI'}</Text>
+      </TouchableOpacity>
+    </BottomSheet>
   );
 }
 
@@ -79,7 +72,7 @@ function MealCard({ meal }: { meal: DietPlanMeal }) {
   ].filter(Boolean).join(' · ');
 
   return (
-    <View style={[styles.mealCard, glass.card]}>
+    <Card style={styles.mealCard}>
       <View style={[styles.mealEmojiBadge, { backgroundColor: meta.color + '20' }]}>
         <Text style={styles.mealEmoji}>{meta.emoji}</Text>
       </View>
@@ -90,7 +83,7 @@ function MealCard({ meal }: { meal: DietPlanMeal }) {
         {meal.notes && <Text style={styles.mealNotes} numberOfLines={2}>{meal.notes}</Text>}
       </View>
       <Text style={styles.mealCalories}>{meal.calories}</Text>
-    </View>
+    </Card>
   );
 }
 

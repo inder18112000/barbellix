@@ -28,21 +28,6 @@ export const styles = StyleSheet.create({
     padding: spacing.md, borderRadius: borderRadius.xl,
     marginTop: spacing.md, marginBottom: spacing.md,
   },
-  profileAvatar: {
-    width: 56, height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.primary,
-    position: 'relative',
-  },
-  profileAvatarImage: { width: 56, height: 56, borderRadius: 28 },
-  profileAvatarText: { ...typography.h4, color: '#fff' },
-  profileAvatarCameraBadge: {
-    position: 'absolute', bottom: -2, right: -2,
-    width: 20, height: 20, borderRadius: 10,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1.5, borderColor: colors.background,
-  },
   profileName: { ...typography.h4, color: colors.textPrimary },
   profileBio: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   profileBioInput: {
