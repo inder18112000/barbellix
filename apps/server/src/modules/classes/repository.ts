@@ -216,3 +216,8 @@ export async function findUserNamesByIds(userIds: string[]) {
   const users = await UserModel.find({ _id: { $in: userIds } }).select('firstName lastName email');
   return new Map(users.map((u) => [u._id.toString(), { name: `${u.firstName} ${u.lastName}`, email: u.email }]));
 }
+
+/** For the trainer-picker on the "create class template" form - staff only, not the member roster. */
+export async function findTrainersByTenant(tenantId: string) {
+  return UserModel.find({ tenantId, role: { $in: ['trainer', 'admin', 'superadmin'] } }).select('firstName lastName');
+}

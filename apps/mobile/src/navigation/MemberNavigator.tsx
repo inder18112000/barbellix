@@ -6,12 +6,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import type {
   MemberTabParams,
+  HomeStackParams,
   WorkoutStackParams,
   ProgressStackParams,
   ProfileStackParams,
 } from './types';
 
 import { HomeScreen } from '../screens/member/HomeScreen';
+import { ClassesHomeScreen } from '../screens/member/ClassesHomeScreen';
+import { ClassDetailScreen } from '../screens/member/ClassDetailScreen';
+import { MyBookingsScreen } from '../screens/member/MyBookingsScreen';
 import { WorkoutHomeScreen } from '../screens/member/WorkoutHomeScreen';
 import { ActiveWorkoutScreen } from '../screens/member/ActiveWorkoutScreen';
 import { WorkoutHistoryScreen } from '../screens/member/WorkoutHistoryScreen';
@@ -37,6 +41,7 @@ import { NotificationsScreen } from '../screens/member/NotificationsScreen';
 import { SponsorshipScreen } from '../screens/member/SponsorshipScreen';
 
 const Tab = createBottomTabNavigator<MemberTabParams>();
+const HomeStack = createNativeStackNavigator<HomeStackParams>();
 const WorkoutStack = createNativeStackNavigator<WorkoutStackParams>();
 const ProgressStack = createNativeStackNavigator<ProgressStackParams>();
 const ProfileStack = createNativeStackNavigator<ProfileStackParams>();
@@ -67,6 +72,17 @@ function TabIcon({ tabName, focused }: { tabName: string; focused: boolean }) {
         {cfg.label}
       </Text>
     </View>
+  );
+}
+
+function HomeNavigator() {
+  return (
+    <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+      <HomeStack.Screen name="HomeMain" component={HomeScreen} />
+      <HomeStack.Screen name="ClassesHome" component={ClassesHomeScreen} />
+      <HomeStack.Screen name="ClassDetail" component={ClassDetailScreen} />
+      <HomeStack.Screen name="MyBookings" component={MyBookingsScreen} />
+    </HomeStack.Navigator>
   );
 }
 
@@ -122,7 +138,7 @@ export function MemberNavigator() {
         tabBarShowLabel: false,
       }}
     >
-      <Tab.Screen name="Home"     component={HomeScreen}        options={{ tabBarIcon: ({ focused }) => <TabIcon tabName="Home"     focused={focused} /> }} />
+      <Tab.Screen name="Home"     component={HomeNavigator}     options={{ tabBarIcon: ({ focused }) => <TabIcon tabName="Home"     focused={focused} /> }} />
       <Tab.Screen name="Workout"  component={WorkoutNavigator}  options={{ tabBarIcon: ({ focused }) => <TabIcon tabName="Workout"  focused={focused} /> }} />
       <Tab.Screen name="Progress" component={ProgressNavigator} options={{ tabBarIcon: ({ focused }) => <TabIcon tabName="Progress" focused={focused} /> }} />
       <Tab.Screen name="AICoach"  component={AICoachScreen}     options={{ tabBarIcon: ({ focused }) => <TabIcon tabName="AICoach"  focused={focused} /> }} />

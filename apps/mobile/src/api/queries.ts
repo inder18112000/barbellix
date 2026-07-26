@@ -19,6 +19,9 @@ import type {
   Message,
   Sponsor,
   DietPlan,
+  ClassSession,
+  ClassTemplate,
+  BookingWithSession,
 } from '@fitpulse/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -56,6 +59,11 @@ export const queryKeys = {
     today: ['habits', 'today'] as const,
   },
   sponsors: ['sponsors'] as const,
+  classes: {
+    schedule: (branchId: string, from: string, to: string) => ['classes', 'schedule', branchId, from, to] as const,
+    myBookings: ['classes', 'my-bookings'] as const,
+    roster: (sessionId: string) => ['classes', 'roster', sessionId] as const,
+  },
 };
 
 // ─── Query Functions ──────────────────────────────────────────────────────────
@@ -153,3 +161,24 @@ export const fetchSponsors = () => api.get<Sponsor[]>('/sponsors');
 
 export const fetchDietPlans = () => api.get<DietPlan[]>('/nutrition/diet-plans');
 export const generateDietPlan = (goal: string) => api.post<DietPlan>('/ai/coach/generate-diet-plan', { goal });
+
+export const fetchClassSchedule = (branchId: string, from: string, to: string) =>
+  api.get<(ClassSession & { trainerName?: string })[]>(`/classes/schedule?branchId=${branchId}&from=${from}&to=${to}`);
+
+export const bookClassSession = (sessionId: string) =>
+  api.post<{ booking: { id: string }; status: 'booked' | 'waitlisted' }>(`/classes/sessions/${sessionId}/book`, {});
+
+export const cancelClassBooking = (bookingId: string) =>
+  api.post<{ cancelled: boolean; promotedUserId?: string }>(`/classes/bookings/${bookingId}/cancel`, {});
+
+export const fetchMyBookings = () => api.get<BookingWithSession[]>('/classes/my-bookings');
+
+export const fetchClassTemplates = () => api.get<(ClassTemplate & { trainerName?: string })[]>('/admin/class-templates');
+export const createClassTemplate = (input: Omit<ClassTemplate, 'id' | 'tenantId' | 'active'>) =>
+  api.post<ClassTemplate>('/admin/class-templates', input);
+export const updateClassTemplate = (templateId: string, updates: Partial<Omit<ClassTemplate, 'id' | 'tenantId'>>) =>
+  api.put<ClassTemplate>(`/admin/class-templates/${templateId}`, updates);
+export const fetchClassRoster = (sessionId: string) =>
+  api.get<{ session: ClassSession; bookings: { id: string; userId: string; status: string; memberName?: string; memberEmail?: string }[] }>(
+    `/admin/class-sessions/${sessionId}/roster`,
+  );

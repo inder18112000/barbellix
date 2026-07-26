@@ -19,6 +19,9 @@ import type {
   PaymentEvent,
   NotificationPreferences,
   LoginPairingToken,
+  ClassTemplate,
+  ClassSession,
+  ClassTemplateOccurrence,
 } from '@fitpulse/shared'
 import type { ChangePasswordInput } from '@fitpulse/shared'
 import { api } from './client'
@@ -40,6 +43,10 @@ export const queryKeys = {
     paymentHistory: (memberId: string) => ['admin', 'members', memberId, 'payment-history'] as const,
     paymentGatewayStatus: ['admin', 'payment-gateway-status'] as const,
     sponsors: ['admin', 'sponsors'] as const,
+    classTemplates: ['admin', 'class-templates'] as const,
+    trainers: ['admin', 'trainers'] as const,
+    classRoster: (sessionId: string) => ['admin', 'class-sessions', sessionId, 'roster'] as const,
+    classSchedule: (branchId: string, from: string, to: string) => ['admin', 'class-schedule', branchId, from, to] as const,
   },
   myNotificationPreferences: ['me', 'notification-preferences'] as const,
   exercises: (q: string) => ['exercises', q] as const,
@@ -129,6 +136,34 @@ export const createSponsor = (input: CreateSponsorInput) => api.post<Sponsor>('/
 
 export const updateSponsor = (sponsorId: string, updates: Partial<CreateSponsorInput> & { active?: boolean }) =>
   api.put<Sponsor>(`/admin/sponsors/${sponsorId}`, updates)
+
+// ─── Classes ──────────────────────────────────────────────────────────────────
+
+export const fetchTrainersList = () => api.get<{ id: string; name: string }[]>('/admin/trainers')
+
+export const fetchClassTemplates = () => api.get<(ClassTemplate & { trainerName?: string })[]>('/admin/class-templates')
+
+export interface CreateClassTemplateInput {
+  branchId: string
+  name: string
+  trainerId: string
+  occurrences: ClassTemplateOccurrence[]
+  capacity: number
+}
+export const createClassTemplate = (input: CreateClassTemplateInput) =>
+  api.post<ClassTemplate>('/admin/class-templates', input)
+
+export const updateClassTemplate = (templateId: string, updates: Partial<CreateClassTemplateInput> & { active?: boolean }) =>
+  api.put<ClassTemplate>(`/admin/class-templates/${templateId}`, updates)
+
+export const fetchClassSchedule = (branchId: string, from: string, to: string) =>
+  api.get<(ClassSession & { trainerName?: string })[]>(`/classes/schedule?branchId=${branchId}&from=${from}&to=${to}`)
+
+export const fetchClassRoster = (sessionId: string) =>
+  api.get<{
+    session: ClassSession
+    bookings: { id: string; userId: string; status: string; memberName?: string; memberEmail?: string }[]
+  }>(`/admin/class-sessions/${sessionId}/roster`)
 
 // ─── My account (Settings) ─────────────────────────────────────────────────────
 

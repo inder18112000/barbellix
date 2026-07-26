@@ -222,6 +222,7 @@ function getGreeting(): string {
 
 export function HomeScreen() {
   const navigation = useNavigation<any>();
+  const parent = navigation.getParent();
   const { user } = useAuthStore();
   const greeting = getGreeting();
 
@@ -279,7 +280,7 @@ export function HomeScreen() {
             <AICard
               title={topRec.title}
               description={topRec.description}
-              onAccept={() => navigation.navigate('AICoach')}
+              onAccept={() => parent?.navigate('AICoach')}
             />
           </View>
         )}
@@ -288,11 +289,12 @@ export function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <QuickAction emoji="🏋️" label="Workout"   onPress={() => navigation.navigate('Workout')}                                  glowColor={colors.primary} />
-            <QuickAction emoji="🥗" label="Diet"       onPress={() => navigation.navigate('Progress', { screen: 'Nutrition' })}        glowColor={colors.success} />
-            <QuickAction emoji="⚖️" label="Weight"     onPress={() => navigation.navigate('Progress', { screen: 'BodyMetrics' })}      glowColor={'#FFB347'} />
-            <QuickAction emoji="📊" label="Progress"   onPress={() => navigation.navigate('Progress')}                                 glowColor={colors.accent} />
-            <QuickAction emoji="🤝" label="Sponsors"   onPress={() => navigation.navigate('Profile', { screen: 'Sponsorship' })}      glowColor={'#AF52DE'} />
+            <QuickAction emoji="🏋️" label="Workout"   onPress={() => parent?.navigate('Workout')}                                  glowColor={colors.primary} />
+            <QuickAction emoji="🥗" label="Diet"       onPress={() => parent?.navigate('Progress', { screen: 'Nutrition' })}        glowColor={colors.success} />
+            <QuickAction emoji="⚖️" label="Weight"     onPress={() => parent?.navigate('Progress', { screen: 'BodyMetrics' })}      glowColor={'#FFB347'} />
+            <QuickAction emoji="📊" label="Progress"   onPress={() => parent?.navigate('Progress')}                                 glowColor={colors.accent} />
+            <QuickAction emoji="🤝" label="Sponsors"   onPress={() => parent?.navigate('Profile', { screen: 'Sponsorship' })}      glowColor={'#AF52DE'} />
+            <QuickAction emoji="🧘" label="Classes"    onPress={() => navigation.navigate('ClassesHome')}                             glowColor={'#22A5AC'} />
           </View>
         </View>
 
@@ -304,7 +306,7 @@ export function HomeScreen() {
               <TouchableOpacity
                 key={s.id}
                 style={[styles.sessionCard, glass.card]}
-                onPress={() => navigation.navigate('Workout', { screen: 'WorkoutHistory' })}
+                onPress={() => parent?.navigate('Workout', { screen: 'WorkoutHistory' })}
               >
                 <View>
                   <Text style={styles.sessionDate}>{format(new Date(s.date), 'EEE, MMM d')}</Text>

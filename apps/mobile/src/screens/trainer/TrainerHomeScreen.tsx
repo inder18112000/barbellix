@@ -102,6 +102,7 @@ export function TrainerHomeScreen() {
         {[
           { emoji: '👥', label: 'All Members', screen: 'MemberList' },
           { emoji: '📋', label: 'Assign Workout Plan', screen: 'MemberList' },
+          { emoji: '🧘', label: 'Class Rosters', screen: 'ClassRosterList' },
         ].map((action) => (
           <TouchableOpacity key={action.label} style={[styles.quickAction, glass.card]} onPress={() => navigation.navigate(action.screen)} activeOpacity={0.85}>
             <Text style={styles.qaEmoji}>{action.emoji}</Text>

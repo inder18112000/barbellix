@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { WorkoutDay, FitnessGoal } from '@fitpulse/shared';
+import type { WorkoutDay, FitnessGoal, ClassSession } from '@fitpulse/shared';
 
 export type AuthStackParams = {
   Splash: undefined;
@@ -19,6 +19,13 @@ export type MemberTabParams = {
   Progress: undefined;
   AICoach: undefined;
   Profile: undefined;
+};
+
+export type HomeStackParams = {
+  HomeMain: undefined;
+  ClassesHome: undefined;
+  ClassDetail: { session: ClassSession & { trainerName?: string } };
+  MyBookings: undefined;
 };
 
 export type WorkoutStackParams = {
@@ -64,6 +71,8 @@ export type TrainerStackParams = {
   MemberDetail: { memberId: string };
   AssignPlan: { memberId: string };
   MessageMember: { memberId: string };
+  ClassRosterList: undefined;
+  ClassRosterDetail: { sessionId: string; className: string };
 };
 
 export type AdminStackParams = {
@@ -87,6 +96,9 @@ export type AuthScreenProps<T extends keyof AuthStackParams> =
 
 export type MemberTabProps<T extends keyof MemberTabParams> =
   BottomTabScreenProps<MemberTabParams, T>;
+
+export type HomeScreenProps<T extends keyof HomeStackParams> =
+  NativeStackScreenProps<HomeStackParams, T>;
 
 export type WorkoutScreenProps<T extends keyof WorkoutStackParams> =
   NativeStackScreenProps<WorkoutStackParams, T>;

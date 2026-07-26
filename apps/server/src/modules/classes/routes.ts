@@ -52,6 +52,10 @@ export default async function classesRoutes(fastify: FastifyInstance) {
     return classesService.listTemplates(request.user.tenantId);
   });
 
+  app.get('/admin/trainers', { preHandler: staffPreHandler }, async (request) => {
+    return classesService.listTrainers(request.user.tenantId);
+  });
+
   app.post(
     '/admin/class-templates',
     { schema: { body: createTemplateSchema }, preHandler: staffPreHandler },

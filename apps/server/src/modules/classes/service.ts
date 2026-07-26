@@ -36,6 +36,11 @@ export async function updateTemplate(
   return repo.toDomainTemplate(updated);
 }
 
+export async function listTrainers(tenantId: string) {
+  const docs = await repo.findTrainersByTenant(tenantId);
+  return docs.map((doc) => ({ id: doc._id.toString(), name: `${doc.firstName} ${doc.lastName}` }));
+}
+
 // ─── Schedule ─────────────────────────────────────────────────────────────────
 
 export async function getSchedule(tenantId: string, branchId: string, from: string, to: string, requestingUserId: string) {

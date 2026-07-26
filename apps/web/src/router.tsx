@@ -14,6 +14,8 @@ import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
 import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
 import { SettingsPage as AdminSettingsPage } from '@/pages/admin/SettingsPage'
 import { SponsorsPage } from '@/pages/admin/SponsorsPage'
+import { ClassesPage } from '@/pages/admin/ClassesPage'
+import { ClassRosterPage } from '@/pages/admin/ClassRosterPage'
 import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
 import { MembersPage as TrainerMembersPage } from '@/pages/trainer/MembersPage'
 import { MemberDetailPage } from '@/pages/trainer/MemberDetailPage'
@@ -49,6 +51,8 @@ export const router = createBrowserRouter([
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },
               { path: 'sponsors', element: <SponsorsPage /> },
+              { path: 'classes', element: <ClassesPage /> },
+              { path: 'classes/roster', element: <ClassRosterPage /> },
               { path: 'branch', element: <BranchSettingsPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
             ],
@@ -67,6 +71,7 @@ export const router = createBrowserRouter([
               { path: 'members/:memberId', element: <MemberDetailPage /> },
               { path: 'members/:memberId/assign-plan', element: <AssignPlanPage /> },
               { path: 'plans/new', element: <CreatePlanPage /> },
+              { path: 'classes/roster', element: <ClassRosterPage /> },
               { path: 'messages', element: <MessagesPage /> },
               { path: 'messages/:otherUserId', element: <MessagesPage /> },
             ],
