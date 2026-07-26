@@ -193,6 +193,13 @@ export function NutritionScreen() {
           <Ionicons name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nutrition</Text>
+        <TouchableOpacity
+          style={styles.dietPlanBtn}
+          onPress={() => (navigation as any).navigate('DietPlan')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.dietPlanBtnText}>✨ AI Plan</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.addBtn} onPress={() => setShowAdd(true)} activeOpacity={0.85}>
           <Ionicons name="add" size={22} color="#fff" />
         </TouchableOpacity>
@@ -282,6 +289,12 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm,
   },
   headerTitle: { flex: 1, ...typography.h3, color: colors.textPrimary },
+  dietPlanBtn: {
+    paddingHorizontal: spacing.sm, paddingVertical: 8,
+    borderRadius: borderRadius.full, backgroundColor: colors.primary + '18',
+    marginRight: spacing.sm,
+  },
+  dietPlanBtnText: { ...typography.label, color: colors.primary, fontWeight: '700' },
   addBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.primary,

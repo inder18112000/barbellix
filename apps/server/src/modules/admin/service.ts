@@ -3,7 +3,7 @@ import { NotFoundError } from '../../lib/errors.js';
 import { getMembershipCounts } from '../billing/service.js';
 import { findMemberByIdInTenant } from '../trainer/repository.js';
 import { listMetrics, listPRs } from '../progress/service.js';
-import { listSessions } from '../workouts/service.js';
+import { listPlans, listSessions } from '../workouts/service.js';
 import * as repo from './repository.js';
 
 export async function getAttendanceAnalytics(tenantId: string): Promise<AttendanceAnalytics[]> {
@@ -42,12 +42,13 @@ export async function getDashboardStats(tenantId: string): Promise<AdminDashboar
   startOfMonth.setUTCDate(1);
   startOfMonth.setUTCHours(0, 0, 0, 0);
 
-  const [membershipCounts, newEnrollmentsThisMonth] = await Promise.all([
+  const [membershipCounts, newEnrollmentsThisMonth, clientsBreakdown] = await Promise.all([
     getMembershipCounts(tenantId),
     repo.countNewEnrollments(tenantId, startOfMonth),
+    repo.countClientsBreakdown(tenantId),
   ]);
 
-  return { ...membershipCounts, newEnrollmentsThisMonth };
+  return { ...clientsBreakdown, ...membershipCounts, newEnrollmentsThisMonth };
 }
 
 /** Admin-side "Client Progress" drill-in - verifies the member belongs to this admin's tenant
@@ -57,13 +58,14 @@ export async function getMemberProgress(tenantId: string, memberId: string) {
   const member = await findMemberByIdInTenant(memberId, tenantId);
   if (!member) throw new NotFoundError('Member not found');
 
-  const [metrics, prs, sessions] = await Promise.all([
+  const [metrics, prs, sessions, plans] = await Promise.all([
     listMetrics(memberId),
     listPRs(memberId),
     listSessions(memberId),
+    listPlans(memberId),
   ]);
 
-  return { metrics, prs, sessions };
+  return { metrics, prs, sessions, plans };
 }
 
 export async function getRecentAttendance(tenantId: string, limit: number): Promise<RecentCheckIn[]> {

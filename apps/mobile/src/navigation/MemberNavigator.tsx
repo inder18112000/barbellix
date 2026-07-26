@@ -22,6 +22,7 @@ import { ExercisePickerScreen } from '../screens/member/ExercisePickerScreen';
 import { WorkoutSummaryScreen } from '../screens/member/WorkoutSummaryScreen';
 import { ProgressHomeScreen } from '../screens/member/ProgressHomeScreen';
 import { NutritionScreen } from '../screens/member/NutritionScreen';
+import { DietPlanScreen } from '../screens/member/DietPlanScreen';
 import { HabitTrackerScreen } from '../screens/member/HabitTrackerScreen';
 import { OneRMCalculatorScreen } from '../screens/member/OneRMCalculatorScreen';
 import { BodyMetricsScreen } from '../screens/member/BodyMetricsScreen';
@@ -33,6 +34,7 @@ import { MembershipCardScreen } from '../screens/member/MembershipCardScreen';
 import { SettingsScreen } from '../screens/member/SettingsScreen';
 import { EditProfileScreen } from '../screens/member/EditProfileScreen';
 import { NotificationsScreen } from '../screens/member/NotificationsScreen';
+import { SponsorshipScreen } from '../screens/member/SponsorshipScreen';
 
 const Tab = createBottomTabNavigator<MemberTabParams>();
 const WorkoutStack = createNativeStackNavigator<WorkoutStackParams>();
@@ -90,6 +92,7 @@ function ProgressNavigator() {
       <ProgressStack.Screen name="BodyMetrics"     component={BodyMetricsScreen} />
       <ProgressStack.Screen name="PersonalRecords" component={PersonalRecordsScreen} />
       <ProgressStack.Screen name="Nutrition"       component={NutritionScreen} />
+      <ProgressStack.Screen name="DietPlan"        component={DietPlanScreen} />
       <ProgressStack.Screen name="HabitTracker"    component={HabitTrackerScreen} />
       <ProgressStack.Screen name="OneRMCalculator" component={OneRMCalculatorScreen} />
     </ProgressStack.Navigator>
@@ -105,6 +108,7 @@ function ProfileNavigator() {
       <ProfileStack.Screen name="Settings"       component={SettingsScreen} />
       <ProfileStack.Screen name="EditProfile"    component={EditProfileScreen} />
       <ProfileStack.Screen name="Notifications"  component={NotificationsScreen} />
+      <ProfileStack.Screen name="Sponsorship"    component={SponsorshipScreen} />
     </ProfileStack.Navigator>
   );
 }

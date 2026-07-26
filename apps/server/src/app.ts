@@ -22,6 +22,7 @@ import messagingRoutes from './modules/messaging/routes.js';
 import aiCoachRoutes from './modules/ai-coach/routes.js';
 import billingRoutes from './modules/billing/routes.js';
 import stripeWebhookRoutes from './modules/billing/webhookRoutes.js';
+import sponsorsRoutes from './modules/sponsors/routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -56,6 +57,7 @@ export async function buildApp() {
   await app.register(aiCoachRoutes);
   await app.register(billingRoutes);
   await app.register(stripeWebhookRoutes);
+  await app.register(sponsorsRoutes);
 
   app.get('/health', async () => ({
     status: 'ok',

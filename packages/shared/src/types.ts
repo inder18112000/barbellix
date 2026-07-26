@@ -40,6 +40,20 @@ export interface Branch {
   autoCheckoutEnabled: boolean;
   autoCheckoutAfterMins: number;
   guestPassEnabled: boolean;
+  /** Days after membership expiry before access is blocked at login - 0 disables the grace
+   * period entirely (block immediately on expiry). Enforced lazily at login/refresh time, not
+   * by a background job - see billing/service.ts's isAccessBlocked(). */
+  gracePeriodDays: number;
+}
+
+export interface Sponsor {
+  id: string;
+  tenantId: string;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  websiteUrl?: string;
+  active: boolean;
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
@@ -75,6 +89,14 @@ export interface User {
   lastName: string;
   profile: UserProfile;
   createdAt: string;
+}
+
+/** Returned when an admin generates a device-pairing QR for a member's first login - the token
+ * itself is what gets encoded into the QR image; scanning it redeems the same shape a normal
+ * POST /auth/login returns (user + accessToken + refreshToken). Single-use, short-lived. */
+export interface LoginPairingToken {
+  token: string;
+  expiresAt: string;
 }
 
 export interface MembershipPlan {
@@ -269,6 +291,33 @@ export interface MealEntry {
   fatG?: number;
 }
 
+/** A prescribed template day (repeat daily) - distinct from MealEntry above, which is a log of
+ * what was actually eaten on a specific day. */
+export interface DietPlan {
+  id: string;
+  userId: string;
+  name: string;
+  goal: FitnessGoal;
+  generatedBy: WorkoutGeneratedBy;
+  dailyCalorieTarget: number;
+  dailyProteinG: number;
+  dailyCarbsG: number;
+  dailyFatG: number;
+  meals: DietPlanMeal[];
+  active: boolean;
+  createdAt: string;
+}
+
+export interface DietPlanMeal {
+  mealType: MealType;
+  name: string;
+  calories: number;
+  proteinG?: number;
+  carbsG?: number;
+  fatG?: number;
+  notes?: string;
+}
+
 // ─── Habits ───────────────────────────────────────────────────────────────────
 
 export type HabitId = 'water' | 'sleep' | 'steps' | 'stretch' | 'no_junk' | 'meditation';
@@ -333,11 +382,26 @@ export interface TrainerStats {
 }
 
 export interface AdminDashboardStats {
+  totalClients: number;
+  activeClients: number;
   expiredSubscriptions: number;
   newEnrollmentsThisMonth: number;
   pendingPayments: number;
   onlinePayments: number;
   cashPayments: number;
+}
+
+export type PaymentEventType = 'checkout_completed' | 'subscription_renewed' | 'subscription_cancelled' | 'payment_failed' | 'marked_paid';
+
+export interface PaymentEvent {
+  id: string;
+  tenantId: string;
+  userId: string;
+  type: PaymentEventType;
+  amountCents?: number;
+  currency?: string;
+  planName?: string;
+  occurredAt: string;
 }
 
 // ─── Messaging ────────────────────────────────────────────────────────────────

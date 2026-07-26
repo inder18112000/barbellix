@@ -14,6 +14,7 @@ export interface BranchDocument {
   autoCheckoutEnabled: boolean;
   autoCheckoutAfterMins: number;
   guestPassEnabled: boolean;
+  gracePeriodDays: number;
 }
 
 const branchSchema = new Schema<BranchDocument>({
@@ -26,6 +27,7 @@ const branchSchema = new Schema<BranchDocument>({
   autoCheckoutEnabled: { type: Boolean, default: true },
   autoCheckoutAfterMins: { type: Number, default: 180 },
   guestPassEnabled: { type: Boolean, default: false },
+  gracePeriodDays: { type: Number, default: 2 },
 });
 
 export const BranchModel = model<BranchDocument>('Branch', branchSchema);

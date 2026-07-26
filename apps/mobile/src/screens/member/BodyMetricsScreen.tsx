@@ -11,7 +11,42 @@ import { queryKeys, fetchProgressMetrics, logBodyMetric } from '../../api/querie
 import { ScreenShell } from '../../components/common/ScreenShell';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
+import type { BodyMetric } from '@fitpulse/shared';
 import { styles } from './BodyMetricsScreen.styles';
+
+// Weight alone conflates fat and muscle loss/gain, so hypertrophy-focused members are
+// better served by tracking limb/torso circumference trends - reuses the same
+// BodyMetric.measurements history already logged above, no new backend needed.
+function computeMuscleTrend(metrics: BodyMetric[], key: 'armCm' | 'chestCm') {
+  const points = metrics.filter((m) => m.measurements?.[key] != null);
+  if (points.length < 2) return null;
+  const latest = points[0].measurements![key]!;
+  const earliest = points[points.length - 1].measurements![key]!;
+  return { latest, delta: latest - earliest };
+}
+
+function MuscleStat({ label, trend }: { label: string; trend: { latest: number; delta: number } | null }) {
+  if (!trend) {
+    return (
+      <View style={styles.muscleStat}>
+        <Text style={styles.muscleStatLabel}>{label}</Text>
+        <Text style={[styles.muscleStatValue, { color: colors.textMuted }]}>--</Text>
+      </View>
+    );
+  }
+  const positive = trend.delta > 0;
+  return (
+    <View style={styles.muscleStat}>
+      <Text style={styles.muscleStatLabel}>{label}</Text>
+      <Text style={styles.muscleStatValue}>{trend.latest} cm</Text>
+      {trend.delta !== 0 && (
+        <Text style={[styles.muscleStatDelta, { color: positive ? colors.success : colors.error }]}>
+          {positive ? '+' : ''}{trend.delta.toFixed(1)} cm
+        </Text>
+      )}
+    </View>
+  );
+}
 
 export function BodyMetricsScreen() {
   const navigation = useNavigation();
@@ -165,6 +200,22 @@ export function BodyMetricsScreen() {
               />
             </View>
           </View>
+
+          {(() => {
+            const armTrend = computeMuscleTrend(metrics, 'armCm');
+            const chestTrend = computeMuscleTrend(metrics, 'chestCm');
+            if (!armTrend && !chestTrend) return null;
+            return (
+              <View style={[styles.muscleCard, glass.cardStrong]}>
+                <Text style={styles.muscleTitle}>💪 Muscle Gain Tracker</Text>
+                <Text style={styles.muscleSubtitle}>Circumference change since your first log</Text>
+                <View style={styles.muscleRow}>
+                  <MuscleStat label="Arm" trend={armTrend} />
+                  <MuscleStat label="Chest" trend={chestTrend} />
+                </View>
+              </View>
+            );
+          })()}
 
           <Text style={styles.sectionTitle}>History</Text>
           {metrics.map((m, i) => {

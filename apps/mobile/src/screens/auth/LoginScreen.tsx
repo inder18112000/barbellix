@@ -66,6 +66,11 @@ export function LoginScreen() {
             </TouchableOpacity>
 
             <PrimaryButton label="Log In" onPress={handleSubmit((data) => doLogin(data))} loading={isPending} />
+
+            <TouchableOpacity style={styles.scanLink} onPress={() => navigation.navigate('ScanToSignIn')}>
+              <Text style={{ fontSize: 16 }}>📷</Text>
+              <Text style={styles.scanLinkText}>Scan to sign in</Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.registerLink} onPress={() => navigation.replace('Register')}>

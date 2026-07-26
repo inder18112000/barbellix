@@ -168,6 +168,7 @@ export function ProfileHomeScreen() {
         <MenuRow emoji="⚙️" label="Settings"       onPress={() => navigation.navigate('Settings')} />
 
         <Text style={styles.menuSection}>App</Text>
+        <MenuRow emoji="🤝" label="Sponsors"       onPress={() => navigation.navigate('Sponsorship')} />
         <MenuRow emoji="📤" label="Share FitPulse" onPress={handleShare} />
         <MenuRow emoji="⭐" label="Rate the App"   onPress={handleRate} />
         <MenuRow emoji="🚪" label="Log Out"        onPress={handleLogout} chevron={false} danger />

@@ -1,7 +1,8 @@
 import type { HydratedDocument } from 'mongoose';
-import type { MembershipPlan, Membership } from '@fitpulse/shared';
+import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType } from '@fitpulse/shared';
 import { MembershipPlanModel, type MembershipPlanDocument } from '../../db/models/MembershipPlan.js';
 import { MembershipModel, type MembershipDocument } from '../../db/models/Membership.js';
+import { PaymentEventModel, type PaymentEventDocument } from '../../db/models/PaymentEvent.js';
 
 export function toDomainPlan(doc: HydratedDocument<MembershipPlanDocument>): MembershipPlan {
   return {
@@ -106,4 +107,34 @@ export async function getMembershipCounts(tenantId: string) {
     MembershipModel.countDocuments({ tenantId, paymentMethod: 'cash' }),
   ]);
   return { expiredSubscriptions, pendingPayments, onlinePayments, cashPayments };
+}
+
+// ─── Payment history ────────────────────────────────────────────────────────────
+
+export function toDomainPaymentEvent(doc: HydratedDocument<PaymentEventDocument>): PaymentEvent {
+  return {
+    id: doc._id.toString(),
+    tenantId: doc.tenantId.toString(),
+    userId: doc.userId.toString(),
+    type: doc.type,
+    amountCents: doc.amountCents,
+    currency: doc.currency,
+    planName: doc.planName,
+    occurredAt: doc.occurredAt.toISOString(),
+  };
+}
+
+export async function recordPaymentEvent(input: {
+  tenantId: string;
+  userId: string;
+  type: PaymentEventType;
+  amountCents?: number;
+  currency?: string;
+  planName?: string;
+}) {
+  return PaymentEventModel.create(input);
+}
+
+export async function findPaymentEventsByUser(userId: string, limit = 50) {
+  return PaymentEventModel.find({ userId }).sort({ occurredAt: -1 }).limit(limit);
 }

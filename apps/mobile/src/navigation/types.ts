@@ -10,6 +10,7 @@ export type AuthStackParams = {
   GoalSelection: undefined;
   BodyStats: { goals: FitnessGoal[] };
   ForgotPassword: undefined;
+  ScanToSignIn: undefined;
 };
 
 export type MemberTabParams = {
@@ -42,6 +43,7 @@ export type ProgressStackParams = {
   BodyMetrics: undefined;
   PersonalRecords: undefined;
   Nutrition: undefined;
+  DietPlan: undefined;
   HabitTracker: undefined;
   OneRMCalculator: undefined;
 };
@@ -53,6 +55,7 @@ export type ProfileStackParams = {
   QRCheckIn: undefined;
   Notifications: undefined;
   Settings: undefined;
+  Sponsorship: undefined;
 };
 
 export type TrainerStackParams = {

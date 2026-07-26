@@ -29,4 +29,8 @@ export default async function nutritionRoutes(fastify: FastifyInstance) {
       return nutritionService.deleteMeal(request.params.id, request.user.sub);
     },
   );
+
+  app.get('/nutrition/diet-plans', { preHandler: [fastify.authenticate] }, async (request) => {
+    return nutritionService.listDietPlans(request.user.sub);
+  });
 }

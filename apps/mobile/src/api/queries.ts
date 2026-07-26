@@ -17,6 +17,8 @@ import type {
   HabitEntry,
   UserStatus,
   Message,
+  Sponsor,
+  DietPlan,
 } from '@fitpulse/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -48,10 +50,12 @@ export const queryKeys = {
   messages: (otherUserId: string) => ['messages', otherUserId] as const,
   nutrition: {
     today: ['nutrition', 'today'] as const,
+    dietPlans: ['nutrition', 'diet-plans'] as const,
   },
   habits: {
     today: ['habits', 'today'] as const,
   },
+  sponsors: ['sponsors'] as const,
 };
 
 // ─── Query Functions ──────────────────────────────────────────────────────────
@@ -144,3 +148,8 @@ export const deleteMeal = (id: string) => api.delete<{ success: boolean }>(`/nut
 
 export const fetchTodayHabits = () => api.get<HabitEntry[]>('/habits/today');
 export const toggleHabit = (habitId: string) => api.post<HabitEntry>(`/habits/${habitId}/toggle`, {});
+
+export const fetchSponsors = () => api.get<Sponsor[]>('/sponsors');
+
+export const fetchDietPlans = () => api.get<DietPlan[]>('/nutrition/diet-plans');
+export const generateDietPlan = (goal: string) => api.post<DietPlan>('/ai/coach/generate-diet-plan', { goal });

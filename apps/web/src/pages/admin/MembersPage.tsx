@@ -3,17 +3,20 @@ import { observer } from 'mobx-react-lite'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown } from 'lucide-react'
+import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode } from 'lucide-react'
 import type { TrainerMemberSummary, SubscriptionStatus } from '@fitpulse/shared'
 import {
   queryKeys,
   fetchTrainerMembers,
   updateMemberStatus,
+  updateMemberInfo,
   fetchMembershipPlans,
   createCheckoutSession,
   markMemberPaid,
   updateMembershipDates,
+  generateLoginPairingToken,
 } from '@/api/queries'
+import { QRCodeImage } from '@/components/common/QRCodeImage'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
@@ -44,6 +47,8 @@ export const MembersPage = observer(function MembersPage() {
   const [checkoutTarget, setCheckoutTarget] = useState<TrainerMemberSummary | null>(null)
   const [markPaidTarget, setMarkPaidTarget] = useState<TrainerMemberSummary | null>(null)
   const [datesTarget, setDatesTarget] = useState<TrainerMemberSummary | null>(null)
+  const [infoTarget, setInfoTarget] = useState<TrainerMemberSummary | null>(null)
+  const [pairingTarget, setPairingTarget] = useState<TrainerMemberSummary | null>(null)
 
   const isAdmin = authStore.user?.role === 'admin'
 
@@ -190,6 +195,11 @@ export const MembersPage = observer(function MembersPage() {
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>Account</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => setInfoTarget(member)}>Edit name / phone</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPairingTarget(member)}>
+                              <QrCode className="size-4" />
+                              Generate sign-in QR
+                            </DropdownMenuItem>
                             {member.status === 'suspended' ? (
                               <DropdownMenuItem onClick={() => statusMutation.mutate({ memberId: member.id, status: 'active' })}>
                                 Reactivate member
@@ -216,6 +226,8 @@ export const MembersPage = observer(function MembersPage() {
 
       <SendCheckoutLinkDialog member={checkoutTarget} onClose={() => setCheckoutTarget(null)} />
       <EditMembershipDatesDialog member={datesTarget} onClose={() => setDatesTarget(null)} />
+      <EditMemberInfoDialog member={infoTarget} onClose={() => setInfoTarget(null)} />
+      <LoginPairingDialog member={pairingTarget} onClose={() => setPairingTarget(null)} />
 
       <Dialog open={!!markPaidTarget} onOpenChange={(open) => !open && setMarkPaidTarget(null)}>
         <DialogContent>
@@ -314,6 +326,109 @@ function EditMembershipDatesDialog({ member, onClose }: { member: TrainerMemberS
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function EditMemberInfoDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (updates: { firstName?: string; lastName?: string; phone?: string }) => {
+      if (!member) throw new Error('No member selected')
+      return updateMemberInfo(member.id, updates)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
+      toast.success('Member info updated')
+      onClose()
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  return (
+    <Dialog open={!!member} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit member info</DialogTitle>
+          <DialogDescription>Update {member?.firstName} {member?.lastName}'s name and phone number.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const formData = new FormData(e.currentTarget)
+            mutation.mutate({
+              firstName: String(formData.get('firstName') ?? ''),
+              lastName: String(formData.get('lastName') ?? ''),
+              phone: String(formData.get('phone') ?? '') || undefined,
+            })
+          }}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="firstName">First name</Label>
+              <Input id="firstName" name="firstName" defaultValue={member?.firstName} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lastName">Last name</Label>
+              <Input id="lastName" name="lastName" defaultValue={member?.lastName} required />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="phone">Phone number</Label>
+            <Input id="phone" name="phone" type="tel" defaultValue={member?.phone} placeholder="+1 555 123 4567" />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Saving…' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function LoginPairingDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
+  const mutation = useMutation({
+    mutationFn: () => {
+      if (!member) throw new Error('No member selected')
+      return generateLoginPairingToken(member.id)
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const handleClose = (open: boolean) => {
+    if (open) return
+    mutation.reset()
+    onClose()
+  }
+
+  return (
+    <Dialog open={!!member} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Sign-in QR code</DialogTitle>
+          <DialogDescription>
+            {member?.firstName} scans this once in the mobile app to sign in instantly - no password needed. Expires in 10 minutes and
+            works only once.
+          </DialogDescription>
+        </DialogHeader>
+
+        {mutation.data ? (
+          <div className="flex flex-col items-center gap-3 py-2">
+            <QRCodeImage value={mutation.data.token} />
+            <p className="text-xs text-muted-foreground">
+              Expires at {new Date(mutation.data.expiresAt).toLocaleTimeString()}
+            </p>
+          </div>
+        ) : (
+          <Button className="w-fit" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+            {mutation.isPending ? 'Generating…' : 'Generate QR code'}
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
   )

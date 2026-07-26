@@ -20,6 +20,7 @@ import { WorkoutPlanModel } from './models/WorkoutPlan.js';
 import { WorkoutSessionModel } from './models/WorkoutSession.js';
 import { AttendanceRecordModel } from './models/AttendanceRecord.js';
 import { PersonalRecordModel } from './models/PersonalRecord.js';
+import { SponsorModel } from './models/Sponsor.js';
 
 const SEED_PASSWORD = 'password123';
 
@@ -48,6 +49,23 @@ async function upsertBranch(tenantId: Types.ObjectId) {
       },
     },
     { new: true, upsert: true },
+  );
+}
+
+async function upsertSponsors(tenantId: Types.ObjectId) {
+  const sponsors = [
+    { name: 'IronForge Supplements', description: 'Official protein & creatine partner - members get 15% off with code FITPULSE15.', websiteUrl: 'https://example.com/ironforge' },
+    { name: 'PulseWear Athletic', description: 'Performance apparel sponsor - new member welcome packs include a free PulseWear tee.', websiteUrl: 'https://example.com/pulsewear' },
+    { name: 'RecoverFast Therapy', description: 'On-site recovery partner - members get a discounted rate on sports massage and cupping.', websiteUrl: 'https://example.com/recoverfast' },
+  ];
+  await Promise.all(
+    sponsors.map((s) =>
+      SponsorModel.findOneAndUpdate(
+        { tenantId, name: s.name },
+        { $setOnInsert: { tenantId, ...s, active: true } },
+        { upsert: true },
+      ),
+    ),
   );
 }
 
@@ -101,6 +119,7 @@ async function main() {
 
   const tenant = await upsertTenant();
   const branch = await upsertBranch(tenant._id);
+  await upsertSponsors(tenant._id);
 
   const admin = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'admin', email: 'admin@fitpulse.app', firstName: 'Ava', lastName: 'Owner' });
   const trainer = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'trainer', email: 'trainer@fitpulse.app', firstName: 'Tom', lastName: 'Coach' });

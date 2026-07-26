@@ -66,4 +66,16 @@ export default async function billingRoutes(fastify: FastifyInstance) {
       return billingService.updateMembershipDates(request.user.tenantId, request.params.memberId, request.body);
     },
   );
+
+  app.get(
+    '/admin/members/:memberId/payment-history',
+    { schema: { params: memberIdParamSchema }, preHandler },
+    async (request) => {
+      return billingService.getPaymentHistory(request.user.tenantId, request.params.memberId);
+    },
+  );
+
+  app.get('/admin/payment-gateway-status', { preHandler }, async () => {
+    return billingService.getPaymentGatewayStatus();
+  });
 }

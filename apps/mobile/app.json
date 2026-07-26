@@ -31,6 +31,12 @@
       "expo-camera",
       "expo-barcode-scanner",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "FitPulse needs access to your photos so you can set a profile picture."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",

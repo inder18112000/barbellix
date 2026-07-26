@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { loginSchema, registerSchema, forgotPasswordSchema } from '@fitpulse/shared';
+import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema } from '@fitpulse/shared';
 import * as authService from './service.js';
 
 const refreshBodySchema = z.object({ refreshToken: z.string().min(1) });
@@ -16,6 +16,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   app.post('/login', { schema: { body: loginSchema } }, async (request) => {
     return authService.login(fastify, request.body);
+  });
+
+  // Public - identity is proven by possessing the (single-use, short-lived) QR pairing token
+  // itself, not by a bearer session. See lib/pairingToken.ts.
+  app.post('/pair', { schema: { body: redeemPairingTokenSchema } }, async (request) => {
+    return authService.pairDevice(fastify, request.body.token);
   });
 
   app.post('/refresh', { schema: { body: refreshBodySchema } }, async (request) => {

@@ -8,6 +8,7 @@ export const updateBranchSchema = z.object({
   autoCheckoutEnabled: z.boolean().optional(),
   autoCheckoutAfterMins: z.number().optional(),
   guestPassEnabled: z.boolean().optional(),
+  gracePeriodDays: z.number().min(0).max(30).optional(),
 });
 
 export const recentAttendanceQuerySchema = z.object({

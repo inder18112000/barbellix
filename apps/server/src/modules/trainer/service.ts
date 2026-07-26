@@ -1,7 +1,11 @@
+import { Types } from 'mongoose';
 import type { TrainerMemberSummary } from '@fitpulse/shared';
 import { NotFoundError } from '../../lib/errors.js';
+import { toDomainUser } from '../../lib/mappers.js';
+import { issuePairingToken } from '../../lib/pairingToken.js';
 import { computeSummary } from '../attendance/service.js';
 import { getMembershipSummary } from '../billing/service.js';
+import { updateInfo as updateUserInfo } from '../users/repository.js';
 import * as repo from './repository.js';
 
 export async function listMembers(tenantId: string): Promise<TrainerMemberSummary[]> {
@@ -70,6 +74,32 @@ export async function updateMemberStatus(tenantId: string, memberId: string, sta
   const updated = await repo.updateMemberStatus(memberId, tenantId, status);
   if (!updated) throw new NotFoundError('Member not found');
   return { memberId, status: updated.status };
+}
+
+/** Reuses the exact same update path a member uses to edit their own info (users/repository.ts's
+ * updateInfo) - the only new thing here is the tenant-ownership check, since this is being
+ * called by an admin about someone else's account rather than by the account owner. */
+export async function updateMemberInfo(
+  tenantId: string,
+  memberId: string,
+  updates: { firstName?: string; lastName?: string; phone?: string },
+) {
+  const member = await repo.findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const updated = await updateUserInfo(memberId, updates);
+  if (!updated) throw new NotFoundError('Member not found');
+  return toDomainUser(updated);
+}
+
+/** Generates a one-time QR device-pairing token for this member's first mobile login - see
+ * lib/pairingToken.ts and auth/service.ts's pairDevice() for the redemption side. */
+export async function generateLoginPairingToken(tenantId: string, memberId: string) {
+  const member = await repo.findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const { token, expiresAt } = await issuePairingToken(new Types.ObjectId(memberId), new Types.ObjectId(tenantId));
+  return { token, expiresAt: expiresAt.toISOString() };
 }
 
 export async function assignPlan(trainerId: string, tenantId: string, memberId: string, planId: string) {

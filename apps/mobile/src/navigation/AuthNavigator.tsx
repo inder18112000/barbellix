@@ -9,6 +9,7 @@ import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { GoalSelectionScreen } from '../screens/auth/GoalSelectionScreen';
 import { BodyStatsScreen } from '../screens/auth/BodyStatsScreen';
 import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
+import { ScanToSignInScreen } from '../screens/auth/ScanToSignInScreen';
 
 const Stack = createNativeStackNavigator<AuthStackParams>();
 
@@ -25,6 +26,7 @@ export function AuthNavigator() {
       <Stack.Screen name="GoalSelection" component={GoalSelectionScreen} />
       <Stack.Screen name="BodyStats" component={BodyStatsScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ScanToSignIn" component={ScanToSignInScreen} />
     </Stack.Navigator>
   );
 }

@@ -15,6 +15,15 @@ export const styles = StyleSheet.create({
   measureToggle: { marginTop: spacing.md, paddingVertical: spacing.sm },
   measureToggleText: { ...typography.label, color: colors.primary },
 
+  muscleCard: { marginHorizontal: spacing.md, marginBottom: spacing.md, padding: spacing.lg, borderRadius: borderRadius.xl },
+  muscleTitle: { ...typography.h4, color: colors.textPrimary, marginBottom: 2 },
+  muscleSubtitle: { ...typography.caption, color: colors.textMuted, marginBottom: spacing.md },
+  muscleRow: { flexDirection: 'row', gap: spacing.md },
+  muscleStat: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm, borderRadius: borderRadius.lg, backgroundColor: colors.surfaceElevated },
+  muscleStatLabel: { ...typography.caption, color: colors.textSecondary },
+  muscleStatValue: { ...typography.h3, color: colors.textPrimary, marginTop: 2 },
+  muscleStatDelta: { ...typography.label, fontWeight: '700', marginTop: 2 },
+
   historyRow: {
     marginHorizontal: spacing.md, marginBottom: spacing.xs,
     padding: spacing.md, borderRadius: borderRadius.lg,

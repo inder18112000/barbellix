@@ -21,6 +21,8 @@ export const styles = StyleSheet.create({
   errorBannerText: { ...typography.body, color: colors.error },
   forgotLink: { alignSelf: 'flex-end', marginBottom: spacing.lg, marginTop: -spacing.sm },
   forgotLinkText: { ...typography.caption, color: colors.primary },
+  scanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.lg, padding: spacing.sm },
+  scanLinkText: { ...typography.body, color: colors.primary, fontWeight: '600' },
   registerLink: { alignItems: 'center', padding: spacing.sm },
   registerLinkText: { ...typography.body, color: colors.textMuted },
 });

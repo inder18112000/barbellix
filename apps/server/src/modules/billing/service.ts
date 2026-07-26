@@ -14,6 +14,26 @@ export function deriveSubscriptionStatus(status?: MembershipStatus, paymentStatu
   return 'active';
 }
 
+/**
+ * Pure function - no I/O, no scheduled job needed. Enforced lazily at the moment a member tries
+ * to log in or refresh their session (see auth/service.ts), not by a background process that
+ * proactively suspends accounts. This is a deliberate architectural choice: it's always correct
+ * at the instant it's checked (no "the cron hasn't run yet" staleness window), it needs no new
+ * server infrastructure, and "access restored after payment" falls out for free - the very next
+ * check after a webhook updates paymentStatus/endDate just naturally passes again.
+ */
+export function isAccessBlocked(
+  membership: { paymentStatus: PaymentStatus; endDate?: Date } | null | undefined,
+  gracePeriodDays: number,
+): boolean {
+  if (!membership?.endDate) return false;
+  if (membership.paymentStatus === 'paid' || membership.paymentStatus === 'comp') return false;
+
+  const graceEnd = new Date(membership.endDate);
+  graceEnd.setUTCDate(graceEnd.getUTCDate() + gracePeriodDays);
+  return new Date() > graceEnd;
+}
+
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
 export async function listPlans(tenantId: string): Promise<MembershipPlan[]> {
@@ -173,7 +193,22 @@ export async function markPaid(tenantId: string, memberId: string, planName: str
     paymentStatus: 'comp' as PaymentStatus,
     paymentMethod: 'cash',
   });
+  await repo.recordPaymentEvent({ tenantId, userId: memberId, type: 'marked_paid', planName });
   return repo.toDomainMembership(doc);
+}
+
+/** Never exposes the actual key - only whether one is configured - so the web Settings page can
+ * show real status without the UI (or its network tab) ever seeing a secret. */
+export function getPaymentGatewayStatus() {
+  return { stripeConfigured: stripeLib.isConfigured() };
+}
+
+export async function getPaymentHistory(tenantId: string, memberId: string) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const docs = await repo.findPaymentEventsByUser(memberId);
+  return docs.map(repo.toDomainPaymentEvent);
 }
 
 // ─── Webhook handling ───────────────────────────────────────────────────────────
@@ -197,6 +232,14 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
         stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
       });
+      await repo.recordPaymentEvent({
+        tenantId,
+        userId,
+        type: 'checkout_completed',
+        amountCents: session.amount_total ?? undefined,
+        currency: session.currency ?? undefined,
+        planName: plan?.name,
+      });
       break;
     }
 
@@ -210,6 +253,9 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         status: subscription.status === 'active' ? ('active' as MembershipStatus) : ('paused' as MembershipStatus),
         currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : undefined,
       });
+      if (subscription.status === 'active') {
+        await repo.recordPaymentEvent({ tenantId: membership.tenantId.toString(), userId: membership.userId.toString(), type: 'subscription_renewed', planName: membership.planName });
+      }
       break;
     }
 
@@ -219,6 +265,7 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       if (!membership) break;
 
       await repo.upsertMembership(membership.userId.toString(), { status: 'cancelled' as MembershipStatus });
+      await repo.recordPaymentEvent({ tenantId: membership.tenantId.toString(), userId: membership.userId.toString(), type: 'subscription_cancelled', planName: membership.planName });
       break;
     }
 
@@ -230,6 +277,14 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       if (!membership) break;
 
       await repo.upsertMembership(membership.userId.toString(), { paymentStatus: 'overdue' as PaymentStatus });
+      await repo.recordPaymentEvent({
+        tenantId: membership.tenantId.toString(),
+        userId: membership.userId.toString(),
+        type: 'payment_failed',
+        amountCents: invoice.amount_due ?? undefined,
+        currency: invoice.currency ?? undefined,
+        planName: membership.planName,
+      });
       break;
     }
 

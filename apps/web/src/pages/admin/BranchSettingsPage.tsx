@@ -28,6 +28,7 @@ interface FormState {
   autoCheckoutEnabled: boolean
   autoCheckoutAfterMins: string
   guestPassEnabled: boolean
+  gracePeriodDays: string
 }
 
 export const BranchSettingsPage = observer(function BranchSettingsPage() {
@@ -45,6 +46,7 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
       autoCheckoutEnabled: data.autoCheckoutEnabled,
       autoCheckoutAfterMins: String(data.autoCheckoutAfterMins),
       guestPassEnabled: data.guestPassEnabled,
+      gracePeriodDays: String(data.gracePeriodDays),
     })
   }, [data])
 
@@ -100,6 +102,7 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
             autoCheckoutEnabled: form.autoCheckoutEnabled,
             autoCheckoutAfterMins: Number(form.autoCheckoutAfterMins) || 60,
             guestPassEnabled: form.guestPassEnabled,
+            gracePeriodDays: Number(form.gracePeriodDays) || 0,
           })
         }}
       >
@@ -188,6 +191,31 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
                 checked={form.guestPassEnabled}
                 onCheckedChange={(checked) => setForm({ ...form, guestPassEnabled: checked })}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Membership enforcement</CardTitle>
+            <CardDescription>
+              Grace period after a membership expires before access is blocked - checked the moment a member tries to log in, not by a
+              background job. Restored automatically as soon as they pay.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="gracePeriodDays">Grace period (days)</Label>
+              <Input
+                id="gracePeriodDays"
+                type="number"
+                min="0"
+                max="30"
+                className="max-w-40"
+                value={form.gracePeriodDays}
+                onChange={(e) => setForm({ ...form, gracePeriodDays: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Set to 0 to block access immediately on expiry.</p>
             </div>
           </CardContent>
           <CardFooter>

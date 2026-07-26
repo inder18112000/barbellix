@@ -32,8 +32,17 @@ export const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 28,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: colors.primary,
+    position: 'relative',
   },
+  profileAvatarImage: { width: 56, height: 56, borderRadius: 28 },
   profileAvatarText: { ...typography.h4, color: '#fff' },
+  profileAvatarCameraBadge: {
+    position: 'absolute', bottom: -2, right: -2,
+    width: 20, height: 20, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5, borderColor: colors.background,
+  },
   profileName: { ...typography.h4, color: colors.textPrimary },
   profileBio: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   profileBioInput: {
@@ -107,9 +116,9 @@ export const styles = StyleSheet.create({
   aiSkipBtn: { paddingHorizontal: spacing.md, justifyContent: 'center' },
   aiSkipText: { ...typography.body, color: colors.textMuted },
 
-  quickActions: { flexDirection: 'row', gap: spacing.sm },
+  quickActions: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.sm },
   quickAction: {
-    flex: 1, alignItems: 'center',
+    width: '31%', alignItems: 'center',
     paddingVertical: spacing.md, paddingHorizontal: spacing.xs,
     borderRadius: borderRadius.lg, borderWidth: 1,
   },

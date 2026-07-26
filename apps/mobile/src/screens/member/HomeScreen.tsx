@@ -1,14 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions,
+  View, Text, Image, ScrollView, TouchableOpacity, TextInput, Animated, Dimensions, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
+import type { User } from '@fitpulse/shared';
 import { format } from 'date-fns';
 import { styles } from './HomeScreen.styles';
 
@@ -122,9 +125,10 @@ function ProfileCard() {
   const { user, setUser } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(user?.profile.bio ?? '');
+  const [pickingPhoto, setPickingPhoto] = useState(false);
 
-  const { mutate: saveBio, isPending } = useMutation({
-    mutationFn: (bio: string) => updateProfile({ bio }),
+  const { mutate: saveProfile, isPending } = useMutation({
+    mutationFn: (partial: Partial<User['profile']>) => updateProfile(partial),
     onSuccess: (updated) => {
       setUser(updated);
       setEditing(false);
@@ -133,11 +137,47 @@ function ProfileCard() {
 
   const initials = `${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`;
 
+  const handlePickPhoto = async () => {
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      Alert.alert('Photo access needed', 'Enable photo library access in Settings to change your profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setPickingPhoto(true);
+    try {
+      // Resize + compress before base64-encoding to keep the JSON payload well under
+      // Fastify's default 1MB body limit - full-res phone photos would blow past it.
+      const manipulated = await manipulateAsync(
+        result.assets[0].uri,
+        [{ resize: { width: 400 } }],
+        { compress: 0.6, format: SaveFormat.JPEG, base64: true },
+      );
+      saveProfile({ avatarUrl: `data:image/jpeg;base64,${manipulated.base64}` });
+    } finally {
+      setPickingPhoto(false);
+    }
+  };
+
   return (
     <View style={[styles.profileCard, glass.card]}>
-      <View style={styles.profileAvatar}>
-        <Text style={styles.profileAvatarText}>{initials}</Text>
-      </View>
+      <TouchableOpacity style={styles.profileAvatar} onPress={handlePickPhoto} disabled={pickingPhoto} activeOpacity={0.8}>
+        {user?.profile.avatarUrl ? (
+          <Image source={{ uri: user.profile.avatarUrl }} style={styles.profileAvatarImage} />
+        ) : (
+          <Text style={styles.profileAvatarText}>{initials}</Text>
+        )}
+        <View style={styles.profileAvatarCameraBadge}>
+          <Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>
+        </View>
+      </TouchableOpacity>
       <View style={{ flex: 1 }}>
         <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
         {editing ? (
@@ -149,8 +189,8 @@ function ProfileCard() {
             placeholderTextColor={colors.textMuted}
             autoFocus
             maxLength={280}
-            onSubmitEditing={() => saveBio(draft)}
-            onBlur={() => saveBio(draft)}
+            onSubmitEditing={() => saveProfile({ bio: draft })}
+            onBlur={() => saveProfile({ bio: draft })}
             editable={!isPending}
           />
         ) : (
@@ -162,7 +202,7 @@ function ProfileCard() {
       <TouchableOpacity
         style={styles.profileEditBtn}
         onPress={() => {
-          if (editing) saveBio(draft);
+          if (editing) saveProfile({ bio: draft });
           else setEditing(true);
         }}
       >
@@ -253,6 +293,7 @@ export function HomeScreen() {
             <QuickAction emoji="🥗" label="Diet"       onPress={() => navigation.navigate('Progress', { screen: 'Nutrition' })}        glowColor={colors.success} />
             <QuickAction emoji="⚖️" label="Weight"     onPress={() => navigation.navigate('Progress', { screen: 'BodyMetrics' })}      glowColor={'#FFB347'} />
             <QuickAction emoji="📊" label="Progress"   onPress={() => navigation.navigate('Progress')}                                 glowColor={colors.accent} />
+            <QuickAction emoji="🤝" label="Sponsors"   onPress={() => navigation.navigate('Profile', { screen: 'Sponsorship' })}      glowColor={'#AF52DE'} />
           </View>
         </View>
 

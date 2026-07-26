@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useQuery } from '@tanstack/react-query'
-import { Users, CalendarCheck, TrendingUp, Activity, ShieldAlert, UserPlus, Clock, CreditCard, Banknote } from 'lucide-react'
+import { Users, CalendarCheck, TrendingUp, Activity, ShieldAlert, UserPlus, Clock, CreditCard } from 'lucide-react'
 import { authStore } from '@/store/authStore'
 import { queryKeys, fetchTrainerStats, fetchAttendanceAnalytics, fetchRecentAttendance, fetchDashboardStats } from '@/api/queries'
 import { StatCard } from '@/components/common/StatCard'
@@ -24,87 +24,94 @@ export const AdminHomePage = observer(function AdminHomePage() {
         <p className="mt-1 text-muted-foreground">Here's how your gym is doing right now.</p>
       </div>
 
-      {statsQuery.isError || analyticsQuery.isError ? (
-        <ErrorState message="Couldn't load dashboard stats." />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statsQuery.isPending ? (
-            <>
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-            </>
-          ) : (
-            <>
-              <StatCard
-                label="Active members"
-                value={statsQuery.data.activeMembersCount}
-                icon={<Users className="size-5" />}
-              />
-              <StatCard
-                label="Sessions today"
-                value={statsQuery.data.sessionsTodayCount}
-                icon={<Activity className="size-5" />}
-              />
-              <StatCard
-                label="Attendance rate"
-                value={`${Math.round(statsQuery.data.attendanceRate * 100)}%`}
-                icon={<TrendingUp className="size-5" />}
-              />
-              <StatCard
-                label="Check-ins (30d)"
-                value={checkinsLast30d}
-                icon={<CalendarCheck className="size-5" />}
-              />
-            </>
-          )}
-        </div>
-      )}
+      <section className="flex flex-col gap-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          <span className="h-4 w-1 rounded-full bg-primary" />
+          Roster &amp; activity
+        </h2>
+        {statsQuery.isError || analyticsQuery.isError || dashboardStatsQuery.isError ? (
+          <ErrorState message="Couldn't load dashboard stats." />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {statsQuery.isPending || dashboardStatsQuery.isPending ? (
+              <>
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  label="Total clients"
+                  value={dashboardStatsQuery.data.totalClients}
+                  hint={`${dashboardStatsQuery.data.activeClients} active`}
+                  icon={<Users className="size-5" />}
+                />
+                <StatCard
+                  label="Sessions today"
+                  value={statsQuery.data.sessionsTodayCount}
+                  icon={<Activity className="size-5" />}
+                />
+                <StatCard
+                  label="Attendance rate"
+                  value={`${Math.round(statsQuery.data.attendanceRate * 100)}%`}
+                  icon={<TrendingUp className="size-5" />}
+                />
+                <StatCard
+                  label="Check-ins (30d)"
+                  value={checkinsLast30d}
+                  icon={<CalendarCheck className="size-5" />}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </section>
 
-      {dashboardStatsQuery.isError ? (
-        <ErrorState message="Couldn't load membership & payment stats." />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {dashboardStatsQuery.isPending ? (
-            <>
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-              <Skeleton className="h-28" />
-            </>
-          ) : (
-            <>
-              <StatCard
-                label="Expired subscriptions"
-                value={dashboardStatsQuery.data.expiredSubscriptions}
-                icon={<ShieldAlert className="size-5" />}
-              />
-              <StatCard
-                label="New enrollments (30d)"
-                value={dashboardStatsQuery.data.newEnrollmentsThisMonth}
-                icon={<UserPlus className="size-5" />}
-              />
-              <StatCard
-                label="Pending payments"
-                value={dashboardStatsQuery.data.pendingPayments}
-                icon={<Clock className="size-5" />}
-              />
-              <StatCard
-                label="Online payments"
-                value={dashboardStatsQuery.data.onlinePayments}
-                icon={<CreditCard className="size-5" />}
-              />
-              <StatCard
-                label="Cash payments"
-                value={dashboardStatsQuery.data.cashPayments}
-                icon={<Banknote className="size-5" />}
-              />
-            </>
-          )}
-        </div>
-      )}
+      <section className="flex flex-col gap-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          <span className="h-4 w-1 rounded-full bg-warning" />
+          Membership &amp; payments
+        </h2>
+        {dashboardStatsQuery.isError ? (
+          <ErrorState message="Couldn't load membership & payment stats." />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {dashboardStatsQuery.isPending ? (
+              <>
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+                <Skeleton className="h-28" />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  label="Expired subscriptions"
+                  value={dashboardStatsQuery.data.expiredSubscriptions}
+                  icon={<ShieldAlert className="size-5" />}
+                />
+                <StatCard
+                  label="New enrollments (30d)"
+                  value={dashboardStatsQuery.data.newEnrollmentsThisMonth}
+                  icon={<UserPlus className="size-5" />}
+                />
+                <StatCard
+                  label="Pending payments"
+                  value={dashboardStatsQuery.data.pendingPayments}
+                  icon={<Clock className="size-5" />}
+                />
+                <StatCard
+                  label="Online vs. cash"
+                  value={`${dashboardStatsQuery.data.onlinePayments} / ${dashboardStatsQuery.data.cashPayments}`}
+                  icon={<CreditCard className="size-5" />}
+                />
+              </>
+            )}
+          </div>
+        )}
+      </section>
 
       <Card>
         <CardHeader>

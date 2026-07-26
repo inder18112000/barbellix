@@ -20,3 +20,8 @@ export const logoutRequest = (refreshToken: string) =>
 
 export const forgotPassword = (input: ForgotPasswordInput) =>
   api.post<{ message: string }>('/auth/forgot-password', input);
+
+/** Redeems a one-time QR device-pairing token (see the "Scan to sign in" flow) - same response
+ * shape as a normal login, just a different way of proving identity. */
+export const pairDevice = (token: string) =>
+  api.post<{ user: User } & AuthTokens>('/auth/pair', { token });

@@ -37,6 +37,7 @@ export function toDomainBranch(doc: HydratedDocument<BranchDocument>): Branch {
     autoCheckoutEnabled: doc.autoCheckoutEnabled,
     autoCheckoutAfterMins: doc.autoCheckoutAfterMins,
     guestPassEnabled: doc.guestPassEnabled,
+    gracePeriodDays: doc.gracePeriodDays,
   };
 }
 
@@ -70,4 +71,12 @@ export async function findRecentAttendance(tenantId: string, limit: number) {
 
 export async function countNewEnrollments(tenantId: string, since: Date) {
   return UserModel.countDocuments({ tenantId, role: 'member', createdAt: { $gte: since } });
+}
+
+export async function countClientsBreakdown(tenantId: string) {
+  const [totalClients, activeClients] = await Promise.all([
+    UserModel.countDocuments({ tenantId, role: 'member' }),
+    UserModel.countDocuments({ tenantId, role: 'member', status: 'active' }),
+  ]);
+  return { totalClients, activeClients };
 }

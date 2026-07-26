@@ -3,14 +3,32 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { format } from 'date-fns'
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { ArrowLeft, Trophy, Dumbbell, Scale, Flame } from 'lucide-react'
-import { queryKeys, fetchTrainerMembers, fetchMemberProgress } from '@/api/queries'
+import { ArrowLeft, Trophy, Dumbbell, Scale, Flame, ClipboardList, Sparkles, CreditCard, Banknote, AlertTriangle, RefreshCcw, XCircle } from 'lucide-react'
+import { queryKeys, fetchTrainerMembers, fetchMemberProgress, fetchPaymentHistory } from '@/api/queries'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { UserStatusBadge, SubscriptionStatusBadge } from '@/lib/statusBadges'
+import { cn } from '@/lib/utils'
+import type { PaymentEvent } from '@fitpulse/shared'
+
+const PAYMENT_EVENT_ICON: Record<PaymentEvent['type'], typeof CreditCard> = {
+  checkout_completed: CreditCard,
+  subscription_renewed: RefreshCcw,
+  subscription_cancelled: XCircle,
+  payment_failed: AlertTriangle,
+  marked_paid: Banknote,
+}
+const PAYMENT_EVENT_LABEL: Record<PaymentEvent['type'], string> = {
+  checkout_completed: 'Checkout completed',
+  subscription_renewed: 'Subscription renewed',
+  subscription_cancelled: 'Subscription cancelled',
+  payment_failed: 'Payment failed',
+  marked_paid: 'Marked as paid (cash)',
+}
 
 export const MemberDetailPage = observer(function MemberDetailPage() {
   const { memberId } = useParams<{ memberId: string }>()
@@ -19,6 +37,11 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
   const progressQuery = useQuery({
     queryKey: queryKeys.admin.memberProgress(memberId ?? ''),
     queryFn: () => fetchMemberProgress(memberId!),
+    enabled: !!memberId,
+  })
+  const paymentHistoryQuery = useQuery({
+    queryKey: queryKeys.admin.paymentHistory(memberId ?? ''),
+    queryFn: () => fetchPaymentHistory(memberId!),
     enabled: !!memberId,
   })
 
@@ -152,6 +175,77 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Workout plans</CardTitle>
+              <CardDescription>Trainer-assigned and AI-generated plans this member has.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {progressQuery.isPending ? (
+                <Skeleton className="h-24 w-full" />
+              ) : (progressQuery.data?.plans.length ?? 0) === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No workout plans yet.</p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-border">
+                  {progressQuery.data!.plans.map((plan) => (
+                    <li key={plan.id} className="flex items-center justify-between py-2.5 text-sm">
+                      <div className="flex items-center gap-2">
+                        {plan.generatedBy === 'ai' && <Sparkles className="size-4 text-primary" />}
+                        <span className="font-medium">{plan.name}</span>
+                        <Badge variant="outline" className="capitalize">
+                          {plan.goal.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <ClipboardList className="size-3.5" />
+                        {plan.days.length} day{plan.days.length === 1 ? '' : 's'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment history</CardTitle>
+              <CardDescription>Real events recorded from Stripe webhooks and manual mark-as-paid actions.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {paymentHistoryQuery.isPending ? (
+                <Skeleton className="h-24 w-full" />
+              ) : paymentHistoryQuery.isError ? (
+                <ErrorState message="Couldn't load payment history." />
+              ) : paymentHistoryQuery.data.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No payment events yet.</p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-border">
+                  {paymentHistoryQuery.data.map((event) => {
+                    const Icon = PAYMENT_EVENT_ICON[event.type]
+                    return (
+                      <li key={event.id} className="flex items-center justify-between py-2.5 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Icon className={cn('size-4', event.type === 'payment_failed' ? 'text-destructive' : 'text-primary')} />
+                          <span>{PAYMENT_EVENT_LABEL[event.type]}</span>
+                          {event.planName && <span className="text-muted-foreground">· {event.planName}</span>}
+                        </div>
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          {event.amountCents != null && (
+                            <span className="font-medium text-foreground">
+                              ${(event.amountCents / 100).toFixed(2)} {event.currency?.toUpperCase()}
+                            </span>
+                          )}
+                          <span>{format(new Date(event.occurredAt), 'MMM d, yyyy')}</span>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
               )}
             </CardContent>
           </Card>

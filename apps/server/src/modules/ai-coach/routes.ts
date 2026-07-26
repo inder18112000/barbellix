@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { completeChatSchema, generateWorkoutPlanSchema, recommendationIdParamSchema } from './schemas.js';
+import { completeChatSchema, generateWorkoutPlanSchema, generateDietPlanSchema, recommendationIdParamSchema } from './schemas.js';
 import * as aiCoachService from './service.js';
 
 function rateLimitKeyGenerator(fastify: FastifyInstance) {
@@ -68,6 +68,19 @@ export default async function aiCoachRoutes(fastify: FastifyInstance) {
         request.body.goal,
         request.body.daysPerWeek,
       );
+      return reply.status(201).send(plan);
+    },
+  );
+
+  app.post(
+    '/ai/coach/generate-diet-plan',
+    {
+      schema: { body: generateDietPlanSchema },
+      preHandler: [fastify.authenticate],
+      config: { rateLimit: { max: 8, timeWindow: '1 hour', keyGenerator: rateLimitKeyGenerator(fastify) } },
+    },
+    async (request, reply) => {
+      const plan = await aiCoachService.generateDietPlan(fastify, request.user.sub, request.body.goal);
       return reply.status(201).send(plan);
     },
   );

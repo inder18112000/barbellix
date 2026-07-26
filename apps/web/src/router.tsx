@@ -13,6 +13,7 @@ import { AttendanceFeedPage } from '@/pages/admin/AttendanceFeedPage'
 import { MembershipPlansPage } from '@/pages/admin/MembershipPlansPage'
 import { BranchSettingsPage } from '@/pages/admin/BranchSettingsPage'
 import { SettingsPage as AdminSettingsPage } from '@/pages/admin/SettingsPage'
+import { SponsorsPage } from '@/pages/admin/SponsorsPage'
 import { TrainerHomePage } from '@/pages/trainer/TrainerHomePage'
 import { MembersPage as TrainerMembersPage } from '@/pages/trainer/MembersPage'
 import { MemberDetailPage } from '@/pages/trainer/MemberDetailPage'
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
               { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },
+              { path: 'sponsors', element: <SponsorsPage /> },
               { path: 'branch', element: <BranchSettingsPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
             ],

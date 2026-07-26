@@ -25,3 +25,8 @@ export async function deleteMeal(id: string, userId: string) {
   if (!deleted) throw new NotFoundError('Meal not found');
   return { success: true };
 }
+
+export async function listDietPlans(userId: string) {
+  const docs = await repo.findDietPlansByUser(userId);
+  return docs.map(repo.toDomainDietPlan);
+}

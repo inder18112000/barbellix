@@ -15,6 +15,10 @@ import type {
   BodyMetric,
   PersonalRecord,
   WorkoutSession,
+  Sponsor,
+  PaymentEvent,
+  NotificationPreferences,
+  LoginPairingToken,
 } from '@fitpulse/shared'
 import type { ChangePasswordInput } from '@fitpulse/shared'
 import { api } from './client'
@@ -33,7 +37,11 @@ export const queryKeys = {
     membershipPlans: ['admin', 'membership-plans'] as const,
     dashboardStats: ['admin', 'dashboard-stats'] as const,
     memberProgress: (memberId: string) => ['admin', 'members', memberId, 'progress'] as const,
+    paymentHistory: (memberId: string) => ['admin', 'members', memberId, 'payment-history'] as const,
+    paymentGatewayStatus: ['admin', 'payment-gateway-status'] as const,
+    sponsors: ['admin', 'sponsors'] as const,
   },
+  myNotificationPreferences: ['me', 'notification-preferences'] as const,
   exercises: (q: string) => ['exercises', q] as const,
   messages: (otherUserId: string) => ['messages', otherUserId] as const,
 }
@@ -93,8 +101,34 @@ export interface MemberProgress {
   metrics: BodyMetric[]
   prs: PersonalRecord[]
   sessions: WorkoutSession[]
+  plans: WorkoutPlan[]
 }
 export const fetchMemberProgress = (memberId: string) => api.get<MemberProgress>(`/admin/members/${memberId}/progress`)
+
+export const fetchPaymentHistory = (memberId: string) => api.get<PaymentEvent[]>(`/admin/members/${memberId}/payment-history`)
+
+export const fetchPaymentGatewayStatus = () => api.get<{ stripeConfigured: boolean }>('/admin/payment-gateway-status')
+
+export const updateMemberInfo = (memberId: string, updates: { firstName?: string; lastName?: string; phone?: string }) =>
+  api.patch<TrainerMemberSummary>(`/trainer/members/${memberId}/info`, updates)
+
+export const generateLoginPairingToken = (memberId: string) =>
+  api.post<LoginPairingToken>(`/trainer/members/${memberId}/login-pairing`, {})
+
+// ─── Sponsors ─────────────────────────────────────────────────────────────────
+
+export const fetchAllSponsors = () => api.get<Sponsor[]>('/admin/sponsors')
+
+export interface CreateSponsorInput {
+  name: string
+  description?: string
+  logoUrl?: string
+  websiteUrl?: string
+}
+export const createSponsor = (input: CreateSponsorInput) => api.post<Sponsor>('/admin/sponsors', input)
+
+export const updateSponsor = (sponsorId: string, updates: Partial<CreateSponsorInput> & { active?: boolean }) =>
+  api.put<Sponsor>(`/admin/sponsors/${sponsorId}`, updates)
 
 // ─── My account (Settings) ─────────────────────────────────────────────────────
 
@@ -102,6 +136,10 @@ export const updateMyInfo = (updates: { firstName?: string; lastName?: string; p
   api.put<User>('/me', updates)
 
 export const changeMyPassword = (input: ChangePasswordInput) => api.put<{ message: string }>('/me/password', input)
+
+export const fetchMyNotificationPreferences = () => api.get<NotificationPreferences>('/me/notification-preferences')
+export const updateMyNotificationPreferences = (updates: Partial<NotificationPreferences>) =>
+  api.put<NotificationPreferences>('/me/notification-preferences', updates)
 
 // ─── Trainer: workout plans ─────────────────────────────────────────────────
 

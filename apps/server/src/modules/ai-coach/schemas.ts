@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { aiCoachCompleteSchema, generateWorkoutPlanSchema } from '@fitpulse/shared';
+import { aiCoachCompleteSchema, generateWorkoutPlanSchema, generateDietPlanSchema } from '@fitpulse/shared';
 
-export { aiCoachCompleteSchema as completeChatSchema, generateWorkoutPlanSchema };
+export { aiCoachCompleteSchema as completeChatSchema, generateWorkoutPlanSchema, generateDietPlanSchema };
 
 export const recommendationIdParamSchema = z.object({ id: z.string() });

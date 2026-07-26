@@ -60,3 +60,13 @@ export const generateWorkoutPlanSchema = z.object({
   daysPerWeek: z.coerce.number().min(1).max(7),
 });
 export type GenerateWorkoutPlanInput = z.infer<typeof generateWorkoutPlanSchema>;
+
+export const generateDietPlanSchema = z.object({
+  goal: z.string().min(1, 'Tell the AI your goal'),
+});
+export type GenerateDietPlanInput = z.infer<typeof generateDietPlanSchema>;
+
+export const redeemPairingTokenSchema = z.object({
+  token: z.string().min(1),
+});
+export type RedeemPairingTokenInput = z.infer<typeof redeemPairingTokenSchema>;
