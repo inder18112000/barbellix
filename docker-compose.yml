@@ -1,10 +1,47 @@
 services:
   mongo:
     image: mongo:7
+    restart: unless-stopped
     ports:
       - '27017:27017'
     volumes:
       - fitpulse_mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # Local dev secrets (JWT secrets, AI provider keys, Stripe keys) still come from the
+    # gitignored .env file - only the values that need to change *because* we're now running
+    # inside Docker (MongoDB's address, allowed browser origins) are overridden below.
+    env_file:
+      - apps/server/.env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/fitpulse
+      CORS_ORIGIN: http://localhost:8080,http://localhost:8081,http://localhost:5173
+    ports:
+      - '4000:4000'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:4000
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - '8080:80'
 
 volumes:
   fitpulse_mongo_data:

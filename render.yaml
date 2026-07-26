@@ -1,0 +1,67 @@
+# Render Blueprint - deploys apps/server and apps/web as two Docker-based web services.
+#
+# Setup (one-time):
+#   1. Push this repo to GitHub (already done: github.com/inder18112000/fitpulse).
+#   2. In the Render dashboard: New -> Blueprint -> connect this repo. Render reads this file
+#      and provisions both services below.
+#   3. You'll be prompted to fill in every `sync: false` value below (real secrets - Render
+#      never commits these to the blueprint or bakes them into an image).
+#
+# Both services' public URLs are predictable from their `name:` field
+# (https://<name>.onrender.com), which is how they reference each other below without needing
+# to know the URL in advance.
+
+services:
+  - name: fitpulse-server
+    type: web
+    runtime: docker
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render assigns and injects its own PORT - our Fastify server already reads process.env.PORT
+      # (see apps/server/src/config/env.ts), so nothing needs to be hardcoded here.
+      - key: MONGODB_URI
+        sync: false # paste your MongoDB Atlas connection string (include /fitpulse before the '?')
+      - key: JWT_ACCESS_SECRET
+        sync: false # generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      - key: JWT_REFRESH_SECRET
+        sync: false # generate the same way - use a DIFFERENT value than JWT_ACCESS_SECRET
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN_DAYS
+        value: '30'
+      - key: CORS_ORIGIN
+        value: https://fitpulse-web.onrender.com
+      - key: STRIPE_SECRET_KEY
+        sync: false # optional - leave blank in the dashboard prompt if not demoing real Stripe checkout
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false # optional, same as above
+      - key: STRIPE_SUCCESS_URL
+        value: https://fitpulse-web.onrender.com/billing/success
+      - key: STRIPE_CANCEL_URL
+        value: https://fitpulse-web.onrender.com/billing/cancel
+      - key: GROQ_API_KEY
+        sync: false # optional - only needed if demoing the AI Coach screen
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+  - name: fitpulse-web
+    type: web
+    runtime: docker
+    dockerfilePath: apps/web/Dockerfile
+    dockerContext: .
+    plan: starter
+    envVars:
+      # Render forwards this to the Docker build as a build ARG, matching apps/web/Dockerfile's
+      # `ARG VITE_API_BASE_URL` - this is baked into the built JS at build time, so it has to be
+      # the browser-facing URL (the server's own public Render URL), not an internal address.
+      - key: VITE_API_BASE_URL
+        value: https://fitpulse-server.onrender.com

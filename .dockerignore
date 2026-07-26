@@ -1,0 +1,26 @@
+# Never send these into a Docker build context - keeps builds fast and images small,
+# and (for .env) keeps secrets out of image layers entirely.
+**/node_modules
+**/dist
+**/.expo
+**/.turbo
+**/coverage
+
+.git
+.gitignore
+
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+
+*.log
+npm-debug.log*
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+docs/
+*.md
