@@ -1,11 +1,12 @@
 import { Suspense, type ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { observer } from 'mobx-react-lite'
-import { LogOut, Zap } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { authStore } from '@/store/authStore'
 import { ROLE_LABELS } from '@/lib/roleLabels'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BrandMark } from '@/components/common/BrandMark'
 
 // Route-level code-split pages (see router.tsx) suspend here while their chunk loads - a single
 // shared fallback for every admin/trainer page instead of repeating one per route.
@@ -37,10 +38,8 @@ export const DashboardShell = observer(function DashboardShell({ navItems }: Pro
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
         <div className="flex items-center gap-2 px-5 py-5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-primary-foreground">
-            <Zap className="size-4" fill="currentColor" />
-          </div>
-          <span className="font-semibold">BarBellix</span>
+          <BrandMark className="size-8" />
+          <span className="font-bold uppercase tracking-wide">BarBellix</span>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">

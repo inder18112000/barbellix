@@ -8,6 +8,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
+import { BrandMark } from '../../components/common/BrandMark';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { useAuthStore } from '../../store/authStore';
@@ -36,7 +37,7 @@ export function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
           <View style={styles.logoSection}>
-            <Text style={styles.logoEmoji}>⚡</Text>
+            <BrandMark size={56} style={styles.logoMark} />
             <Text style={styles.logoText}>BarBellix</Text>
             <Text style={styles.tagline}>Feel every rep.</Text>
           </View>

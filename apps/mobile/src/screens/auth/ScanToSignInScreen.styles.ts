@@ -6,7 +6,7 @@ export const SCANNER_SIZE = width * 0.72;
 
 export const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
-  logoEmoji: { fontSize: 40, marginBottom: spacing.sm },
+  logoMark: { marginBottom: spacing.sm },
   heading: { ...typography.h2, color: colors.textPrimary, textAlign: 'center', marginBottom: spacing.xs },
   instruction: { ...typography.body, color: colors.textSecondary, textAlign: 'center', marginBottom: spacing.xl, paddingHorizontal: spacing.md },
   scannerFrame: { width: SCANNER_SIZE, height: SCANNER_SIZE, borderRadius: borderRadius.lg, overflow: 'hidden', backgroundColor: colors.surface, marginBottom: spacing.xl, position: 'relative' },

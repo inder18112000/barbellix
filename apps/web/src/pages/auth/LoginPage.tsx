@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Zap, TriangleAlert } from 'lucide-react'
+import { TriangleAlert } from 'lucide-react'
+import { BrandMark } from '@/components/common/BrandMark'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -48,10 +49,8 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <Zap className="size-6" fill="currentColor" />
-          </div>
-          <h1 className="text-xl font-semibold">BarBellix Management</h1>
+          <BrandMark className="size-14 shadow-lg shadow-primary/30 rounded-2xl" />
+          <h1 className="text-xl font-bold uppercase tracking-wide">BarBellix Management</h1>
           <p className="text-sm text-muted-foreground">Sign in to your gym dashboard</p>
         </div>
 

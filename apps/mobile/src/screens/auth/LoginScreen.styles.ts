@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: spacing.lg },
   logoSection: { alignItems: 'center', marginBottom: spacing.xl },
-  logoEmoji: { fontSize: 56, marginBottom: spacing.sm },
+  logoMark: { marginBottom: spacing.sm },
   logoText: { ...typography.h1, color: colors.textPrimary, letterSpacing: 2 },
   tagline: { ...typography.body, color: colors.textSecondary, marginTop: 4 },
   card: { padding: spacing.lg, borderRadius: borderRadius.xl, marginBottom: spacing.lg },

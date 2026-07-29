@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 import { useAuthStore } from '../../store/authStore';
 import { pairDevice } from '../../api/auth';
+import { BrandMark } from '../../components/common/BrandMark';
 import { styles, SCANNER_SIZE } from './ScanToSignInScreen.styles';
 
 // Mirrors QRCheckInScreen's laser-line scan animation for a consistent scanning feel.
@@ -87,7 +88,7 @@ export function ScanToSignInScreen() {
 
   return (
     <View style={[styles.container, { flex: 1, backgroundColor: colors.background }]}>
-      <Text style={styles.logoEmoji}>⚡</Text>
+      <BrandMark size={40} style={styles.logoMark} />
       <Text style={styles.heading}>Scan to sign in</Text>
       <Text style={styles.instruction}>
         Ask the front desk to generate a sign-in code from the Admin Portal, then scan it here.
