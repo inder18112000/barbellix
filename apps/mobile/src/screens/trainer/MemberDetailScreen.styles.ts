@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   hero: { alignItems: 'center', paddingVertical: spacing.xl },
   avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  avatarText: { ...typography.h2, color: '#fff' },
+  avatarText: { ...typography.h2, color: colors.onPrimary },
   memberName: { ...typography.h2, color: colors.textPrimary },
   memberEmail: { ...typography.body, color: colors.textSecondary, marginTop: 4 },
   statsRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md },

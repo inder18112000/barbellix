@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'visible',
   },
-  text: { ...typography.h4, color: '#fff', fontWeight: '700' },
+  text: { ...typography.h4, color: colors.onPrimary, fontWeight: '700' },
   badge: {
     position: 'absolute',
     bottom: -2,

@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
 
   memberRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.xs, padding: spacing.md, borderRadius: borderRadius.lg, gap: spacing.md },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...typography.h4, color: '#fff' },
+  avatarText: { ...typography.h4, color: colors.onPrimary },
   memberName: { ...typography.h4, color: colors.textPrimary },
   memberSub: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   streakBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full, backgroundColor: colors.accent + '20' },

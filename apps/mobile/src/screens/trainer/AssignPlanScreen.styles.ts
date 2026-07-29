@@ -18,6 +18,6 @@ export const styles = StyleSheet.create({
   planMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   checkCircle: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   checkCircleActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkMark: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  checkMark: { color: colors.onPrimary, fontSize: 14, fontWeight: '700' },
   footer: { padding: spacing.lg },
 });

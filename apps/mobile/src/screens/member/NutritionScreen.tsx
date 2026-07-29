@@ -375,5 +375,5 @@ const styles = StyleSheet.create({
     flex: 2, height: 48, alignItems: 'center', justifyContent: 'center',
     borderRadius: borderRadius.lg, backgroundColor: colors.primary,
   },
-  saveBtnText: { ...typography.h4, color: '#fff' },
+  saveBtnText: { ...typography.h4, color: colors.onPrimary },
 });

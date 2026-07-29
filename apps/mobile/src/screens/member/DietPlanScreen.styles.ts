@@ -58,7 +58,7 @@ export const styles = StyleSheet.create({
     borderRadius: borderRadius.lg, backgroundColor: colors.primary,
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
   },
-  aiGenerateBtnText: { ...typography.label, color: '#fff', fontWeight: '700' },
+  aiGenerateBtnText: { ...typography.label, color: colors.onPrimary, fontWeight: '700' },
 
   overlay: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
   sheet: {
@@ -80,5 +80,5 @@ export const styles = StyleSheet.create({
     height: 52, alignItems: 'center', justifyContent: 'center',
     borderRadius: borderRadius.lg, backgroundColor: colors.primary,
   },
-  generateSubmitBtnText: { ...typography.h4, color: '#fff' },
+  generateSubmitBtnText: { ...typography.h4, color: colors.onPrimary },
 });

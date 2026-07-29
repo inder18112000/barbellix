@@ -18,7 +18,7 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.md,
     borderWidth: 3, borderColor: colors.primaryLight,
   },
-  avatarText: { ...typography.h2, color: '#fff' },
+  avatarText: { ...typography.h2, color: colors.onPrimary },
   name: { ...typography.h2, color: colors.textPrimary, marginBottom: 4 },
   email: { ...typography.body, color: colors.textSecondary, marginBottom: spacing.sm },
   expBadge: {

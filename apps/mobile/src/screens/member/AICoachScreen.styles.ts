@@ -37,7 +37,7 @@ export const styles = StyleSheet.create({
   chipText: { ...typography.label, color: colors.textSecondary },
   chatMessages: { paddingHorizontal: spacing.md, gap: spacing.sm, marginBottom: spacing.md },
   userBubble: { alignSelf: 'flex-end', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.lg, borderBottomRightRadius: 4, backgroundColor: colors.primary, maxWidth: '80%' },
-  userBubbleText: { ...typography.body, color: '#fff' },
+  userBubbleText: { ...typography.body, color: colors.onPrimary },
   aiBubble: { alignSelf: 'flex-start', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.lg, borderBottomLeftRadius: 4, maxWidth: '85%' },
   aiBubbleText: { ...typography.body, color: colors.textPrimary, lineHeight: 22 },
   inputRow: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.md, paddingBottom: spacing.lg },

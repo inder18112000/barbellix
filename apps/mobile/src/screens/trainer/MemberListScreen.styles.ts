@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
   searchInput: { flex: 1, ...typography.body, color: colors.textPrimary, padding: 0 },
   memberRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.xs, padding: spacing.md, borderRadius: borderRadius.lg, gap: spacing.md },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...typography.h4, color: '#fff' },
+  avatarText: { ...typography.h4, color: colors.onPrimary },
   memberName: { ...typography.h4, color: colors.textPrimary },
   memberMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   badgeRow: { alignItems: 'flex-end', gap: 4 },

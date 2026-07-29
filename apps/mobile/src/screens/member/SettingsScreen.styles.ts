@@ -27,7 +27,7 @@ export const styles = StyleSheet.create({
   segmentBtn: { flex: 1, paddingVertical: spacing.xs, alignItems: 'center', backgroundColor: 'transparent' },
   segmentBtnActive: { backgroundColor: colors.primary },
   segmentText: { ...typography.label, color: colors.textSecondary },
-  segmentTextActive: { color: '#fff' },
+  segmentTextActive: { color: colors.onPrimary },
 
   // Stepper
   stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },

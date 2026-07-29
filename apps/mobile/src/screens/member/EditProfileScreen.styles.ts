@@ -20,7 +20,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  avatarText: { ...typography.h1, color: '#fff' },
+  avatarText: { ...typography.h1, color: colors.onPrimary },
   avatarEdit: { ...typography.caption, color: colors.primary, marginTop: 2 },
 
   sectionLabel: {

@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   },
   setBadgeComplete: { backgroundColor: colors.primary },
   setBadgeText: { ...typography.label, color: colors.textMuted },
-  setBadgeTextComplete: { color: '#fff' },
+  setBadgeTextComplete: { color: colors.onPrimary },
 
   inputGroup: { flexDirection: 'row', alignItems: 'baseline', gap: 3, flex: 1 },
   input: {

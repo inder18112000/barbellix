@@ -98,7 +98,7 @@ function MemberCard() {
               <Text style={styles.cardBrand}>⚡ BarBellix</Text>
               <Text style={styles.cardBrandSub}>Premium Member</Text>
             </View>
-            <View style={[styles.streakPill, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+            <View style={[styles.streakPill, { backgroundColor: 'rgba(18,18,18,0.15)' }]}>
               <Text style={styles.streakPillText}>🔥 {attendance?.streak ?? 0} streak</Text>
             </View>
           </View>

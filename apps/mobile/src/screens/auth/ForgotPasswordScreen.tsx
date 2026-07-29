@@ -6,6 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 
+import { colors } from '../../theme';
 import { glow } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
@@ -28,7 +29,7 @@ function SuccessView({ email, onBack }: { email: string; onBack: () => void }) {
       <Text style={styles.successTitle}>Check your inbox</Text>
       <Text style={styles.successBody}>
         We sent a reset link to{'\n'}
-        <Text style={{ color: '#4F6EF7' }}>{email}</Text>
+        <Text style={{ color: colors.primary }}>{email}</Text>
       </Text>
       <Text style={styles.successHint}>Didn't receive it? Check your spam folder or try again in a few minutes.</Text>
       <TouchableOpacity style={styles.backBtn} onPress={onBack}>

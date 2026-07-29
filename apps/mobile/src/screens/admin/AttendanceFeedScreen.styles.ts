@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   liveCount: { flex: 1, ...typography.body, color: colors.textSecondary, textAlign: 'right' },
   entryRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.xs, padding: spacing.md, borderRadius: borderRadius.md, gap: spacing.md },
   avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...typography.label, color: '#fff' },
+  avatarText: { ...typography.label, color: colors.onPrimary },
   entryName: { ...typography.h4, color: colors.textPrimary, flex: 1 },
   entryMeta: { ...typography.caption, color: colors.textSecondary },
   methodBadge: { paddingHorizontal: spacing.xs, paddingVertical: 2, borderRadius: borderRadius.full },

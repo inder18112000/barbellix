@@ -1,31 +1,37 @@
+// "Tech-Forward Powerhouse": Obsidian base + Titanium neutrals + an Electric Volt energy
+// accent - raw fitness energy against a clean, dark system-software backdrop.
 export const colors = {
-  // Brand
-  primary: '#0A84FF',
-  primaryDark: '#0066CC',
-  primaryLight: '#5AABFF',
-  accent: '#34C759',
+  // Brand - Electric Volt is the one high-energy accent (CTAs, active states, glows).
+  // It's too light for white text to sit on top of, so onPrimary (dark) is the paired
+  // foreground token wherever primary/accent is used as a solid fill.
+  primary: '#C6FF00',
+  primaryDark: '#9FCC00',
+  primaryLight: '#D9FF4D',
+  onPrimary: '#121212',
+  accent: '#C6FF00',
+  onAccent: '#121212',
 
-  // Backgrounds
-  background: '#F5F7FA',
-  surface: '#FFFFFF',
-  surfaceElevated: '#EEF2FB',
-  card: '#FFFFFF',
+  // Backgrounds - Obsidian Black base, stepped up for elevation
+  background: '#121212',
+  surface: '#1C1C1E',
+  surfaceElevated: '#242426',
+  card: '#1C1C1E',
 
-  // Text
-  textPrimary: '#1C1C1E',
-  textSecondary: '#48484A',
-  textMuted: '#8E8E93',
+  // Text - Titanium Silver for body copy, near-white for headlines
+  textPrimary: '#F5F5F5',
+  textSecondary: '#E0E0E0',
+  textMuted: '#9A9A9E',
 
-  // Status
+  // Status - kept semantically distinct from the Volt brand accent, tuned for dark backgrounds
   success: '#34C759',
-  warning: '#FF9500',
-  error: '#FF3B30',
-  info: '#0A84FF',
+  warning: '#FF9F0A',
+  error: '#FF453A',
+  info: '#64D2FF',
 
   // Misc
-  border: '#D8DCE8',
-  divider: '#EEF2FB',
-  overlay: 'rgba(0,0,0,0.5)',
+  border: '#333335',
+  divider: '#242426',
+  overlay: 'rgba(0,0,0,0.7)',
 } as const;
 
 export const spacing = {

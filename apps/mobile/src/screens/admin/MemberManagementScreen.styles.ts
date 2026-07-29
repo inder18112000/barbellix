@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
   filterBtnText: { fontSize: 18 },
   memberRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginBottom: spacing.xs, padding: spacing.md, borderRadius: borderRadius.lg, gap: spacing.md },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { ...typography.label, color: '#fff' },
+  avatarText: { ...typography.label, color: colors.onPrimary },
   memberName: { ...typography.h4, color: colors.textPrimary },
   memberMeta: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   statusBadge: { paddingHorizontal: spacing.xs, paddingVertical: 2, borderRadius: borderRadius.full },

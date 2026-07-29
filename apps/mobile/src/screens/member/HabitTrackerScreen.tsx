@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   habitCardDone: {
     borderColor: colors.primary + '40',
-    backgroundColor: '#F0F6FF',
+    backgroundColor: colors.surfaceElevated,
   },
   habitIcon: {
     width: 48, height: 48, borderRadius: 24,

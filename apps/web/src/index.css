@@ -3,75 +3,75 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * FitPulse brand palette - shared visual identity with the mobile app (indigo primary,
- * deep-navy dark mode matching the splash screen, vivid accent set from the goal-selection
- * cards) rather than shadcn's flat neutral default.
+ * BarBellix brand palette - "Tech-Forward Powerhouse": Obsidian Black base, Titanium Silver
+ * neutrals, Electric Volt energy accent. A single deliberate dark identity (not a light/dark
+ * toggle) - :root and .dark hold the same values so the dashboard reads consistently regardless
+ * of OS preference, matching the mobile app's theme.
  */
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(0.985 0.004 260);
-  --foreground: oklch(0.16 0.03 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.03 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.03 265);
+  --background: #121212;
+  --foreground: #E0E0E0;
+  --card: #1C1C1E;
+  --card-foreground: #E0E0E0;
+  --popover: #1C1C1E;
+  --popover-foreground: #E0E0E0;
 
-  --primary: oklch(0.58 0.19 264);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.01 264);
-  --secondary-foreground: oklch(0.3 0.03 265);
-  --muted: oklch(0.96 0.006 264);
-  --muted-foreground: oklch(0.5 0.02 265);
-  --accent: oklch(0.94 0.03 264);
-  --accent-foreground: oklch(0.3 0.1 264);
+  --primary: #C6FF00;
+  --primary-foreground: #121212;
+  --secondary: #242426;
+  --secondary-foreground: #E0E0E0;
+  --muted: #1C1C1E;
+  --muted-foreground: #9A9A9E;
+  --accent: #C6FF00;
+  --accent-foreground: #121212;
 
-  --success: oklch(0.72 0.15 165);
-  --warning: oklch(0.79 0.14 75);
-  --destructive: oklch(0.62 0.22 25);
+  --success: #34C759;
+  --warning: #FF9F0A;
+  --destructive: #FF453A;
 
-  --border: oklch(0.91 0.008 264);
-  --input: oklch(0.91 0.008 264);
-  --ring: oklch(0.58 0.19 264 / 0.5);
+  --border: #333335;
+  --input: #3A3A3C;
+  --ring: rgba(198, 255, 0, 0.5);
 
-  --sidebar: oklch(0.16 0.035 265);
-  --sidebar-foreground: oklch(0.95 0.006 264);
-  --sidebar-primary: oklch(0.62 0.19 264);
-  --sidebar-accent: oklch(0.24 0.03 265);
-  --sidebar-border: oklch(0.26 0.03 265 / 0.6);
+  --sidebar: #0D0D0D;
+  --sidebar-foreground: #E0E0E0;
+  --sidebar-primary: #C6FF00;
+  --sidebar-accent: #1C1C1E;
+  --sidebar-border: rgba(224, 224, 224, 0.08);
 }
 
 .dark {
-  /* Deep navy, matching apps/mobile's splash screen background (#0A0E27) */
-  --background: oklch(0.17 0.035 265);
-  --foreground: oklch(0.96 0.006 264);
-  --card: oklch(0.21 0.035 265);
-  --card-foreground: oklch(0.96 0.006 264);
-  --popover: oklch(0.21 0.035 265);
-  --popover-foreground: oklch(0.96 0.006 264);
+  --background: #121212;
+  --foreground: #E0E0E0;
+  --card: #1C1C1E;
+  --card-foreground: #E0E0E0;
+  --popover: #1C1C1E;
+  --popover-foreground: #E0E0E0;
 
-  --primary: oklch(0.68 0.17 264);
-  --primary-foreground: oklch(0.14 0.03 265);
-  --secondary: oklch(0.27 0.03 265);
-  --secondary-foreground: oklch(0.94 0.006 264);
-  --muted: oklch(0.25 0.03 265);
-  --muted-foreground: oklch(0.68 0.02 264);
-  --accent: oklch(0.29 0.045 264);
-  --accent-foreground: oklch(0.94 0.01 264);
+  --primary: #C6FF00;
+  --primary-foreground: #121212;
+  --secondary: #242426;
+  --secondary-foreground: #E0E0E0;
+  --muted: #1C1C1E;
+  --muted-foreground: #9A9A9E;
+  --accent: #C6FF00;
+  --accent-foreground: #121212;
 
-  --success: oklch(0.75 0.15 165);
-  --warning: oklch(0.8 0.14 75);
-  --destructive: oklch(0.7 0.2 25);
+  --success: #34C759;
+  --warning: #FF9F0A;
+  --destructive: #FF453A;
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.68 0.17 264 / 0.5);
+  --border: #333335;
+  --input: #3A3A3C;
+  --ring: rgba(198, 255, 0, 0.5);
 
-  --sidebar: oklch(0.13 0.03 265);
-  --sidebar-foreground: oklch(0.94 0.006 264);
-  --sidebar-primary: oklch(0.68 0.17 264);
-  --sidebar-accent: oklch(0.22 0.03 265);
-  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar: #0D0D0D;
+  --sidebar-foreground: #E0E0E0;
+  --sidebar-primary: #C6FF00;
+  --sidebar-accent: #1C1C1E;
+  --sidebar-border: rgba(224, 224, 224, 0.08);
 }
 
 @theme inline {

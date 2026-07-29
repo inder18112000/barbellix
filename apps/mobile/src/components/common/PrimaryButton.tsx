@@ -47,7 +47,7 @@ export function PrimaryButton({
         disabled={isDisabled}
       >
         {loading ? (
-          <ActivityIndicator color={variant === 'primary' ? '#fff' : colors.primary} size="small" />
+          <ActivityIndicator color={variant === 'primary' ? colors.onPrimary : colors.primary} size="small" />
         ) : (
           <Text style={[
             styles.label,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: 'transparent' },
   disabled: { opacity: 0.5 },
   label: { ...typography.h4 },
-  labelPrimary: { color: '#fff' },
+  labelPrimary: { color: colors.onPrimary },
   labelOutline: { color: colors.primary },
   labelGhost: { color: colors.textSecondary },
   labelDisabled: { opacity: 0.7 },

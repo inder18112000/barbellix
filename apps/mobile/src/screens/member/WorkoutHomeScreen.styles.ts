@@ -90,10 +90,10 @@ export const styles = StyleSheet.create({
   },
   dayChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   dayChipText: { ...typography.body, color: colors.textSecondary },
-  dayChipTextActive: { color: '#fff', fontWeight: '700' },
+  dayChipTextActive: { color: colors.onPrimary, fontWeight: '700' },
   generateSubmitBtn: {
     height: 52, alignItems: 'center', justifyContent: 'center',
     borderRadius: borderRadius.lg, backgroundColor: colors.primary,
   },
-  generateSubmitBtnText: { ...typography.h4, color: '#fff' },
+  generateSubmitBtnText: { ...typography.h4, color: colors.onPrimary },
 });

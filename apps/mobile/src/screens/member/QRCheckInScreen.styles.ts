@@ -31,7 +31,7 @@ export const styles = StyleSheet.create({
   pinKey: { width: 72, height: 56, borderRadius: borderRadius.md, backgroundColor: colors.surfaceElevated, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border },
   pinKeyConfirm: { backgroundColor: colors.primary, borderColor: colors.primary },
   pinKeyText: { ...typography.h4, color: colors.textPrimary },
-  pinKeyTextConfirm: { color: '#fff' },
+  pinKeyTextConfirm: { color: colors.onPrimary },
   successContainer: { alignItems: 'center', position: 'relative' },
   ring: { position: 'absolute', width: 100, height: 100, borderRadius: 50, borderWidth: 2, alignSelf: 'center' },
   successCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.success, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },

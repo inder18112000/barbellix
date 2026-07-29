@@ -22,6 +22,6 @@ export const styles = StyleSheet.create({
     marginTop: spacing.md, height: 56, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary,
   },
-  bookBtnText: { ...typography.h4, color: '#fff' },
+  bookBtnText: { ...typography.h4, color: colors.onPrimary },
   bookBtnWaitlist: { backgroundColor: colors.warning },
 });
