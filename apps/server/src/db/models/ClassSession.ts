@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { ClassSessionStatus } from '@fitpulse/shared';
+import type { ClassSessionStatus } from '@barbellix/shared';
 
 export interface ClassSessionDocument {
   _id: Types.ObjectId;

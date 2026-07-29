@@ -40,7 +40,7 @@ export const DashboardShell = observer(function DashboardShell({ navItems }: Pro
           <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-primary-foreground">
             <Zap className="size-4" fill="currentColor" />
           </div>
-          <span className="font-semibold">FitPulse</span>
+          <span className="font-semibold">BarBellix</span>
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">

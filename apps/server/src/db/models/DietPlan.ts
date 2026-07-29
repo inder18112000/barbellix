@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { FitnessGoal, MealType, WorkoutGeneratedBy } from '@fitpulse/shared';
+import type { FitnessGoal, MealType, WorkoutGeneratedBy } from '@barbellix/shared';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 const GENERATED_BY: WorkoutGeneratedBy[] = ['ai', 'trainer', 'user'];

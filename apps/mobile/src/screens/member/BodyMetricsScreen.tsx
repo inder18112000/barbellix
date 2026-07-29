@@ -11,7 +11,7 @@ import { queryKeys, fetchProgressMetrics, logBodyMetric } from '../../api/querie
 import { ScreenShell } from '../../components/common/ScreenShell';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import type { BodyMetric } from '@fitpulse/shared';
+import type { BodyMetric } from '@barbellix/shared';
 import { styles } from './BodyMetricsScreen.styles';
 
 // Weight alone conflates fat and muscle loss/gain, so hypertrophy-focused members are

@@ -1,4 +1,4 @@
-import type { User, LoginInput, RegisterInput, ForgotPasswordInput } from '@fitpulse/shared';
+import type { User, LoginInput, RegisterInput, ForgotPasswordInput } from '@barbellix/shared';
 import { api } from './client';
 
 interface AuthTokens {

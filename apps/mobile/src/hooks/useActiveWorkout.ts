@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import type { WorkoutDay } from '@fitpulse/shared';
+import type { WorkoutDay } from '@barbellix/shared';
 
 // -- Types --------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { MealEntry, DietPlan } from '@fitpulse/shared';
+import type { MealEntry, DietPlan } from '@barbellix/shared';
 import { MealEntryModel, type MealEntryDocument } from '../../db/models/MealEntry.js';
 import { DietPlanModel, type DietPlanDocument, type DietPlanMealSubdoc } from '../../db/models/DietPlan.js';
 import { isValidObjectId } from '../../lib/objectId.js';

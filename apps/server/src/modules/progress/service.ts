@@ -1,4 +1,4 @@
-import type { BodyMetric } from '@fitpulse/shared';
+import type { BodyMetric } from '@barbellix/shared';
 import type { PRUnit } from '../../db/models/PersonalRecord.js';
 import * as repo from './repository.js';
 

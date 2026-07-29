@@ -19,8 +19,8 @@ export class OpenRouterProvider extends BaseProvider {
       'https://openrouter.ai/api/v1/chat/completions',
       {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://fitpulse.app',
-        'X-Title': 'FitPulse AI Coach',
+        'HTTP-Referer': 'https://barbellix.app',
+        'X-Title': 'BarBellix AI Coach',
       },
       {
         model: this.model,

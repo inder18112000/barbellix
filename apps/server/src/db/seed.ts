@@ -26,19 +26,19 @@ const SEED_PASSWORD = 'password123';
 
 async function upsertTenant() {
   return TenantModel.findOneAndUpdate(
-    { name: 'FitPulse Default' },
-    { $setOnInsert: { name: 'FitPulse Default', planTier: 'free', themeConfig: { primaryColor: '#4F6EF7', brandName: 'FitPulse' } } },
+    { name: 'BarBellix Default' },
+    { $setOnInsert: { name: 'BarBellix Default', planTier: 'free', themeConfig: { primaryColor: '#4F6EF7', brandName: 'BarBellix' } } },
     { new: true, upsert: true },
   );
 }
 
 async function upsertBranch(tenantId: Types.ObjectId) {
   return BranchModel.findOneAndUpdate(
-    { tenantId, name: 'FitPulse Default Branch' },
+    { tenantId, name: 'BarBellix Default Branch' },
     {
       $setOnInsert: {
         tenantId,
-        name: 'FitPulse Default Branch',
+        name: 'BarBellix Default Branch',
         location: 'Main location',
         qrCodeToken: `default-branch-${tenantId.toString()}`,
         checkInMethods: ['qr', 'pin'],
@@ -54,7 +54,7 @@ async function upsertBranch(tenantId: Types.ObjectId) {
 
 async function upsertSponsors(tenantId: Types.ObjectId) {
   const sponsors = [
-    { name: 'IronForge Supplements', description: 'Official protein & creatine partner - members get 15% off with code FITPULSE15.', websiteUrl: 'https://example.com/ironforge' },
+    { name: 'IronForge Supplements', description: 'Official protein & creatine partner - members get 15% off with code BARBELLIX15.', websiteUrl: 'https://example.com/ironforge' },
     { name: 'PulseWear Athletic', description: 'Performance apparel sponsor - new member welcome packs include a free PulseWear tee.', websiteUrl: 'https://example.com/pulsewear' },
     { name: 'RecoverFast Therapy', description: 'On-site recovery partner - members get a discounted rate on sports massage and cupping.', websiteUrl: 'https://example.com/recoverfast' },
   ];
@@ -121,15 +121,15 @@ async function main() {
   const branch = await upsertBranch(tenant._id);
   await upsertSponsors(tenant._id);
 
-  const admin = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'admin', email: 'admin@fitpulse.app', firstName: 'Ava', lastName: 'Owner' });
-  const trainer = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'trainer', email: 'trainer@fitpulse.app', firstName: 'Tom', lastName: 'Coach' });
+  const admin = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'admin', email: 'admin@barbellix.app', firstName: 'Ava', lastName: 'Owner' });
+  const trainer = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'trainer', email: 'trainer@barbellix.app', firstName: 'Tom', lastName: 'Coach' });
 
   const memberSeeds = [
-    { email: 'alex@fitpulse.app', firstName: 'Alex', lastName: 'Chen' },
-    { email: 'priya@fitpulse.app', firstName: 'Priya', lastName: 'Sharma' },
-    { email: 'jake@fitpulse.app', firstName: 'Jake', lastName: 'Wilson' },
-    { email: 'maria@fitpulse.app', firstName: 'Maria', lastName: 'Lopez' },
-    { email: 'sam@fitpulse.app', firstName: 'Sam', lastName: 'Park' },
+    { email: 'alex@barbellix.app', firstName: 'Alex', lastName: 'Chen' },
+    { email: 'priya@barbellix.app', firstName: 'Priya', lastName: 'Sharma' },
+    { email: 'jake@barbellix.app', firstName: 'Jake', lastName: 'Wilson' },
+    { email: 'maria@barbellix.app', firstName: 'Maria', lastName: 'Lopez' },
+    { email: 'sam@barbellix.app', firstName: 'Sam', lastName: 'Park' },
   ];
   const members = await Promise.all(
     memberSeeds.map((m) => upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'member', ...m })),
@@ -283,8 +283,8 @@ async function main() {
 
   console.log('\nSeed complete.');
   console.log('Login with any of these (password: "%s"):', SEED_PASSWORD);
-  console.log('  admin:   admin@fitpulse.app');
-  console.log('  trainer: trainer@fitpulse.app');
+  console.log('  admin:   admin@barbellix.app');
+  console.log('  trainer: trainer@barbellix.app');
   for (const m of memberSeeds) console.log('  member:  %s', m.email);
 }
 

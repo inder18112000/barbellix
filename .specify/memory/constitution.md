@@ -12,7 +12,7 @@ Templates requiring updates:
 Follow-up TODOs: none
 -->
 
-# FitPulse Constitution
+# BarBellix Constitution
 
 ## Core Principles
 

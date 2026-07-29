@@ -25,13 +25,13 @@ export async function createUser(input: {
 
 /** Every self-serve registration attaches to a single seeded default tenant (no gym-selection UI yet). */
 export async function getOrCreateDefaultTenant() {
-  const existing = await TenantModel.findOne({ name: 'FitPulse Default' });
+  const existing = await TenantModel.findOne({ name: 'BarBellix Default' });
   if (existing) return existing;
 
   return TenantModel.create({
-    name: 'FitPulse Default',
+    name: 'BarBellix Default',
     planTier: 'free',
-    themeConfig: { primaryColor: '#4F6EF7', brandName: 'FitPulse' },
+    themeConfig: { primaryColor: '#4F6EF7', brandName: 'BarBellix' },
   });
 }
 

@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { WorkoutPlan, WorkoutSession } from '@fitpulse/shared';
+import type { WorkoutPlan, WorkoutSession } from '@barbellix/shared';
 import { WorkoutPlanModel, type WorkoutPlanDocument } from '../../db/models/WorkoutPlan.js';
 import { WorkoutSessionModel, type WorkoutSessionDocument, type WorkoutSetSubdoc } from '../../db/models/WorkoutSession.js';
 import { idStr, isoStr } from '../../lib/mappers-base.js';

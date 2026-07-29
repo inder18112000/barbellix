@@ -12,7 +12,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 import { glass } from '../../theme/effects';
 import { queryKeys, fetchTodayMeals, logMeal, deleteMeal } from '../../api/queries';
-import type { MealEntry, MealType } from '@fitpulse/shared';
+import type { MealEntry, MealType } from '@barbellix/shared';
 
 const GOAL = { calories: 2200, protein: 160, carbs: 250, fat: 70 };
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];

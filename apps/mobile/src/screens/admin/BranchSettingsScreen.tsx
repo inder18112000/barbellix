@@ -46,7 +46,7 @@ function InfoRow({ emoji, label, value }: { emoji: string; label: string; value:
 
 export function BranchSettingsScreen() {
   const navigation = useNavigation();
-  const [branchName, setBranchName] = useState('FitPulse — Main Branch');
+  const [branchName, setBranchName] = useState('BarBellix — Main Branch');
   const [capacity, setCapacity] = useState('120');
   const [qrEnabled, setQrEnabled] = useState(true);
   const [nfcEnabled, setNfcEnabled] = useState(true);

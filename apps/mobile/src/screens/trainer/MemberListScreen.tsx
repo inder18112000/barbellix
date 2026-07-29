@@ -10,7 +10,7 @@ import { ScreenShell } from '../../components/common/ScreenShell';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { useTrainerData } from '../../hooks/useTrainerData';
-import type { TrainerMemberSummary } from '@fitpulse/shared';
+import type { TrainerMemberSummary } from '@barbellix/shared';
 import { styles } from './MemberListScreen.styles';
 
 export function MemberListScreen() {

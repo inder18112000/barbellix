@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { UserRole } from '@fitpulse/shared';
+import type { UserRole } from '@barbellix/shared';
 
 export interface AuthUser {
   sub: string;

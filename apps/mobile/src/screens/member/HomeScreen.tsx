@@ -13,7 +13,7 @@ import { Card } from '../../components/common/Card';
 import { Avatar } from '../../components/common/Avatar';
 import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
-import type { User } from '@fitpulse/shared';
+import type { User } from '@barbellix/shared';
 import { format } from 'date-fns';
 import { styles } from './HomeScreen.styles';
 

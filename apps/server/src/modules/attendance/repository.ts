@@ -1,6 +1,6 @@
 import type { HydratedDocument } from 'mongoose';
 import { Types } from 'mongoose';
-import type { AttendanceRecord } from '@fitpulse/shared';
+import type { AttendanceRecord } from '@barbellix/shared';
 import { AttendanceRecordModel, type AttendanceRecordDocument } from '../../db/models/AttendanceRecord.js';
 import { BranchModel } from '../../db/models/Branch.js';
 import { idStr, isoStr } from '../../lib/mappers-base.js';
@@ -26,12 +26,12 @@ export async function findBranchById(id: string) {
 
 /** Every default-tenant member checks into a single seeded default branch until real branch selection exists. */
 export async function getOrCreateDefaultBranch(tenantId: string) {
-  const existing = await BranchModel.findOne({ tenantId, name: 'FitPulse Default Branch' });
+  const existing = await BranchModel.findOne({ tenantId, name: 'BarBellix Default Branch' });
   if (existing) return existing;
 
   return BranchModel.create({
     tenantId,
-    name: 'FitPulse Default Branch',
+    name: 'BarBellix Default Branch',
     location: 'Main location',
     qrCodeToken: `default-branch-${tenantId}`,
   });

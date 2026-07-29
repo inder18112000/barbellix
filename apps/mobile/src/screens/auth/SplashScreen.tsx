@@ -21,7 +21,7 @@ export function SplashScreen() {
     <View style={styles.container}>
       <Animated.View style={{ transform: [{ scale }], opacity }}>
         <Text style={styles.logo}>⚡</Text>
-        <Text style={styles.brand}>FitPulse</Text>
+        <Text style={styles.brand}>BarBellix</Text>
         <Text style={styles.tagline}>Feel every rep.</Text>
       </Animated.View>
     </View>

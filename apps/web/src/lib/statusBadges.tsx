@@ -1,4 +1,4 @@
-import type { UserStatus, PaymentStatus, MembershipStatus, SubscriptionStatus } from '@fitpulse/shared'
+import type { UserStatus, PaymentStatus, MembershipStatus, SubscriptionStatus } from '@barbellix/shared'
 import { Badge } from '@/components/ui/badge'
 
 export function UserStatusBadge({ status }: { status: UserStatus }) {

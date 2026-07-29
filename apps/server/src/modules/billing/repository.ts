@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType } from '@fitpulse/shared';
+import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType } from '@barbellix/shared';
 import { MembershipPlanModel, type MembershipPlanDocument } from '../../db/models/MembershipPlan.js';
 import { MembershipModel, type MembershipDocument } from '../../db/models/Membership.js';
 import { PaymentEventModel, type PaymentEventDocument } from '../../db/models/PaymentEvent.js';

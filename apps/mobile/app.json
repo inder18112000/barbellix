@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FitPulse",
-    "slug": "fitpulse",
+    "name": "BarBellix",
+    "slug": "barbellix",
     "version": "1.0.0",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
@@ -15,14 +15,14 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.fitpulse.app"
+      "bundleIdentifier": "com.barbellix.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0E27"
       },
-      "package": "com.fitpulse.app"
+      "package": "com.barbellix.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,7 +33,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "FitPulse needs access to your photos so you can set a profile picture."
+          "photosPermission": "BarBellix needs access to your photos so you can set a profile picture."
         }
       ],
       [

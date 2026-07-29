@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { BodyMeasurements } from '@fitpulse/shared';
+import type { BodyMeasurements } from '@barbellix/shared';
 
 export interface BodyMetricDocument {
   _id: Types.ObjectId;

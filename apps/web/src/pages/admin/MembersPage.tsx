@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode } from 'lucide-react'
-import type { TrainerMemberSummary, SubscriptionStatus } from '@fitpulse/shared'
+import type { TrainerMemberSummary, SubscriptionStatus } from '@barbellix/shared'
 import {
   queryKeys,
   fetchTrainerMembers,

@@ -1,4 +1,4 @@
-import type { AIRecommendation, WorkoutSession } from '@fitpulse/shared';
+import type { AIRecommendation, WorkoutSession } from '@barbellix/shared';
 import { findRecentSessions } from '../workouts/service.js';
 import { computeSummary } from '../attendance/service.js';
 

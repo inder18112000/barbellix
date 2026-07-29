@@ -3,7 +3,7 @@ import { View, Text, FlatList, Animated, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import type { RecentCheckIn, CheckInMethod } from '@fitpulse/shared';
+import type { RecentCheckIn, CheckInMethod } from '@barbellix/shared';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';

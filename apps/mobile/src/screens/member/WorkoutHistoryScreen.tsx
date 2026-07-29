@@ -9,7 +9,7 @@ import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { queryKeys, fetchWorkoutSessions } from '../../api/queries';
 import { ScreenShell } from '../../components/common/ScreenShell';
-import type { WorkoutSession } from '@fitpulse/shared';
+import type { WorkoutSession } from '@barbellix/shared';
 import { styles } from './WorkoutHistoryScreen.styles';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

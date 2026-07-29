@@ -1,4 +1,4 @@
-import { DEFAULT_NUTRITION_GOALS, HABIT_LABELS } from '@fitpulse/shared';
+import { DEFAULT_NUTRITION_GOALS, HABIT_LABELS } from '@barbellix/shared';
 import { getMe } from '../users/service.js';
 import { findRecentSessions } from '../workouts/service.js';
 import { listPRs, listMetrics } from '../progress/service.js';
@@ -49,7 +49,7 @@ export async function buildSystemPrompt(userId: string): Promise<string> {
   const ageStr = p.dob ? String(calcAge(p.dob)) : 'unknown';
 
   // ── Profile ────────────────────────────────────────────────────────────────
-  let ctx = `You are an expert personal AI fitness coach inside the FitPulse gym app. Your client is ${user.firstName} ${user.lastName}.
+  let ctx = `You are an expert personal AI fitness coach inside the BarBellix gym app. Your client is ${user.firstName} ${user.lastName}.
 
 CLIENT PROFILE:
 - Age: ${ageStr} | Gender: ${p.gender ?? 'not specified'}

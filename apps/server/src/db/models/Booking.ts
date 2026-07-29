@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { BookingStatus } from '@fitpulse/shared';
+import type { BookingStatus } from '@barbellix/shared';
 
 export interface BookingDocument {
   _id: Types.ObjectId;

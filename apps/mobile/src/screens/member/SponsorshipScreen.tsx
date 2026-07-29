@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import type { Sponsor } from '@fitpulse/shared';
+import type { Sponsor } from '@barbellix/shared';
 
 import { colors } from '../../theme';
 import { ScreenShell } from '../../components/common/ScreenShell';

@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { queryKeys, fetchDietPlans, generateDietPlan } from '../../api/queries';
-import type { DietPlanMeal, MealType } from '@fitpulse/shared';
+import type { DietPlanMeal, MealType } from '@barbellix/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { Card } from '../../components/common/Card';

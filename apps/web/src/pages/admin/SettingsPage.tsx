@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import type { NotificationPreferences } from '@fitpulse/shared'
+import type { NotificationPreferences } from '@barbellix/shared'
 import {
   updateMyInfo,
   changeMyPassword,

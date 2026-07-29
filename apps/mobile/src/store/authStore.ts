@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User } from '@fitpulse/shared';
+import type { User } from '@barbellix/shared';
 import {
   persistTokens,
   clearPersistedTokens,

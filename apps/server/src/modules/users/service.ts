@@ -1,4 +1,4 @@
-import type { UserProfile, NotificationPreferences } from '@fitpulse/shared';
+import type { UserProfile, NotificationPreferences } from '@barbellix/shared';
 import { toDomainUser } from '../../lib/mappers.js';
 import { NotFoundError, UnauthorizedError } from '../../lib/errors.js';
 import { hashPassword, verifyPassword } from '../../lib/password.js';

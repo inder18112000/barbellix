@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { UserRole, UserStatus, FitnessGoal, UserProfile } from '@fitpulse/shared';
+import type { UserRole, UserStatus, FitnessGoal, UserProfile } from '@barbellix/shared';
 
 const USER_ROLES: UserRole[] = ['member', 'trainer', 'admin', 'superadmin'];
 const USER_STATUSES: UserStatus[] = ['active', 'inactive', 'suspended'];

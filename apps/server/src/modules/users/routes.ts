@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { changePasswordSchema } from '@fitpulse/shared';
+import { changePasswordSchema } from '@barbellix/shared';
 import { updateProfileSchema, updateNotificationPreferencesSchema, updateMyInfoSchema } from './schemas.js';
 import * as usersService from './service.js';
 

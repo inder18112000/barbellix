@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { MembershipStatus, PaymentStatus, PaymentMethod } from '@fitpulse/shared';
+import type { MembershipStatus, PaymentStatus, PaymentMethod } from '@barbellix/shared';
 
 const MEMBERSHIP_STATUSES: MembershipStatus[] = ['active', 'expired', 'cancelled', 'paused', 'incomplete'];
 const PAYMENT_STATUSES: PaymentStatus[] = ['paid', 'due', 'overdue', 'comp'];

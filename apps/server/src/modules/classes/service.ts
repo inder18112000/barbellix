@@ -1,4 +1,4 @@
-import type { ClassTemplateOccurrence } from '@fitpulse/shared';
+import type { ClassTemplateOccurrence } from '@barbellix/shared';
 import { NotFoundError, ForbiddenError, ConflictError, ValidationError } from '../../lib/errors.js';
 import { sendPushToUser } from '../../lib/push.js';
 import { getNotificationPreferences } from '../users/service.js';

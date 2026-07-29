@@ -102,8 +102,8 @@ export function ProfileHomeScreen() {
   const handleWorkoutPlans = () => parent?.navigate('Workout');
   const handleBodyMetrics  = () => parent?.navigate('Progress', { screen: 'BodyMetrics' });
   const handlePRs          = () => parent?.navigate('Progress', { screen: 'PersonalRecords' });
-  const handleShare        = () => Share.share({ message: 'FitPulse - Feel every rep. Download now!' });
-  const handleRate         = () => Linking.openURL('https://apps.apple.com/app/fitpulse/id000000000');
+  const handleShare        = () => Share.share({ message: 'BarBellix - Feel every rep. Download now!' });
+  const handleRate         = () => Linking.openURL('https://apps.apple.com/app/barbellix/id000000000');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -162,11 +162,11 @@ export function ProfileHomeScreen() {
 
         <Text style={styles.menuSection}>App</Text>
         <MenuRow emoji="🤝" label="Sponsors"       onPress={() => navigation.navigate('Sponsorship')} />
-        <MenuRow emoji="📤" label="Share FitPulse" onPress={handleShare} />
+        <MenuRow emoji="📤" label="Share BarBellix" onPress={handleShare} />
         <MenuRow emoji="⭐" label="Rate the App"   onPress={handleRate} />
         <MenuRow emoji="🚪" label="Log Out"        onPress={handleLogout} chevron={false} danger />
 
-        <Text style={styles.versionText}>FitPulse v1.0.0</Text>
+        <Text style={styles.versionText}>BarBellix v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );

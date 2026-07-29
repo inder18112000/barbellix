@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import type { TrainerMemberSummary, UserStatus } from '@fitpulse/shared';
+import type { TrainerMemberSummary, UserStatus } from '@barbellix/shared';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';

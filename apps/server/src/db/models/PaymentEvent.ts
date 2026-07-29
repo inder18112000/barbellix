@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { PaymentEventType } from '@fitpulse/shared';
+import type { PaymentEventType } from '@barbellix/shared';
 
 const PAYMENT_EVENT_TYPES: PaymentEventType[] = [
   'checkout_completed',

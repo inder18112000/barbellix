@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { CheckInMethod } from '@fitpulse/shared';
+import type { CheckInMethod } from '@barbellix/shared';
 
 const CHECK_IN_METHODS: CheckInMethod[] = ['qr', 'nfc', 'pin', 'manual'];
 

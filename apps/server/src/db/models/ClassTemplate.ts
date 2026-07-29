@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { DayOfWeek } from '@fitpulse/shared';
+import type { DayOfWeek } from '@barbellix/shared';
 
 export interface ClassTemplateOccurrenceSubdoc {
   dayOfWeek: DayOfWeek;

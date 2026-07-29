@@ -1,4 +1,4 @@
-# FitPulse — Project Analysis & Market-Readiness Roadmap
+# BarBellix — Project Analysis & Market-Readiness Roadmap
 
 *"Feel every rep." — Cross-platform gym & AI training app (React Native + Expo)*
 
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-FitPulse is a cross-platform (iOS / Android / Web) gym management and AI-coached training app built on Expo + React Native, serving three distinct roles — member, trainer, and admin — from a single codebase. The build-out is substantial for an early-stage project: 37 screens are implemented (not stubs) across auth, workout logging, progress tracking, nutrition/habits, an AI coach with a real multi-provider LLM backend, trainer member-management, and admin analytics/attendance.
+BarBellix is a cross-platform (iOS / Android / Web) gym management and AI-coached training app built on Expo + React Native, serving three distinct roles — member, trainer, and admin — from a single codebase. The build-out is substantial for an early-stage project: 37 screens are implemented (not stubs) across auth, workout logging, progress tracking, nutrition/habits, an AI coach with a real multi-provider LLM backend, trainer member-management, and admin analytics/attendance.
 
 The codebase is UI-complete but backend-absent: every data layer is served by a mock (MSW-style fetch interception) rather than a real API, authentication auto-logs in during development, and several features (trainer–member messaging, notifications) only exist as local component state with nothing persisted. This is a normal and sensible stage for a UI-first build — but it means the gap to a market-ready product is almost entirely in backend, security, monetization, and platform-readiness work, not in UI surface area.
 
@@ -120,11 +120,11 @@ The app follows a mock-first, contract-driven pattern: domain types (`src/types`
 
 ## Competitive Landscape & Positioning
 
-| Competitor | Category | FitPulse's angle against it |
+| Competitor | Category | BarBellix's angle against it |
 |---|---|---|
-| Strava / Hevy | Consumer workout tracker/social | FitPulse adds trainer + gym-admin roles — not just a personal logger |
-| Trainerize / TrueCoach / Mindbody | B2B2C gym & trainer platforms | Closest structural match; FitPulse's edge is a real LLM coach baked in, not bolted on |
-| Fitbod / Future | AI-personalized programming | Future pairs AI with human coaches; FitPulse could position its LLM coach as the affordable middle tier |
+| Strava / Hevy | Consumer workout tracker/social | BarBellix adds trainer + gym-admin roles — not just a personal logger |
+| Trainerize / TrueCoach / Mindbody | B2B2C gym & trainer platforms | Closest structural match; BarBellix's edge is a real LLM coach baked in, not bolted on |
+| Fitbod / Future | AI-personalized programming | Future pairs AI with human coaches; BarBellix could position its LLM coach as the affordable middle tier |
 | Whoop / Apple Fitness+ | Wearable-driven coaching | No wearable integration yet — a clear expansion opportunity, not a current competitor overlap |
 
 Recommended positioning: a gym-facing SaaS (member + trainer + admin in one app) with a genuinely AI-personalized coach as the headline differentiator — closer to "Trainerize with a real AI coach" than to a Strava/Hevy-style consumer tracker. That framing also justifies the multi-tenant Branch/Membership data model already present in the types.

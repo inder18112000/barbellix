@@ -1,5 +1,5 @@
 import type Stripe from 'stripe';
-import type { MembershipPlan, MembershipStatus, PaymentStatus, SubscriptionStatus } from '@fitpulse/shared';
+import type { MembershipPlan, MembershipStatus, PaymentStatus, SubscriptionStatus } from '@barbellix/shared';
 import type { Env } from '../../config/env.js';
 import { NotFoundError, BadGatewayError } from '../../lib/errors.js';
 import * as stripeLib from '../../lib/stripe.js';

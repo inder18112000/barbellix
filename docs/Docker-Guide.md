@@ -1,6 +1,6 @@
-# Docker for FitPulse — a step-by-step guide
+# Docker for BarBellix — a step-by-step guide
 
-This walks through exactly what was set up to containerize FitPulse, and *why* each piece
+This walks through exactly what was set up to containerize BarBellix, and *why* each piece
 exists, so you can read it alongside the real files in the repo (`docker-compose.yml`,
 `apps/server/Dockerfile`, `apps/web/Dockerfile`, `apps/web/nginx.conf`, `.dockerignore`) and
 understand every line rather than just copy-pasting them.
@@ -60,7 +60,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - fitpulse_mongo_data:/data/db
+      - barbellix_mongo_data:/data/db
     healthcheck:
       test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 5s
@@ -73,7 +73,7 @@ services:
 - `ports: '27017:27017'` — `hostPort:containerPort`. This exposes Mongo on your actual machine
   too, so you can point a GUI tool (MongoDB Compass, etc.) at `localhost:27017` if you want to
   poke around the data directly.
-- `volumes: fitpulse_mongo_data:/data/db` — MongoDB writes its data files to `/data/db` *inside*
+- `volumes: barbellix_mongo_data:/data/db` — MongoDB writes its data files to `/data/db` *inside*
   the container. Without this line, that data would vanish the moment the container is removed.
   With it, `/data/db` is backed by a named volume that Docker manages and keeps around across
   `docker compose down` / `up` cycles.
@@ -93,7 +93,7 @@ services:
     env_file:
       - apps/server/.env
     environment:
-      MONGODB_URI: mongodb://mongo:27017/fitpulse
+      MONGODB_URI: mongodb://mongo:27017/barbellix
       CORS_ORIGIN: http://localhost:8080,http://localhost:8081,http://localhost:5173
     ports:
       - '4000:4000'
@@ -138,8 +138,8 @@ services:
 
 ## 4. Why the build `context` is the repo root, not the app folder
 
-FitPulse is an **npm workspace monorepo**: `apps/server` and `apps/web` both depend on
-`packages/shared` (`import { loginSchema } from '@fitpulse/shared'`, etc.). A Docker build can
+BarBellix is an **npm workspace monorepo**: `apps/server` and `apps/web` both depend on
+`packages/shared` (`import { loginSchema } from '@barbellix/shared'`, etc.). A Docker build can
 only `COPY` files that exist inside its *build context* — the folder you point it at. If the
 context were just `apps/server`, the Dockerfile would have no way to reach `packages/shared` at
 all, because Docker builds are sandboxed from the rest of your filesystem by design.
@@ -159,8 +159,8 @@ RUN npm ci
 
 COPY packages/shared packages/shared
 COPY apps/server apps/server
-RUN npm run build --workspace=@fitpulse/shared
-RUN npm run build --workspace=@fitpulse/server
+RUN npm run build --workspace=@barbellix/shared
+RUN npm run build --workspace=@barbellix/server
 ```
 
 This copies **only the `package.json` files first**, runs `npm ci`, *then* copies the actual
@@ -229,7 +229,7 @@ contexts**, and mixing them up is the single most common Docker networking mista
 **Container-to-container** (server → mongo): both containers are on the same Docker-managed
 network, so `server` can reach Mongo at the hostname `mongo` — Docker's internal DNS resolves
 that to the right container automatically. This is why `MONGODB_URI` is
-`mongodb://mongo:27017/fitpulse`, not `localhost`.
+`mongodb://mongo:27017/barbellix`, not `localhost`.
 
 **Browser-to-container** (your browser → the web/server containers): your browser is running on
 your actual machine, *completely outside* the Docker network. It has no idea what `server` or
@@ -301,11 +301,11 @@ The first time you start it against a fresh volume, MongoDB has no data in it ye
 same way you would locally, just pointed at the container's published port:
 
 ```bash
-MONGODB_URI="mongodb://localhost:27017/fitpulse" npm run seed --workspace=@fitpulse/server
+MONGODB_URI="mongodb://localhost:27017/barbellix" npm run seed --workspace=@barbellix/server
 ```
 
 Then open **http://localhost:8080** and log in with any of the seeded accounts (see
-`apps/server/src/db/seed.ts` for the full list — `admin@fitpulse.app` / `password123` is the
+`apps/server/src/db/seed.ts` for the full list — `admin@barbellix.app` / `password123` is the
 gym-owner account).
 
 ---
@@ -315,7 +315,7 @@ gym-owner account).
 Everything in this guide was built and tested against this exact repo, not just written from
 theory:
 
-1. `docker compose build` — both `fitpulse-server` and `fitpulse-web` images built successfully.
+1. `docker compose build` — both `barbellix-server` and `barbellix-web` images built successfully.
 2. `docker compose up -d` — all three containers started; `mongo`'s healthcheck passed *before*
    `server` started (proving `depends_on.condition: service_healthy` actually works).
 3. `curl http://localhost:4000/health` → `{"status":"ok","mongo":"connected"}` — the
@@ -323,7 +323,7 @@ theory:
 4. `curl http://localhost:8080/` → `200` — nginx is serving the built React app.
 5. `curl http://localhost:8080/admin/members` → `200` (not nginx's default 404) — the SPA
    fallback routing fix in `nginx.conf` works.
-6. Ran the real seed script against the dockerized Mongo (`MONGODB_URI=mongodb://localhost:27017/fitpulse`),
+6. Ran the real seed script against the dockerized Mongo (`MONGODB_URI=mongodb://localhost:27017/barbellix`),
    then `POST /auth/login` against the dockerized server with a seeded account → got back a real
    user object and a real JWT access token.
 7. Inspected the built JS inside the running `web` container and confirmed `localhost:4000` is

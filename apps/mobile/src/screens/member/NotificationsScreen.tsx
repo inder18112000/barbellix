@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { NotificationPreferences } from '@fitpulse/shared';
+import type { NotificationPreferences } from '@barbellix/shared';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';

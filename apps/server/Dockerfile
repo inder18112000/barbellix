@@ -18,8 +18,8 @@ RUN npm ci
 COPY packages/shared packages/shared
 COPY apps/server apps/server
 
-RUN npm run build --workspace=@fitpulse/shared
-RUN npm run build --workspace=@fitpulse/server
+RUN npm run build --workspace=@barbellix/shared
+RUN npm run build --workspace=@barbellix/server
 
 # ---- runtime stage --------------------------------------------------------------
 # A second, clean image that only contains compiled JS + node_modules - no TypeScript

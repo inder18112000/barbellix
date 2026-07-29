@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 import jwt from '@fastify/jwt';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import type { UserRole } from '@fitpulse/shared';
+import type { UserRole } from '@barbellix/shared';
 import { ForbiddenError } from '../lib/errors.js';
 
 export default fp(async function authPlugin(fastify: FastifyInstance) {

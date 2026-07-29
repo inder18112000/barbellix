@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import type { HydratedDocument } from 'mongoose';
-import type { UserRole } from '@fitpulse/shared';
+import type { UserRole } from '@barbellix/shared';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken } from '../../lib/refreshToken.js';
 import { redeemPairingToken } from '../../lib/pairingToken.js';

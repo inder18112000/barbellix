@@ -12,7 +12,7 @@ import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { useAuthStore } from '../../store/authStore';
 import { login as loginRequest } from '../../api/auth';
-import { loginSchema, type LoginInput as LoginForm } from '@fitpulse/shared';
+import { loginSchema, type LoginInput as LoginForm } from '@barbellix/shared';
 import { styles } from './LoginScreen.styles';
 
 export function LoginScreen() {
@@ -37,7 +37,7 @@ export function LoginScreen() {
 
           <View style={styles.logoSection}>
             <Text style={styles.logoEmoji}>⚡</Text>
-            <Text style={styles.logoText}>FitPulse</Text>
+            <Text style={styles.logoText}>BarBellix</Text>
             <Text style={styles.tagline}>Feel every rep.</Text>
           </View>
 

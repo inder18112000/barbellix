@@ -12,7 +12,7 @@ import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { register } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
-import { registerSchema, type RegisterInput as RegisterForm } from '@fitpulse/shared';
+import { registerSchema, type RegisterInput as RegisterForm } from '@barbellix/shared';
 import { styles } from './RegisterScreen.styles';
 
 export function RegisterScreen() {
@@ -44,7 +44,7 @@ export function RegisterScreen() {
 
           <View style={styles.header}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join FitPulse and start your journey</Text>
+            <Text style={styles.subtitle}>Join BarBellix and start your journey</Text>
           </View>
 
           <View style={[styles.card, glass.card]}>

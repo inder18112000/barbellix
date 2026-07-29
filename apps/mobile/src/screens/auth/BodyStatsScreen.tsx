@@ -12,7 +12,7 @@ import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { updateProfile } from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
-import { bodyStatsSchema, type BodyStatsInput as BodyStatsForm } from '@fitpulse/shared';
+import { bodyStatsSchema, type BodyStatsInput as BodyStatsForm } from '@barbellix/shared';
 import type { AuthStackParams } from '../../navigation/types';
 import { styles } from './BodyStatsScreen.styles';
 

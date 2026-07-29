@@ -1,4 +1,4 @@
-import type { UserProfile, NotificationPreferences } from '@fitpulse/shared';
+import type { UserProfile, NotificationPreferences } from '@barbellix/shared';
 import { UserModel } from '../../db/models/User.js';
 import { NotificationPreferencesModel } from '../../db/models/NotificationPreferences.js';
 

@@ -10,7 +10,7 @@ import { glow } from '../../theme/effects';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { forgotPassword } from '../../api/auth';
-import { forgotPasswordSchema as schema, type ForgotPasswordInput as Form } from '@fitpulse/shared';
+import { forgotPasswordSchema as schema, type ForgotPasswordInput as Form } from '@barbellix/shared';
 import { styles } from './ForgotPasswordScreen.styles';
 
 // ─── Success State (SRP) ──────────────────────────────────────────────────────

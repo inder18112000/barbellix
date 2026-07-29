@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { WorkoutDay, FitnessGoal, ClassSession } from '@fitpulse/shared';
+import type { WorkoutDay, FitnessGoal, ClassSession } from '@barbellix/shared';
 
 export type AuthStackParams = {
   Splash: undefined;

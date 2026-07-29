@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import type { PlanTier } from '@fitpulse/shared';
+import type { PlanTier } from '@barbellix/shared';
 
 const PLAN_TIERS: PlanTier[] = ['free', 'pro', 'gym_starter', 'gym_business', 'enterprise'];
 

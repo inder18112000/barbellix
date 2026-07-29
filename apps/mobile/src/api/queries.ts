@@ -23,7 +23,7 @@ import type {
   ClassTemplate,
   BookingWithSession,
   NotificationPreferences,
-} from '@fitpulse/shared';
+} from '@barbellix/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
 export const queryKeys = {

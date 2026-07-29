@@ -8,7 +8,7 @@ import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { queryKeys, fetchExercises } from '../../api/queries';
 import { ScreenShell } from '../../components/common/ScreenShell';
-import type { Exercise, MuscleGroup } from '@fitpulse/shared';
+import type { Exercise, MuscleGroup } from '@barbellix/shared';
 import { styles } from './ExerciseLibraryScreen.styles';
 
 const MUSCLE_EMOJI: Record<string, string> = {

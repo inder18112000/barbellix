@@ -1,4 +1,4 @@
-import type { HabitId } from '@fitpulse/shared';
+import type { HabitId } from '@barbellix/shared';
 import * as repo from './repository.js';
 
 export async function listToday(userId: string) {

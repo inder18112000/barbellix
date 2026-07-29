@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { MuscleGroup, Equipment } from '@fitpulse/shared';
+import type { MuscleGroup, Equipment } from '@barbellix/shared';
 
 const MUSCLE_GROUPS: MuscleGroup[] = [
   'chest', 'back', 'shoulders', 'biceps', 'triceps', 'forearms',

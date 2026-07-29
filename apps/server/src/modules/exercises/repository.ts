@@ -1,4 +1,4 @@
-import type { Exercise } from '@fitpulse/shared';
+import type { Exercise } from '@barbellix/shared';
 import { ExerciseModel, type ExerciseDocument } from '../../db/models/Exercise.js';
 import type { HydratedDocument } from 'mongoose';
 import { idStr } from '../../lib/mappers-base.js';

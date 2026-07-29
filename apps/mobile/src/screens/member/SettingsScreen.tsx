@@ -129,7 +129,7 @@ export function SettingsScreen() {
           </View>
 
           {/* Version */}
-          <Text style={[styles.sectionTitle, { textAlign: 'center', marginTop: 32 }]}>FitPulse v1.0.0</Text>
+          <Text style={[styles.sectionTitle, { textAlign: 'center', marginTop: 32 }]}>BarBellix v1.0.0</Text>
 
         </ScrollView>
       </SafeAreaView>

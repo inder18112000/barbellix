@@ -1,7 +1,7 @@
 # Render Blueprint - deploys apps/server and apps/web as two Docker-based web services.
 #
 # Setup (one-time):
-#   1. Push this repo to GitHub (already done: github.com/inder18112000/fitpulse).
+#   1. Push this repo to GitHub (already done: github.com/inder18112000/barbellix).
 #   2. In the Render dashboard: New -> Blueprint -> connect this repo. Render reads this file
 #      and provisions both services below.
 #   3. You'll be prompted to fill in every `sync: false` value below (real secrets - Render
@@ -12,7 +12,7 @@
 # to know the URL in advance.
 
 services:
-  - name: fitpulse-server
+  - name: barbellix-server
     type: web
     runtime: docker
     dockerfilePath: apps/server/Dockerfile
@@ -25,7 +25,7 @@ services:
       # Render assigns and injects its own PORT - our Fastify server already reads process.env.PORT
       # (see apps/server/src/config/env.ts), so nothing needs to be hardcoded here.
       - key: MONGODB_URI
-        sync: false # paste your MongoDB Atlas connection string (include /fitpulse before the '?')
+        sync: false # paste your MongoDB Atlas connection string (include /barbellix before the '?')
       - key: JWT_ACCESS_SECRET
         sync: false # generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
       - key: JWT_REFRESH_SECRET
@@ -35,15 +35,15 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN_DAYS
         value: '30'
       - key: CORS_ORIGIN
-        value: https://fitpulse-web.onrender.com
+        value: https://barbellix-web.onrender.com
       - key: STRIPE_SECRET_KEY
         sync: false # optional - leave blank in the dashboard prompt if not demoing real Stripe checkout
       - key: STRIPE_WEBHOOK_SECRET
         sync: false # optional, same as above
       - key: STRIPE_SUCCESS_URL
-        value: https://fitpulse-web.onrender.com/billing/success
+        value: https://barbellix-web.onrender.com/billing/success
       - key: STRIPE_CANCEL_URL
-        value: https://fitpulse-web.onrender.com/billing/cancel
+        value: https://barbellix-web.onrender.com/billing/cancel
       - key: GROQ_API_KEY
         sync: false # optional - only needed if demoing the AI Coach screen
       - key: GEMINI_API_KEY
@@ -53,7 +53,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
-  - name: fitpulse-web
+  - name: barbellix-web
     type: web
     runtime: docker
     dockerfilePath: apps/web/Dockerfile
@@ -64,4 +64,4 @@ services:
       # `ARG VITE_API_BASE_URL` - this is baked into the built JS at build time, so it has to be
       # the browser-facing URL (the server's own public Render URL), not an internal address.
       - key: VITE_API_BASE_URL
-        value: https://fitpulse-server.onrender.com
+        value: https://barbellix-server.onrender.com

@@ -1,4 +1,4 @@
-# ⚡ FitPulse
+# ⚡ BarBellix
 
 Gym management platform: a React Native member app, a React web dashboard for gym owners and
 trainers, and a Node.js/Fastify backend with MongoDB — sharing one real API, one database, and
@@ -8,7 +8,7 @@ subscription billing, and a rate-limited AI coaching proxy (no client-side AI ke
 ## Monorepo structure
 
 ```
-fitpulse/
+barbellix/
 ├── apps/
 │   ├── mobile/     # React Native + Expo — member-facing app
 │   ├── server/     # Fastify + Mongoose/MongoDB — the one real backend both clients talk to
@@ -26,15 +26,15 @@ fitpulse/
   get their own scoped views. Tailwind + shadcn/ui, MobX for state, TanStack Query, real-time-ish
   polling for attendance.
 - **packages/shared** — the contract between all three: TypeScript interfaces and Zod schemas
-  built once (`npm run build --workspace=@fitpulse/shared`) and consumed by every app.
+  built once (`npm run build --workspace=@barbellix/shared`) and consumed by every app.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/inder18112000/fitpulse.git
-cd fitpulse
+git clone https://github.com/inder18112000/barbellix.git
+cd barbellix
 npm install
-npm run build --workspace=@fitpulse/shared
+npm run build --workspace=@barbellix/shared
 ```
 
 **Backend** (needs a local or remote MongoDB — see `apps/server/.env.example`):
@@ -42,14 +42,14 @@ npm run build --workspace=@fitpulse/shared
 ```bash
 cp apps/server/.env.example apps/server/.env   # fill in MONGODB_URI, JWT secrets, etc.
 npm run server                                  # starts Fastify on :4000
-npm run seed --workspace=@fitpulse/server       # seeds a tenant + admin/trainer/member accounts
+npm run seed --workspace=@barbellix/server      # seeds a tenant + admin/trainer/member accounts
 ```
 
 **Web dashboard** (owner + trainer login):
 
 ```bash
 cp apps/web/.env.example apps/web/.env
-npm run dev --workspace=@fitpulse/web           # :5173, log in with a seeded admin/trainer account
+npm run dev --workspace=@barbellix/web          # :5173, log in with a seeded admin/trainer account
 ```
 
 **Mobile app** (member login):
@@ -76,5 +76,5 @@ everything except creating a real Checkout session — set `STRIPE_SECRET_KEY` /
 - Workspaces are npm workspaces (not pnpm — Expo/Metro's module resolution doesn't play well
   with pnpm's hoisting).
 - After changing anything in `packages/shared`, rebuild it before the other apps will pick up the
-  change: `npm run build --workspace=@fitpulse/shared`.
+  change: `npm run build --workspace=@barbellix/shared`.
 - `npm run lint` runs lint across every workspace that defines a `lint` script.

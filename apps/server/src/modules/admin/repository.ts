@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { Branch } from '@fitpulse/shared';
+import type { Branch } from '@barbellix/shared';
 import { UserModel } from '../../db/models/User.js';
 import { AttendanceRecordModel } from '../../db/models/AttendanceRecord.js';
 import { BranchModel, type BranchDocument } from '../../db/models/Branch.js';

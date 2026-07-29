@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { Message } from '@fitpulse/shared';
+import type { Message } from '@barbellix/shared';
 import { MessageModel, type MessageDocument } from '../../db/models/Message.js';
 import { UserModel } from '../../db/models/User.js';
 import { idStr, isoStr } from '../../lib/mappers-base.js';

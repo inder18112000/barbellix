@@ -1,4 +1,4 @@
-# FitPulse — Client Requirements & Implementation Status
+# BarBellix — Client Requirements & Implementation Status
 
 Consolidates everything the client has specified so far (the PRD shared 2026-07-26, plus the
 AI workout-plan reference screenshots shared the same day) into one place, each requirement

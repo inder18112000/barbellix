@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { ClassTemplate, ClassSession, Booking, BookingStatus } from '@fitpulse/shared';
+import type { ClassTemplate, ClassSession, Booking, BookingStatus } from '@barbellix/shared';
 import { ClassTemplateModel, type ClassTemplateDocument } from '../../db/models/ClassTemplate.js';
 import { ClassSessionModel, type ClassSessionDocument } from '../../db/models/ClassSession.js';
 import { BookingModel, type BookingDocument } from '../../db/models/Booking.js';

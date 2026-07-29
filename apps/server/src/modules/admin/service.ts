@@ -1,4 +1,4 @@
-import type { AttendanceAnalytics, Branch, RecentCheckIn, AdminDashboardStats } from '@fitpulse/shared';
+import type { AttendanceAnalytics, Branch, RecentCheckIn, AdminDashboardStats } from '@barbellix/shared';
 import { NotFoundError } from '../../lib/errors.js';
 import { getMembershipCounts } from '../billing/service.js';
 import { findMemberByIdInTenant } from '../trainer/repository.js';

@@ -13,7 +13,7 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { UserStatusBadge, SubscriptionStatusBadge } from '@/lib/statusBadges'
 import { cn } from '@/lib/utils'
-import type { PaymentEvent } from '@fitpulse/shared'
+import type { PaymentEvent } from '@barbellix/shared'
 
 const PAYMENT_EVENT_ICON: Record<PaymentEvent['type'], typeof CreditCard> = {
   checkout_completed: CreditCard,

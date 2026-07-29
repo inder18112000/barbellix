@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { User } from '@fitpulse/shared';
+import type { User } from '@barbellix/shared';
 import type { UserDocument } from '../db/models/User.js';
 import { idStr, isoStr } from './mappers-base.js';
 

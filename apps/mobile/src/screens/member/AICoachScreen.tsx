@@ -14,7 +14,7 @@ import { queryKeys, acceptRecommendation } from '../../api/queries';
 import { api } from '../../api/client';
 import { useAICoach } from '../../hooks/useAICoach';
 import { useLocalCoach, localCoachReply } from '../../hooks/useLocalCoach';
-import type { AIMessage } from '@fitpulse/shared';
+import type { AIMessage } from '@barbellix/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { styles, CARD_WIDTH } from './AICoachScreen.styles';
 

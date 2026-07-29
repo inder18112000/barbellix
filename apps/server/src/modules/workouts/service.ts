@@ -1,4 +1,4 @@
-import type { FitnessGoal, UserRole } from '@fitpulse/shared';
+import type { FitnessGoal, UserRole } from '@barbellix/shared';
 import { isValidObjectId } from '../../lib/objectId.js';
 import { NotFoundError } from '../../lib/errors.js';
 import { recordIfPR } from '../progress/service.js';

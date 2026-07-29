@@ -1,5 +1,5 @@
 import { Types, type HydratedDocument } from 'mongoose';
-import type { BodyMetric, PersonalRecord } from '@fitpulse/shared';
+import type { BodyMetric, PersonalRecord } from '@barbellix/shared';
 import { BodyMetricModel, type BodyMetricDocument } from '../../db/models/BodyMetric.js';
 import { PersonalRecordModel, type PersonalRecordDocument, type PRUnit } from '../../db/models/PersonalRecord.js';
 import { idStr, isoStr } from '../../lib/mappers-base.js';

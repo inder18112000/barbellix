@@ -1,4 +1,4 @@
-import type { Sponsor } from '@fitpulse/shared';
+import type { Sponsor } from '@barbellix/shared';
 import { NotFoundError } from '../../lib/errors.js';
 import * as repo from './repository.js';
 

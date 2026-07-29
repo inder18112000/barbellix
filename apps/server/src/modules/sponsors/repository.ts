@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { Sponsor } from '@fitpulse/shared';
+import type { Sponsor } from '@barbellix/shared';
 import { SponsorModel, type SponsorDocument } from '../../db/models/Sponsor.js';
 import { idStr } from '../../lib/mappers-base.js';
 

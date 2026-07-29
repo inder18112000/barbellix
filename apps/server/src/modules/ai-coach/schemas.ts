@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { aiCoachCompleteSchema, generateWorkoutPlanSchema, generateDietPlanSchema } from '@fitpulse/shared';
+import { aiCoachCompleteSchema, generateWorkoutPlanSchema, generateDietPlanSchema } from '@barbellix/shared';
 
 export { aiCoachCompleteSchema as completeChatSchema, generateWorkoutPlanSchema, generateDietPlanSchema };
 

@@ -44,7 +44,7 @@ function QRDisplay({ userId }: { userId: string }) {
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
-  const qrValue = `fitpulse:checkin:${userId}:${bucket}`;
+  const qrValue = `barbellix:checkin:${userId}:${bucket}`;
 
   return (
     <View style={styles.qrContainer}>
@@ -95,7 +95,7 @@ function MemberCard() {
           <View style={styles.shimmerOverlay} />
           <View style={styles.cardTop}>
             <View>
-              <Text style={styles.cardBrand}>⚡ FitPulse</Text>
+              <Text style={styles.cardBrand}>⚡ BarBellix</Text>
               <Text style={styles.cardBrandSub}>Premium Member</Text>
             </View>
             <View style={[styles.streakPill, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>

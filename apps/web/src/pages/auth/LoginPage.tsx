@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { loginSchema, type LoginInput } from '@fitpulse/shared'
+import { loginSchema, type LoginInput } from '@barbellix/shared'
 import { login as loginRequest } from '@/api/auth'
 import { authStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
@@ -51,7 +51,7 @@ export function LoginPage() {
           <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
             <Zap className="size-6" fill="currentColor" />
           </div>
-          <h1 className="text-xl font-semibold">FitPulse Management</h1>
+          <h1 className="text-xl font-semibold">BarBellix Management</h1>
           <p className="text-sm text-muted-foreground">Sign in to your gym dashboard</p>
         </div>
 

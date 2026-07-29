@@ -60,7 +60,7 @@ function FinishModal({ visible, onConfirm, onCancel, loading }: { visible: boole
 export function ActiveWorkoutScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<Route>();
-  const { day, planId } = route.params as { day: import('@fitpulse/shared').WorkoutDay; planId?: string };
+  const { day, planId } = route.params as { day: import('@barbellix/shared').WorkoutDay; planId?: string };
   const qc = useQueryClient();
   const [showFinish, setShowFinish] = useState(false);
 

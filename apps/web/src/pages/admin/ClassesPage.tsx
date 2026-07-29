@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Plus, CalendarDays, Pencil } from 'lucide-react'
-import type { ClassTemplate, ClassTemplateOccurrence } from '@fitpulse/shared'
+import type { ClassTemplate, ClassTemplateOccurrence } from '@barbellix/shared'
 import {
   queryKeys,
   fetchClassTemplates,

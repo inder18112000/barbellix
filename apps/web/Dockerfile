@@ -21,8 +21,8 @@ COPY apps/web apps/web
 ARG VITE_API_BASE_URL=http://localhost:4000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-RUN npm run build --workspace=@fitpulse/shared
-RUN npm run build --workspace=@fitpulse/web
+RUN npm run build --workspace=@barbellix/shared
+RUN npm run build --workspace=@barbellix/web
 
 # ---- runtime stage --------------------------------------------------------------
 # The build output is just static HTML/JS/CSS, so the runtime image doesn't need Node at

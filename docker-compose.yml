@@ -1,3 +1,5 @@
+name: barbellix
+
 services:
   mongo:
     image: mongo:7
@@ -5,7 +7,7 @@ services:
     ports:
       - '27017:27017'
     volumes:
-      - fitpulse_mongo_data:/data/db
+      - barbellix_mongo_data:/data/db
     healthcheck:
       test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
       interval: 5s
@@ -26,7 +28,7 @@ services:
     env_file:
       - apps/server/.env
     environment:
-      MONGODB_URI: mongodb://mongo:27017/fitpulse
+      MONGODB_URI: mongodb://mongo:27017/barbellix
       CORS_ORIGIN: http://localhost:8080,http://localhost:8081,http://localhost:5173
     ports:
       - '4000:4000'
@@ -44,4 +46,4 @@ services:
       - '8080:80'
 
 volumes:
-  fitpulse_mongo_data:
+  barbellix_mongo_data:

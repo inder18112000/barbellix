@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { FitnessGoal, WorkoutGeneratedBy } from '@fitpulse/shared';
+import type { FitnessGoal, WorkoutGeneratedBy } from '@barbellix/shared';
 
 const FITNESS_GOALS: FitnessGoal[] = [
   'lose_weight', 'build_muscle', 'improve_endurance',

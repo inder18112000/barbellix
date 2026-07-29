@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { HabitId } from '@fitpulse/shared';
+import type { HabitId } from '@barbellix/shared';
 
 const HABIT_IDS: HabitId[] = ['water', 'sleep', 'steps', 'stretch', 'no_junk', 'meditation'];
 

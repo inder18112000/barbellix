@@ -22,8 +22,8 @@ import type {
   ClassTemplate,
   ClassSession,
   ClassTemplateOccurrence,
-} from '@fitpulse/shared'
-import type { ChangePasswordInput } from '@fitpulse/shared'
+} from '@barbellix/shared'
+import type { ChangePasswordInput } from '@barbellix/shared'
 import { api } from './client'
 
 export const queryKeys = {

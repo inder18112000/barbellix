@@ -4,7 +4,7 @@
  * Screens consume this hook; no direct useQuery calls in trainer screens.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UserStatus } from '@fitpulse/shared';
+import type { UserStatus } from '@barbellix/shared';
 import {
   queryKeys,
   fetchTrainerMembers,

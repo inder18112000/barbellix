@@ -1,5 +1,5 @@
 import { Schema, model, Types } from 'mongoose';
-import type { MealType } from '@fitpulse/shared';
+import type { MealType } from '@barbellix/shared';
 
 const MEAL_TYPES: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 

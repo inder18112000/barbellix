@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema } from '@fitpulse/shared';
+import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema } from '@barbellix/shared';
 import * as authService from './service.js';
 
 const refreshBodySchema = z.object({ refreshToken: z.string().min(1) });

@@ -1,5 +1,5 @@
 import { makeAutoObservable, runInAction } from 'mobx'
-import type { User } from '@fitpulse/shared'
+import type { User } from '@barbellix/shared'
 import { persistTokens, clearPersistedTokens, loadPersistedTokens, setOnSessionExpired } from '../api/client'
 import { fetchMe } from '../api/queries'
 import { logoutRequest } from '../api/auth'

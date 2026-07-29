@@ -1,7 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
 
-const ACCESS_TOKEN_KEY = 'fitpulse_access_token'
-const REFRESH_TOKEN_KEY = 'fitpulse_refresh_token'
+const ACCESS_TOKEN_KEY = 'barbellix_access_token'
+const REFRESH_TOKEN_KEY = 'barbellix_refresh_token'
 
 let accessToken: string | null = null
 let refreshToken: string | null = null

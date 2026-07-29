@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import type { TrainerMemberSummary } from '@fitpulse/shared';
+import type { TrainerMemberSummary } from '@barbellix/shared';
 import { NotFoundError } from '../../lib/errors.js';
 import { toDomainUser } from '../../lib/mappers.js';
 import { issuePairingToken } from '../../lib/pairingToken.js';

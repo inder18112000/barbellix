@@ -1,5 +1,5 @@
 import type { HydratedDocument } from 'mongoose';
-import type { HabitEntry, HabitId } from '@fitpulse/shared';
+import type { HabitEntry, HabitId } from '@barbellix/shared';
 import { HabitEntryModel, type HabitEntryDocument } from '../../db/models/HabitEntry.js';
 
 export function toDomainHabit(doc: HydratedDocument<HabitEntryDocument>): HabitEntry {

@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, TextInput, KeyboardAvoidingView
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Message } from '@fitpulse/shared';
+import type { Message } from '@barbellix/shared';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
