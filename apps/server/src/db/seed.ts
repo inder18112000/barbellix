@@ -21,6 +21,14 @@ import { WorkoutSessionModel } from './models/WorkoutSession.js';
 import { AttendanceRecordModel } from './models/AttendanceRecord.js';
 import { PersonalRecordModel } from './models/PersonalRecord.js';
 import { SponsorModel } from './models/Sponsor.js';
+import { MembershipPlanModel } from './models/MembershipPlan.js';
+import { MembershipModel } from './models/Membership.js';
+import { ClassTemplateModel } from './models/ClassTemplate.js';
+import { BodyMetricModel } from './models/BodyMetric.js';
+import { DietPlanModel } from './models/DietPlan.js';
+import { MealEntryModel } from './models/MealEntry.js';
+import { HabitEntryModel } from './models/HabitEntry.js';
+import { MessageModel } from './models/Message.js';
 
 const SEED_PASSWORD = 'password123';
 
@@ -134,6 +142,44 @@ function daysAgo(n: number): Date {
   return d;
 }
 
+/** ClassSession is generated lazily from ClassTemplate.occurrences when someone actually views
+ * the schedule (see classes/repository.ts's generateSessionsForRange) - so seeding a template
+ * with real day-of-week occurrences is enough to make the whole feature testable, no need to
+ * pre-create sessions/bookings by hand. */
+async function upsertClassTemplates(tenantId: Types.ObjectId, branchId: Types.ObjectId, trainerId: Types.ObjectId) {
+  const templates = [
+    { name: 'Morning HIIT', capacity: 15, occurrences: [{ dayOfWeek: 1, startTime: '06:30', durationMins: 45 }, { dayOfWeek: 3, startTime: '06:30', durationMins: 45 }, { dayOfWeek: 5, startTime: '06:30', durationMins: 45 }] },
+    { name: 'Yoga Flow', capacity: 20, occurrences: [{ dayOfWeek: 2, startTime: '18:00', durationMins: 60 }, { dayOfWeek: 4, startTime: '18:00', durationMins: 60 }] },
+  ];
+  await Promise.all(
+    templates.map((t) =>
+      ClassTemplateModel.findOneAndUpdate(
+        { tenantId, branchId, name: t.name },
+        { $setOnInsert: { tenantId, branchId, trainerId, name: t.name, capacity: t.capacity, occurrences: t.occurrences, active: true } },
+        { upsert: true },
+      ),
+    ),
+  );
+}
+
+async function upsertMembershipPlans(tenantId: Types.ObjectId) {
+  const plans = [
+    { name: 'Monthly Unlimited', description: 'Unlimited access, billed monthly.', priceCents: 4999, billingInterval: 'month' as const },
+    { name: 'Annual Unlimited', description: 'Unlimited access, billed annually - two months free vs. monthly.', priceCents: 49999, billingInterval: 'year' as const },
+  ];
+  const docs = [];
+  for (const p of plans) {
+    docs.push(
+      await MembershipPlanModel.findOneAndUpdate(
+        { tenantId, name: p.name },
+        { $setOnInsert: { tenantId, ...p, currency: 'usd', active: true } },
+        { new: true, upsert: true },
+      ),
+    );
+  }
+  return docs;
+}
+
 async function main() {
   const env = loadEnv();
   await mongoose.connect(env.MONGODB_URI);
@@ -160,6 +206,15 @@ async function main() {
   const members = await Promise.all(
     memberSeeds.map((m) => upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'member', ...m })),
   );
+
+  // Every member reports to the one seeded trainer - without this, the trainer's own roster
+  // (trainer/repository.ts's findMembersByTenant) and the messaging scope check
+  // (messaging/service.ts) would both see/allow nothing, since neither has a fallback for an
+  // unassigned member.
+  await UserModel.updateMany({ _id: { $in: members.map((m) => m._id) } }, { $set: { assignedTrainerId: trainer._id } });
+
+  await upsertClassTemplates(tenant._id, branch._id, trainer._id);
+  const membershipPlans = await upsertMembershipPlans(tenant._id);
 
   const benchPress = await upsertExercise('Barbell Bench Press', ['chest'], ['barbell']);
   const squat = await upsertExercise('Barbell Back Squat', ['quads', 'glutes'], ['barbell']);
@@ -274,6 +329,11 @@ async function main() {
     WorkoutSessionModel.deleteMany({ userId: { $in: memberIds } }),
     AttendanceRecordModel.deleteMany({ userId: { $in: memberIds } }),
     PersonalRecordModel.deleteMany({ userId: { $in: memberIds } }),
+    BodyMetricModel.deleteMany({ userId: { $in: memberIds } }),
+    DietPlanModel.deleteMany({ userId: { $in: memberIds } }),
+    MealEntryModel.deleteMany({ userId: { $in: memberIds } }),
+    HabitEntryModel.deleteMany({ userId: { $in: memberIds } }),
+    MessageModel.deleteMany({ senderId: { $in: [...memberIds, trainer._id] }, recipientId: { $in: [...memberIds, trainer._id] } }),
   ]);
 
   // Trainer's own template plans (source plans for CreatePlanPage/AssignPlanPage to work with).
@@ -344,6 +404,84 @@ async function main() {
       { userId: member._id, exerciseId: benchPress._id, value: baseWeight, unit: 'kg', achievedAt: daysAgo(1) },
       { userId: member._id, exerciseId: squat._id, value: baseWeight + 20, unit: 'kg', achievedAt: daysAgo(1) },
       { userId: member._id, exerciseId: deadlift._id, value: baseWeight + 30, unit: 'kg', achievedAt: daysAgo(4) },
+    ]);
+
+    // Billing: rotate through a few real-world statuses across the 5 members instead of making
+    // everyone identically "paid", so the admin billing views have something to actually show.
+    const plan = membershipPlans[i % membershipPlans.length];
+    const billingProfiles = [
+      { status: 'active' as const, paymentStatus: 'paid' as const, paymentMethod: 'online' as const },
+      { status: 'active' as const, paymentStatus: 'paid' as const, paymentMethod: 'cash' as const },
+      { status: 'active' as const, paymentStatus: 'overdue' as const, paymentMethod: 'online' as const },
+      { status: 'paused' as const, paymentStatus: 'due' as const, paymentMethod: 'online' as const },
+      { status: 'active' as const, paymentStatus: 'comp' as const, paymentMethod: 'cash' as const },
+    ];
+    const billing = billingProfiles[i];
+    await MembershipModel.findOneAndUpdate(
+      { userId: member._id },
+      {
+        $set: {
+          tenantId: tenant._id,
+          planId: plan._id,
+          planName: plan.name,
+          status: billing.status,
+          paymentStatus: billing.paymentStatus,
+          paymentMethod: billing.paymentMethod,
+          startDate: daysAgo(90),
+        },
+      },
+      { upsert: true },
+    );
+
+    // Body metrics: a weight trend over the last month so the progress chart has a real line to draw.
+    await BodyMetricModel.insertMany(
+      [30, 20, 10, 3].map((d, j) => ({
+        userId: member._id,
+        recordedAt: daysAgo(d),
+        weightKg: 78 - i - j * 0.6,
+        bodyFatPct: 22 - i * 0.5 - j * 0.3,
+      })),
+    );
+
+    // Nutrition: an active diet plan plus a day's worth of logged meals for the first 3 members.
+    if (i < 3) {
+      await DietPlanModel.create({
+        userId: member._id,
+        name: 'Lean Muscle Nutrition Plan',
+        goal: 'build_muscle',
+        generatedBy: 'trainer',
+        dailyCalorieTarget: 2400,
+        dailyProteinG: 180,
+        dailyCarbsG: 260,
+        dailyFatG: 70,
+        active: true,
+        meals: [
+          { mealType: 'breakfast', name: 'Oats, whey, and banana', calories: 520, proteinG: 40, carbsG: 65, fatG: 10 },
+          { mealType: 'lunch', name: 'Grilled chicken, rice, and greens', calories: 680, proteinG: 55, carbsG: 70, fatG: 15 },
+          { mealType: 'dinner', name: 'Salmon, sweet potato, and broccoli', calories: 640, proteinG: 45, carbsG: 55, fatG: 22 },
+          { mealType: 'snack', name: 'Greek yogurt and almonds', calories: 300, proteinG: 25, carbsG: 15, fatG: 15 },
+        ],
+      });
+      await MealEntryModel.insertMany([
+        { userId: member._id, loggedAt: daysAgo(0), name: 'Oats, whey, and banana', mealType: 'breakfast', calories: 520, proteinG: 40, carbsG: 65, fatG: 10 },
+        { userId: member._id, loggedAt: daysAgo(0), name: 'Grilled chicken, rice, and greens', mealType: 'lunch', calories: 680, proteinG: 55, carbsG: 70, fatG: 15 },
+      ]);
+    }
+
+    // Habits: the last 7 days, mostly-consistent water/sleep tracking with a couple of missed days.
+    const habitDocs = [];
+    for (let d = 0; d < 7; d++) {
+      const dateKey = daysAgo(d).toISOString().slice(0, 10);
+      habitDocs.push({ userId: member._id, habitId: 'water' as const, date: dateKey, completed: d !== 2, value: d === 2 ? 4 : 8 });
+      habitDocs.push({ userId: member._id, habitId: 'sleep' as const, date: dateKey, completed: d !== 5, value: d === 5 ? 5 : 7.5 });
+    }
+    await HabitEntryModel.insertMany(habitDocs);
+
+    // Messaging: a short, real-looking trainer/member exchange so the inbox isn't empty for either side.
+    await MessageModel.insertMany([
+      { tenantId: tenant._id, senderId: member._id, recipientId: trainer._id, text: "Hey! Quick question about today's session - is the leg day plan still on?", createdAt: daysAgo(2), read: true },
+      { tenantId: tenant._id, senderId: trainer._id, recipientId: member._id, text: "Yep, still on! I bumped your squat weight slightly based on last week's RPE.", createdAt: daysAgo(2), read: true },
+      { tenantId: tenant._id, senderId: member._id, recipientId: trainer._id, text: 'Sounds good, see you then.', createdAt: daysAgo(1), read: false },
     ]);
   }
 
