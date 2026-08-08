@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Animated,
 } from 'react-native';
@@ -12,8 +12,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { useAuthStore } from '../../store/authStore';
-import { updateProfile, queryKeys } from '../../api/queries';
+import { updateProfile, addInjury, removeInjury, queryKeys } from '../../api/queries';
 import { glow } from '../../theme/effects';
+import { spacing } from '../../theme';
+import type { MuscleGroup, InjuryCondition, InjurySeverity } from '@barbellix/shared';
+import {
+  MUSCLE_GROUPS, MUSCLE_GROUP_LABELS, INJURY_SEVERITIES,
+  INJURY_CONDITION_LABELS, INJURY_CONDITION_MUSCLE_GROUPS,
+} from '@barbellix/shared';
 import { styles } from './EditProfileScreen.styles';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
@@ -102,6 +108,146 @@ function GenderSelector({ value, onChange }: { value: Gender; onChange: (v: Gend
           );
         })}
       </View>
+    </>
+  );
+}
+
+// ─── Injuries Section (SRP) - self-reported injuries the AI plan generator avoids when picking
+// exercises (see ai-coach/plan-generator.ts's injury-aware filtering). ─────────────────────────
+
+function InjuriesSection() {
+  const { user, setUser } = useAuthStore();
+  const qc = useQueryClient();
+  const injuries = user?.profile?.injuries ?? [];
+
+  const [adding, setAdding] = useState(false);
+  const [bodyPart, setBodyPart] = useState<MuscleGroup | undefined>();
+  const [condition, setCondition] = useState<InjuryCondition | undefined>();
+  const [severity, setSeverity] = useState<InjurySeverity>('mild');
+  const [note, setNote] = useState('');
+
+  const relevantConditions = useMemo(() => {
+    return (Object.entries(INJURY_CONDITION_MUSCLE_GROUPS) as [InjuryCondition, MuscleGroup[]][])
+      .filter(([, groups]) => groups.length === 0 || (bodyPart ? groups.includes(bodyPart) : false))
+      .map(([id]) => id);
+  }, [bodyPart]);
+
+  const resetForm = () => {
+    setAdding(false);
+    setBodyPart(undefined);
+    setCondition(undefined);
+    setSeverity('mild');
+    setNote('');
+  };
+
+  const { mutate: submitInjury, isPending: isAdding } = useMutation({
+    mutationFn: () => addInjury({ bodyPart: bodyPart!, condition, severity, note: note.trim() || undefined }),
+    onSuccess: (updated) => {
+      setUser(updated);
+      qc.invalidateQueries({ queryKey: queryKeys.me });
+      resetForm();
+    },
+  });
+
+  const { mutate: deleteInjury, isPending: isDeleting } = useMutation({
+    mutationFn: (id: string) => removeInjury(id),
+    onSuccess: (updated) => {
+      setUser(updated);
+      qc.invalidateQueries({ queryKey: queryKeys.me });
+    },
+  });
+
+  const handlePickCondition = (id: InjuryCondition) => {
+    setCondition((prev) => (prev === id ? undefined : id));
+    const groups = INJURY_CONDITION_MUSCLE_GROUPS[id];
+    if (groups.length > 0 && !bodyPart) setBodyPart(groups[0]);
+  };
+
+  return (
+    <>
+      <Text style={styles.sectionLabel}>Injuries</Text>
+
+      {injuries.length === 0 && !adding && <Text style={styles.emptyText}>No injuries logged.</Text>}
+
+      {injuries.map((injury) => (
+        <View key={injury.id} style={styles.injuryItem}>
+          <View style={styles.injuryItemText}>
+            <Text style={styles.injuryItemTitle}>
+              {injury.condition ? INJURY_CONDITION_LABELS[injury.condition] : MUSCLE_GROUP_LABELS[injury.bodyPart]}
+            </Text>
+            <Text style={styles.injuryItemMeta}>{MUSCLE_GROUP_LABELS[injury.bodyPart]} · {injury.severity}</Text>
+          </View>
+          <TouchableOpacity style={styles.removeBtn} onPress={() => deleteInjury(injury.id)} disabled={isDeleting}>
+            <Text style={styles.removeBtnText}>×</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      {adding ? (
+        <View style={styles.addInjuryForm}>
+          <Text style={[styles.sectionLabel, { marginTop: 0 }]}>Body part</Text>
+          <View style={styles.chipGrid}>
+            {MUSCLE_GROUPS.map((m) => (
+              <TouchableOpacity
+                key={m}
+                style={[styles.chip, m === bodyPart && styles.chipActive]}
+                onPress={() => { setBodyPart(m); setCondition(undefined); }}
+              >
+                <Text style={[styles.chipText, m === bodyPart && styles.chipTextActive]}>{MUSCLE_GROUP_LABELS[m]}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {bodyPart && relevantConditions.length > 0 && (
+            <>
+              <Text style={styles.sectionLabel}>Specific condition (optional)</Text>
+              <View style={styles.chipGrid}>
+                {relevantConditions.map((id) => (
+                  <TouchableOpacity
+                    key={id}
+                    style={[styles.chip, id === condition && styles.chipActive]}
+                    onPress={() => handlePickCondition(id)}
+                  >
+                    <Text style={[styles.chipText, id === condition && styles.chipTextActive]}>{INJURY_CONDITION_LABELS[id]}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
+
+          {bodyPart && (
+            <>
+              <Text style={styles.sectionLabel}>Severity</Text>
+              <View style={styles.chipGrid}>
+                {INJURY_SEVERITIES.map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.chip, s === severity && styles.chipActive]}
+                    onPress={() => setSeverity(s)}
+                  >
+                    <Text style={[styles.chipText, s === severity && styles.chipTextActive]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <FormInput label="Note (optional)" value={note} onChangeText={setNote} placeholder="e.g. flares up on overhead pressing" />
+
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <View style={{ flex: 1 }}>
+                  <PrimaryButton label="Save injury" onPress={() => submitInjury()} loading={isAdding} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <PrimaryButton label="Cancel" variant="outline" onPress={resetForm} disabled={isAdding} />
+                </View>
+              </View>
+            </>
+          )}
+        </View>
+      ) : (
+        <TouchableOpacity style={styles.addInjuryToggle} onPress={() => setAdding(true)}>
+          <Text style={styles.addInjuryToggleText}>+ Log an injury</Text>
+        </TouchableOpacity>
+      )}
     </>
   );
 }
@@ -222,6 +368,7 @@ export function EditProfileScreen() {
 
         <ExperienceSelector value={expLevel} onChange={setExpLevel} />
         <GenderSelector value={gender} onChange={setGender} />
+        <InjuriesSection />
 
         <View style={styles.saveBtn}>
           <PrimaryButton label="Save Changes" onPress={handleSubmit((v) => mutate(v))} loading={isPending} />

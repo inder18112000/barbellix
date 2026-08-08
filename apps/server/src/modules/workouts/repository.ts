@@ -13,8 +13,12 @@ export function toDomainPlan(doc: HydratedDocument<WorkoutPlanDocument>): Workou
     goal: doc.goal,
     generatedBy: doc.generatedBy,
     active: doc.active,
+    version: doc.version,
+    previousPlanId: doc.previousPlanId ? idStr(doc.previousPlanId) : undefined,
+    changeSummary: doc.changeSummary,
     days: doc.days.map((day) => ({
       dayLabel: day.dayLabel,
+      dayOfWeek: day.dayOfWeek,
       exercises: day.exercises.map((ex) => ({
         exerciseId: idStr(ex.exerciseId),
         sets: ex.sets,
@@ -27,8 +31,15 @@ export function toDomainPlan(doc: HydratedDocument<WorkoutPlanDocument>): Workou
   };
 }
 
+// Sorted newest-first so callers that pick a single "current" plan (e.g. mobile's
+// WorkoutHomeScreen using plans[0]) reliably get the most recent one, not whatever order Mongo
+// happens to return.
 export async function findByUser(userId: string) {
-  return WorkoutPlanModel.find({ userId });
+  return WorkoutPlanModel.find({ userId }).sort({ createdAt: -1 });
+}
+
+export async function findActiveByUser(userId: string) {
+  return WorkoutPlanModel.findOne({ userId, active: true }).sort({ createdAt: -1 });
 }
 
 export async function findByIdForUser(id: string, userId: string) {
@@ -37,6 +48,7 @@ export async function findByIdForUser(id: string, userId: string) {
 
 interface CreatePlanDayInput {
   dayLabel: string;
+  dayOfWeek?: number;
   exercises: Array<{ exerciseId: string; sets: number; reps: string; restSecs: number; notes?: string }>;
 }
 
@@ -46,10 +58,20 @@ export async function createPlan(input: {
   goal: WorkoutPlanDocument['goal'];
   generatedBy: WorkoutPlanDocument['generatedBy'];
   days: CreatePlanDayInput[];
+  trainerId?: string;
+  version?: number;
+  previousPlanId?: string;
+  changeSummary?: string[];
 }) {
   // Mongoose casts the exerciseId strings to ObjectId on write - this input shape matches
   // what the client actually sends, not the hydrated document shape.
   return WorkoutPlanModel.create({ ...input, active: true });
+}
+
+/** Deactivates a plan without deleting it - the superseded version stays readable via
+ * previousPlanId chaining (see regenerateWorkoutPlan() in ai-coach/plan-generator.ts). */
+export async function deactivatePlan(id: string) {
+  return WorkoutPlanModel.findByIdAndUpdate(id, { $set: { active: false } });
 }
 
 // ─── Sessions ─────────────────────────────────────────────────────────────────

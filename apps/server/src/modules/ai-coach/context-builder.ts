@@ -60,6 +60,19 @@ CLIENT PROFILE:
 
 `;
 
+  // ── Active injuries ────────────────────────────────────────────────────────
+  // This freeform chat has no exercise candidate list to hard-filter (unlike the structured plan
+  // generators in plan-generator.ts, which exclude unsafe exercises before the LLM ever sees
+  // them) - this instruction is the only safety net available here, so it must be explicit and
+  // impossible to miss, not folded quietly into the profile line above.
+  if (p.injuries && p.injuries.length > 0) {
+    ctx += `⚠️ ACTIVE INJURIES — DO NOT recommend exercises that load these areas, even indirectly:\n`;
+    for (const injury of p.injuries) {
+      ctx += `• ${injury.bodyPart.replace(/_/g, ' ')} (${injury.severity})${injury.note ? ` — ${injury.note}` : ''}\n`;
+    }
+    ctx += `If asked for exercises touching an injured area, suggest a safe alternative or recovery-focused movement instead, and note the injury as the reason. For anything beyond general fitness guidance, recommend the client see their trainer or a medical professional.\n\n`;
+  }
+
   // ── Workout history ───────────────────────────────────────────────────────
   if (sessions.length > 0) {
     ctx += `RECENT WORKOUT SESSIONS (last ${sessions.length}):\n`;

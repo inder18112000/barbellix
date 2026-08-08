@@ -30,11 +30,18 @@ const AdminSettingsPage = lazy(() => import('@/pages/admin/SettingsPage').then((
 const SponsorsPage = lazy(() => import('@/pages/admin/SponsorsPage').then((m) => ({ default: m.SponsorsPage })))
 const ClassesPage = lazy(() => import('@/pages/admin/ClassesPage').then((m) => ({ default: m.ClassesPage })))
 const ClassRosterPage = lazy(() => import('@/pages/admin/ClassRosterPage').then((m) => ({ default: m.ClassRosterPage })))
+const PlatformOverviewPage = lazy(() =>
+  import('@/pages/superadmin/PlatformOverviewPage').then((m) => ({ default: m.PlatformOverviewPage })),
+)
+const TrainersPage = lazy(() => import('@/pages/admin/TrainersPage').then((m) => ({ default: m.TrainersPage })))
 const TrainerHomePage = lazy(() => import('@/pages/trainer/TrainerHomePage').then((m) => ({ default: m.TrainerHomePage })))
 const TrainerMembersPage = lazy(() => import('@/pages/trainer/MembersPage').then((m) => ({ default: m.MembersPage })))
 const MemberDetailPage = lazy(() => import('@/pages/trainer/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage })))
 const AssignPlanPage = lazy(() => import('@/pages/trainer/AssignPlanPage').then((m) => ({ default: m.AssignPlanPage })))
 const CreatePlanPage = lazy(() => import('@/pages/trainer/CreatePlanPage').then((m) => ({ default: m.CreatePlanPage })))
+const ExerciseLibraryPage = lazy(() =>
+  import('@/pages/trainer/ExerciseLibraryPage').then((m) => ({ default: m.ExerciseLibraryPage })),
+)
 const MessagesPage = lazy(() => import('@/pages/trainer/MessagesPage').then((m) => ({ default: m.MessagesPage })))
 
 // Sends an already-authenticated user straight to their own dashboard instead of the login form.
@@ -60,6 +67,7 @@ export const router = createBrowserRouter([
               { index: true, element: <AdminHomePage /> },
               { path: 'members', element: <AdminMembersPage /> },
               { path: 'members/:memberId', element: <AdminMemberDetailPage /> },
+              { path: 'trainers', element: <TrainersPage /> },
               { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },
@@ -68,6 +76,12 @@ export const router = createBrowserRouter([
               { path: 'classes/roster', element: <ClassRosterPage /> },
               { path: 'branch', element: <BranchSettingsPage /> },
               { path: 'settings', element: <AdminSettingsPage /> },
+              {
+                // Nested under /admin's admin-or-superadmin guard, but further restricted to
+                // superadmin only - an admin who guesses this URL still gets redirected away.
+                element: <RequireRole roles={['superadmin']} />,
+                children: [{ path: 'platform', element: <PlatformOverviewPage /> }],
+              },
             ],
           },
         ],
@@ -84,6 +98,7 @@ export const router = createBrowserRouter([
               { path: 'members/:memberId', element: <MemberDetailPage /> },
               { path: 'members/:memberId/assign-plan', element: <AssignPlanPage /> },
               { path: 'plans/new', element: <CreatePlanPage /> },
+              { path: 'exercises', element: <ExerciseLibraryPage /> },
               { path: 'classes/roster', element: <ClassRosterPage /> },
               { path: 'messages', element: <MessagesPage /> },
               { path: 'messages/:otherUserId', element: <MessagesPage /> },

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
+import { InjuriesCard } from '@/components/common/InjuriesCard'
 import { UserStatusBadge, MembershipStatusBadge, PaymentStatusBadge } from '@/lib/statusBadges'
 
 export const MemberDetailPage = observer(function MemberDetailPage() {
@@ -113,6 +114,8 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <InjuriesCard memberId={member.id} />
         </>
       )}
     </div>

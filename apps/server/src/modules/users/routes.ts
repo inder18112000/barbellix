@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { changePasswordSchema } from '@barbellix/shared';
-import { updateProfileSchema, updateNotificationPreferencesSchema, updateMyInfoSchema } from './schemas.js';
+import { updateProfileSchema, updateNotificationPreferencesSchema, updateMyInfoSchema, addInjurySchema, injuryIdParamSchema } from './schemas.js';
 import * as usersService from './service.js';
 
 export default async function usersRoutes(fastify: FastifyInstance) {
@@ -32,6 +32,23 @@ export default async function usersRoutes(fastify: FastifyInstance) {
     { schema: { body: updateProfileSchema }, preHandler: [fastify.authenticate] },
     async (request) => {
       return usersService.updateMyProfile(request.user.sub, request.body);
+    },
+  );
+
+  app.post(
+    '/me/injuries',
+    { schema: { body: addInjurySchema }, preHandler: [fastify.authenticate] },
+    async (request, reply) => {
+      const user = await usersService.addMyInjury(request.user.sub, request.body);
+      return reply.status(201).send(user);
+    },
+  );
+
+  app.delete(
+    '/me/injuries/:id',
+    { schema: { params: injuryIdParamSchema }, preHandler: [fastify.authenticate] },
+    async (request) => {
+      return usersService.removeMyInjury(request.user.sub, request.params.id);
     },
   );
 

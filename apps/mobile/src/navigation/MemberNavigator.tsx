@@ -16,6 +16,12 @@ import { HomeScreen } from '../screens/member/HomeScreen';
 import { ClassesHomeScreen } from '../screens/member/ClassesHomeScreen';
 import { ClassDetailScreen } from '../screens/member/ClassDetailScreen';
 import { MyBookingsScreen } from '../screens/member/MyBookingsScreen';
+import { AIWizardBasicsScreen } from '../screens/member/AIWizardBasicsScreen';
+import { AIWizardGoalScreen } from '../screens/member/AIWizardGoalScreen';
+import { AIWizardDietScreen } from '../screens/member/AIWizardDietScreen';
+import { AIWizardGymAccessScreen } from '../screens/member/AIWizardGymAccessScreen';
+import { AIWizardInjuriesScreen } from '../screens/member/AIWizardInjuriesScreen';
+import { AIWizardReviewScreen } from '../screens/member/AIWizardReviewScreen';
 import { WorkoutHomeScreen } from '../screens/member/WorkoutHomeScreen';
 import { ActiveWorkoutScreen } from '../screens/member/ActiveWorkoutScreen';
 import { WorkoutHistoryScreen } from '../screens/member/WorkoutHistoryScreen';
@@ -82,6 +88,12 @@ function HomeNavigator() {
       <HomeStack.Screen name="ClassesHome" component={ClassesHomeScreen} />
       <HomeStack.Screen name="ClassDetail" component={ClassDetailScreen} />
       <HomeStack.Screen name="MyBookings" component={MyBookingsScreen} />
+      <HomeStack.Screen name="AIWizardBasics" component={AIWizardBasicsScreen} />
+      <HomeStack.Screen name="AIWizardGoal" component={AIWizardGoalScreen} />
+      <HomeStack.Screen name="AIWizardDiet" component={AIWizardDietScreen} />
+      <HomeStack.Screen name="AIWizardGymAccess" component={AIWizardGymAccessScreen} />
+      <HomeStack.Screen name="AIWizardInjuries" component={AIWizardInjuriesScreen} />
+      <HomeStack.Screen name="AIWizardReview" component={AIWizardReviewScreen} />
     </HomeStack.Navigator>
   );
 }

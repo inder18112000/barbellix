@@ -1,4 +1,4 @@
-import { NotFoundError } from '../../lib/errors.js';
+import { NotFoundError, UnauthorizedError } from '../../lib/errors.js';
 import { sendPushToUser } from '../../lib/push.js';
 import { getNotificationPreferences } from '../users/service.js';
 import * as repo from './repository.js';
@@ -90,6 +90,10 @@ export async function checkIn(
     : await repo.getOrCreateDefaultBranch(tenantId);
 
   if (!branch) throw new NotFoundError('Branch not found for that QR code');
+
+  if (input.pin && input.pin !== branch.checkInPin) {
+    throw new UnauthorizedError('Incorrect PIN');
+  }
 
   const method = input.qrToken ? 'qr' : input.pin ? 'pin' : 'manual';
 

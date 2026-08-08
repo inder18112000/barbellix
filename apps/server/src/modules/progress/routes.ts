@@ -22,4 +22,8 @@ export default async function progressRoutes(fastify: FastifyInstance) {
   app.get('/progress/prs', { preHandler: [fastify.authenticate] }, async (request) => {
     return progressService.listPRs(request.user.sub);
   });
+
+  app.get('/progress/check-in-status', { preHandler: [fastify.authenticate] }, async (request) => {
+    return progressService.getCheckInStatus(request.user.sub, request.user.tenantId);
+  });
 }

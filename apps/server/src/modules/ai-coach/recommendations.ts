@@ -2,7 +2,7 @@ import type { AIRecommendation, WorkoutSession } from '@barbellix/shared';
 import { findRecentSessions } from '../workouts/service.js';
 import { computeSummary } from '../attendance/service.js';
 
-function computeAverageRPE(sessions: Array<{ perceivedEffort?: number }>): number {
+export function computeAverageRPE(sessions: Array<{ perceivedEffort?: number }>): number {
   const rpeValues = sessions
     .filter((s) => s.perceivedEffort !== undefined)
     .map((s) => s.perceivedEffort!);

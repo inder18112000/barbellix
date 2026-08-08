@@ -72,7 +72,7 @@ async function upsertSponsors(tenantId: Types.ObjectId) {
 async function upsertUser(input: {
   tenantId: Types.ObjectId;
   branchId?: Types.ObjectId;
-  role: 'admin' | 'trainer' | 'member';
+  role: 'admin' | 'trainer' | 'member' | 'superadmin';
   email: string;
   firstName: string;
   lastName: string;
@@ -105,6 +105,28 @@ async function upsertExercise(name: string, muscleGroups: string[], equipment: s
   );
 }
 
+/** Real, standard physical-therapy rehab exercises (not the generic placeholder instructions
+ * upsertExercise() above uses) - tagged 'rehabilitation' and 'low_impact' so they surface in the
+ * AI plan generator's candidate list specifically for members with a logged injury in the
+ * matching muscle group/region (see ai-coach/plan-generator.ts's filterExercisesForProfile()) and
+ * are browsable/filterable in the exercise library by trainers building recovery-focused plans. */
+async function upsertRehabExercise(name: string, muscleGroups: string[], equipment: string[], instructions: string) {
+  return ExerciseModel.findOneAndUpdate(
+    { name, isCustom: false },
+    {
+      $setOnInsert: {
+        name,
+        muscleGroups,
+        equipment,
+        instructions,
+        tags: ['rehabilitation', 'low_impact'],
+        isCustom: false,
+      },
+    },
+    { new: true, upsert: true },
+  );
+}
+
 function daysAgo(n: number): Date {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() - n);
@@ -123,6 +145,10 @@ async function main() {
 
   const admin = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'admin', email: 'admin@barbellix.app', firstName: 'Ava', lastName: 'Owner' });
   const trainer = await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'trainer', email: 'trainer@barbellix.app', firstName: 'Tom', lastName: 'Coach' });
+  // Superadmin belongs to this same seeded tenant (every User requires one), but its role grants
+  // platform-wide access regardless - see modules/superadmin/routes.ts, which never filters by
+  // this or any other tenantId.
+  await upsertUser({ tenantId: tenant._id, branchId: branch._id, role: 'superadmin', email: 'superadmin@barbellix.app', firstName: 'Sam', lastName: 'Platform' });
 
   const memberSeeds = [
     { email: 'alex@barbellix.app', firstName: 'Alex', lastName: 'Chen' },
@@ -198,6 +224,48 @@ async function main() {
     upsertExercise('Seated Calf Raise', ['calves'], ['machine']),
     upsertExercise('Kettlebell Swing', ['full_body', 'glutes'], ['kettlebell']),
     upsertExercise('Burpee', ['full_body'], ['bodyweight']),
+  ]);
+
+  // Rehab library - standard physical-therapy exercises for the most common injuries/conditions,
+  // one or more per region. Real content, not placeholders: this is what the injury-aware AI
+  // filter (plan-generator.ts) and trainers building recovery plans actually have to work with.
+  await Promise.all([
+    // Lower back (lumbar strain, disc herniation, sciatica, spinal stenosis, spondylolisthesis)
+    upsertRehabExercise('Cat-Cow Stretch', ['back', 'core'], ['bodyweight'], 'On hands and knees, alternate arching the back up (exhale) and dipping it down (inhale) through a pain-free range. 8-10 slow reps, 2-3 rounds. Stop if it increases leg pain or numbness.'),
+    upsertRehabExercise('Bird Dog', ['back', 'core', 'glutes'], ['bodyweight'], 'On hands and knees, extend one arm and the opposite leg straight out while keeping the spine neutral and hips level. Hold 3-5s, return with control. 8-10 reps per side. Keep the low back still - the movement comes from the shoulder and hip.'),
+    upsertRehabExercise('Dead Bug', ['core', 'back'], ['bodyweight'], 'Lying on your back, arms up and knees bent at 90°, slowly lower one arm and the opposite leg toward the floor while pressing the low back into the mat, then return. 8-10 reps per side. Never let the low back arch off the floor.'),
+    // Knee (ACL/PCL/MCL/LCL, meniscus, patellofemoral pain, patellar/quad tendinopathy)
+    upsertRehabExercise('Straight Leg Raise', ['quads', 'knee'], ['bodyweight'], 'Lying down with one leg bent and the other straight, tighten the straight leg\'s quad and lift it to hip height with no knee bend. Lower slowly. 2-3 sets of 10-15. Builds quad strength without loading the knee joint itself - a standard early post-injury/post-op exercise.'),
+    upsertRehabExercise('Terminal Knee Extension', ['quads', 'knee'], ['resistance_band'], 'Anchor a band behind the knee at knee height, step forward until it\'s taut, soft bend in the knee, then straighten the knee fully against the band\'s pull without locking out hard. 2-3 sets of 12-15. Targets the last few degrees of extension that are often weak after knee injuries.'),
+    upsertRehabExercise('Wall Sit', ['quads', 'knee'], ['bodyweight'], 'Back against a wall, slide down to a comfortable knee angle (start shallow, e.g. 45°, not a full 90° squat) and hold. Build up hold time as tolerated. Stop immediately if it produces sharp knee pain, not just muscle fatigue.'),
+    upsertRehabExercise('Step-Up (Low Box)', ['quads', 'glutes', 'knee'], ['bodyweight'], 'Step up onto a low, stable step (start with 4-6 inches) leading with the affected leg, then step back down with control. 2-3 sets of 8-10 per side. Progress step height only once this is pain-free.'),
+    // Shoulder (rotator cuff, impingement, instability, labral tear, frozen shoulder)
+    upsertRehabExercise('Band External Rotation', ['shoulders'], ['resistance_band'], 'Elbow tucked at your side and bent 90°, hold a band anchored at waist height and rotate the forearm outward without letting the elbow drift from your side. 2-3 sets of 12-15 per arm. Classic rotator-cuff strengthening move - keep it slow and controlled.'),
+    upsertRehabExercise('Scapular Wall Slides', ['shoulders', 'back'], ['bodyweight'], 'Back against a wall, arms in a "goalpost" position touching the wall, slide arms overhead while keeping them and the low back in contact with the wall, then return. 2 sets of 10. Improves shoulder blade mechanics - stop if it pinches.'),
+    upsertRehabExercise('Pendulum Swing', ['shoulders'], ['bodyweight'], 'Lean on a table with the uninjured arm, let the affected arm hang loose, and gently swing it in small circles and side-to-side using body momentum, not the shoulder muscles. 1-2 minutes. A gentle early-stage mobility exercise, common after shoulder injury or surgery.'),
+    // Neck (cervical strain, cervical radiculopathy)
+    upsertRehabExercise('Chin Tuck', ['neck'], ['bodyweight'], 'Sitting tall, gently draw the chin straight back (as if making a double chin) without tilting the head up or down. Hold 3-5s. 10 reps, several times a day. Improves neck posture and relieves strain on the cervical spine.'),
+    upsertRehabExercise('Neck Isometric Hold', ['neck'], ['bodyweight'], 'Place a hand against the side, front, or back of the head and gently push the head into the hand without letting the head actually move, holding steady resistance. 5s holds, 5-8 reps per direction. Builds neck strength without moving a potentially irritated joint.'),
+    // Ankle (lateral/high ankle sprain, Achilles tendinopathy/rupture)
+    upsertRehabExercise('Ankle Alphabet', ['ankle'], ['bodyweight'], 'Sitting with the leg extended, use the big toe to "write" the letters of the alphabet in the air, moving only the ankle. One full pass. Restores ankle range of motion after a sprain - keep it pain-free, not forced.'),
+    upsertRehabExercise('Single-Leg Balance Hold', ['ankle', 'calves'], ['bodyweight'], 'Stand on the affected leg only, knee soft, and hold your balance for 20-30s; progress to standing on a pillow or closing your eyes as it gets easy. 3 attempts. Rebuilds the ankle\'s proprioception (position sense), which is commonly lost after a sprain.'),
+    upsertRehabExercise('Eccentric Calf Raise', ['calves', 'ankle'], ['bodyweight'], 'Rise onto both toes, shift weight onto the affected leg, then lower down on that leg alone as slowly as possible (3-4 seconds). 3 sets of 15. The standard evidence-based protocol for Achilles tendinopathy - stop and scale back if it produces sharp pain rather than a manageable stretch/ache.'),
+    // Hip (flexor strain, adductor/groin strain, gluteal tendinopathy, bursitis, OA)
+    upsertRehabExercise('Clamshell', ['glutes', 'hip'], ['bodyweight'], 'Lying on your side, knees bent and stacked, feet together, lift the top knee open like a clamshell while keeping the feet touching and hips still. 2-3 sets of 12-15 per side. Targets the hip stabilizers commonly weak in hip and knee injuries alike.'),
+    upsertRehabExercise('Standing Hip Flexor Stretch', ['hip'], ['bodyweight'], 'In a half-kneeling lunge position, tuck the pelvis under and gently shift weight forward until a stretch is felt at the front of the back hip. Hold 20-30s per side, 2-3 rounds. Ease off if it causes lower-back discomfort instead.'),
+    // Thigh (hamstring/quad strain)
+    upsertRehabExercise('Eccentric Nordic Hamstring Lower', ['hamstrings'], ['bodyweight'], 'Kneeling with ankles anchored (a partner or a bar), slowly lower your torso forward from the knees as far as controllable, using the hamstrings to resist, then catch yourself with your hands. Start with 2-3 sets of 3-5 - this is advanced; earlier-stage hamstring strains should start with gentle straight-leg raises instead.'),
+    // Calf strain
+    upsertRehabExercise('Standing Calf Stretch', ['calves'], ['bodyweight'], 'Hands on a wall, affected leg back with the heel down and knee straight, lean forward until a gentle stretch is felt in the calf. Hold 20-30s, 2-3 rounds per leg. Should feel like a stretch, never a sharp pull.'),
+    // Elbow (tennis elbow, golfer's elbow)
+    upsertRehabExercise('Wrist Extensor Stretch', ['forearms', 'elbow'], ['bodyweight'], 'Arm extended in front, palm down, gently pull the hand down and back with the other hand until a stretch is felt along the top of the forearm. Hold 20-30s, 2-3 rounds. Standard tennis-elbow stretch.'),
+    upsertRehabExercise('Eccentric Wrist Curl', ['forearms', 'elbow'], ['dumbbell'], 'Forearm supported on a table or thigh, palm up (for golfer\'s elbow) or palm down (for tennis elbow), use the other hand to lift the weight up then lower it on your own as slowly as possible over 3-4 seconds. 3 sets of 12-15. The evidence-based rehab standard for elbow tendinopathies.'),
+    // Wrist / hand (sprain, tendinopathy, carpal tunnel)
+    upsertRehabExercise('Wrist Flexor/Extensor Stretch', ['wrist_hand', 'forearms'], ['bodyweight'], 'Arm extended, gently pull the hand back (fingers up) then down (fingers down) with the other hand, holding each 20-30s. 2-3 rounds. Improves wrist mobility and forearm flexibility.'),
+    upsertRehabExercise('Median Nerve Glide', ['wrist_hand'], ['bodyweight'], 'Make a fist, then slowly extend the fingers, thumb, and wrist back one segment at a time until the arm is fully open with the wrist extended, then reverse. 5-10 slow reps. A common carpal-tunnel nerve-mobility exercise - stop if it causes tingling or numbness rather than a mild stretch.'),
+    // Foot (plantar fasciitis, Achilles, metatarsal injuries)
+    upsertRehabExercise('Towel Scrunches', ['foot'], ['bodyweight'], 'Sitting with a towel flat under bare feet, use the toes to scrunch and pull the towel toward you. 2-3 sets of 10-12. Strengthens the small foot muscles that support the arch - helpful for plantar fasciitis.'),
+    upsertRehabExercise('Plantar Fascia Stretch', ['foot', 'calves'], ['bodyweight'], 'Sitting, cross the affected foot over the other knee and pull the toes back toward the shin until a stretch is felt along the arch. Hold 20-30s, 2-3 rounds - classically done first thing in the morning before standing.'),
   ]);
 
   const memberIds = members.map((m) => m._id);
@@ -283,9 +351,10 @@ async function main() {
 
   console.log('\nSeed complete.');
   console.log('Login with any of these (password: "%s"):', SEED_PASSWORD);
-  console.log('  admin:   admin@barbellix.app');
-  console.log('  trainer: trainer@barbellix.app');
-  for (const m of memberSeeds) console.log('  member:  %s', m.email);
+  console.log('  superadmin: superadmin@barbellix.app');
+  console.log('  admin:      admin@barbellix.app');
+  console.log('  trainer:    trainer@barbellix.app');
+  for (const m of memberSeeds) console.log('  member:     %s', m.email);
 }
 
 main().catch((err) => {

@@ -80,7 +80,7 @@ export function ActiveWorkoutScreen() {
   const handleFinish = (rpe: number, notes: string) => {
     const durationMins = Math.ceil(stopwatch.seconds / 60);
     const totalVolume = grouped.reduce(
-      (t, ex) => t + ex.sets.filter(s => s.completed).reduce((a, s) => a + (s.weightKg ?? 0) * (s.reps ?? 0), 0),
+      (t, ex) => t + ex.sets.filter(s => s.completed).reduce((a, s) => a + (parseFloat(s.weightKg) || 0) * (parseInt(s.reps, 10) || 0), 0),
       0,
     );
     const payload = { ...buildSessionPayload(planId), perceivedEffort: rpe, notes, durationMins };

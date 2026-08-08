@@ -1,5 +1,8 @@
 import 'dotenv/config';
 import { buildApp } from './app.js';
+import { initSentry } from './lib/sentry.js';
+
+initSentry(process.env.SENTRY_DSN);
 
 const app = await buildApp();
 

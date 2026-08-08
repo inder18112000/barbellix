@@ -1,18 +1,8 @@
 import { z } from 'zod';
+import { FITNESS_GOALS, MUSCLE_GROUPS, INJURY_CONDITIONS, INJURY_SEVERITIES, DIET_PREFERENCES, GYM_ACCESS_OPTIONS } from '@barbellix/shared';
 
 export const updateProfileSchema = z.object({
-  goals: z
-    .array(
-      z.enum([
-        'lose_weight',
-        'build_muscle',
-        'improve_endurance',
-        'increase_strength',
-        'general_fitness',
-        'sport_performance',
-      ]),
-    )
-    .optional(),
+  goals: z.array(z.enum(FITNESS_GOALS)).optional(),
   dob: z.string().optional(),
   heightCm: z.number().optional(),
   weightKg: z.number().optional(),
@@ -20,7 +10,19 @@ export const updateProfileSchema = z.object({
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
   avatarUrl: z.string().optional(),
   bio: z.string().max(280).optional(),
+  targetWeightKg: z.number().optional(),
+  dietPreference: z.enum(DIET_PREFERENCES).optional(),
+  gymAccess: z.enum(GYM_ACCESS_OPTIONS).optional(),
 });
+
+export const addInjurySchema = z.object({
+  bodyPart: z.enum(MUSCLE_GROUPS),
+  condition: z.enum(INJURY_CONDITIONS).optional(),
+  note: z.string().max(280).optional(),
+  severity: z.enum(INJURY_SEVERITIES),
+});
+
+export const injuryIdParamSchema = z.object({ id: z.string() });
 
 export const updateMyInfoSchema = z.object({
   firstName: z.string().min(1).optional(),

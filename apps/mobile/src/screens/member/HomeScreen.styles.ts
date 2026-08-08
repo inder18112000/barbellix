@@ -5,12 +5,17 @@ export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   scroll: { paddingHorizontal: spacing.md, paddingBottom: spacing.xxl },
 
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.md },
+  brandWordmark: { ...typography.label, color: colors.textPrimary, fontWeight: '800', fontSize: 15, letterSpacing: 0.5, textTransform: 'uppercase' },
+  brandWordmarkAccent: { color: colors.primary },
+
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end',
     marginTop: spacing.md, marginBottom: spacing.sm,
   },
   greeting: { ...typography.body, color: colors.textSecondary },
-  name: { ...typography.h2, color: colors.textPrimary },
+  name: { ...typography.h1, color: colors.textPrimary, marginTop: 2 },
+  nameUnderline: { width: 40, height: 3, borderRadius: borderRadius.full, backgroundColor: colors.primary, marginTop: spacing.xs },
   notifBtn: {
     width: 42, height: 42, borderRadius: 21,
     alignItems: 'center', justifyContent: 'center',
@@ -24,17 +29,37 @@ export const styles = StyleSheet.create({
   },
 
   profileCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    padding: spacing.md, borderRadius: borderRadius.xl,
+    padding: spacing.md, borderRadius: borderRadius.xl, gap: spacing.md,
     marginTop: spacing.md, marginBottom: spacing.md,
   },
-  profileName: { ...typography.h4, color: colors.textPrimary },
+  profileCardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  profileLabel: { ...typography.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1 },
+  profileTextBlock: { flex: 1 },
+  profileName: { ...typography.h4, color: colors.textPrimary, marginTop: 4 },
   profileBio: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
   profileBioInput: {
     ...typography.caption, color: colors.textPrimary, marginTop: 2,
     borderBottomWidth: 1, borderBottomColor: colors.primary, paddingVertical: 2,
   },
   profileEditBtn: { padding: spacing.xs },
+  profileBottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  viewProfileBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: 7,
+    borderRadius: borderRadius.full,
+  },
+  viewProfileBtnText: { ...typography.label, color: colors.onPrimary, fontWeight: '700', letterSpacing: 0.6 },
+  profileChevron: { ...typography.h4, color: colors.textMuted },
+
+  wizardCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    padding: spacing.md, borderRadius: borderRadius.xl,
+    marginBottom: spacing.lg,
+  },
+  wizardEmoji: { fontSize: 32 },
+  wizardTitle: { ...typography.h4, color: colors.textPrimary },
+  wizardDesc: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  wizardArrow: { ...typography.h3, color: colors.primary },
 
   datePill: {
     alignSelf: 'flex-start',
@@ -78,6 +103,9 @@ export const styles = StyleSheet.create({
   section: { marginBottom: spacing.lg },
   sectionTitle: { ...typography.h4, color: colors.textPrimary, marginBottom: spacing.sm },
 
+  performanceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  performanceCell: { width: '47%' },
+
   aiCard: { padding: spacing.lg, borderRadius: borderRadius.xl },
   aiCardHeader: { marginBottom: spacing.sm },
   aiChip: {
@@ -101,14 +129,25 @@ export const styles = StyleSheet.create({
   aiSkipBtn: { paddingHorizontal: spacing.md, justifyContent: 'center' },
   aiSkipText: { ...typography.body, color: colors.textMuted },
 
-  quickActions: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.sm },
-  quickAction: {
-    width: '31%', alignItems: 'center',
-    paddingVertical: spacing.md, paddingHorizontal: spacing.xs,
-    borderRadius: borderRadius.lg, borderWidth: 1,
+  exploreGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.sm },
+  exploreCard: {
+    width: '31%', minHeight: 132,
+    padding: spacing.sm, borderRadius: borderRadius.lg, borderWidth: 1,
+    justifyContent: 'space-between',
   },
-  quickActionEmoji: { fontSize: 22, marginBottom: 6 },
-  quickActionLabel: { ...typography.label, color: colors.textSecondary, textAlign: 'center' },
+  exploreIconBadge: {
+    width: 38, height: 38, borderRadius: borderRadius.md,
+    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs,
+  },
+  exploreIconEmoji: { fontSize: 18 },
+  exploreTitle: { ...typography.label, color: colors.textPrimary, fontWeight: '700', fontSize: 12.5 },
+  exploreDesc: { ...typography.caption, color: colors.textMuted, fontSize: 10.5, lineHeight: 13, marginTop: 2 },
+  exploreFooterRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.xs },
+  exploreChevronBtn: {
+    width: 22, height: 22, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceElevated,
+  },
+  exploreChevronText: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
 
   sessionCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',

@@ -1,19 +1,20 @@
-# React + TypeScript + Vite
+# BarBellix — Web Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The staff-only management dashboard for gym owners (`admin`/`superadmin`) and trainers. Vite +
+React, Tailwind + shadcn/ui, MobX for state, TanStack Query for server state.
 
-Currently, two official plugins are available:
+See the [root README](../../README.md) for monorepo-wide setup, roles, and quick start. To run
+just this app:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cp .env.example .env
+npm run dev --workspace=@barbellix/web   # :5173
+```
 
-## React Compiler
+## Tooling notes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+This app is built with Vite's React template using [Oxlint](https://oxc.rs) instead of ESLint. To
+enable type-aware lint rules, install `oxlint-tsgolint` and add to `.oxlintrc.json`:
 
 ```json
 {
@@ -21,12 +22,9 @@ If you are developing a production application, we recommend enabling type-aware
   "plugins": ["react", "typescript", "oxc"],
   "options": {
     "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
   }
 }
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full
+rule list.

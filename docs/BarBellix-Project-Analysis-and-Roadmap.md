@@ -6,6 +6,35 @@
 
 ---
 
+> **Status update (2026-07-30):** this report is a point-in-time snapshot from 2026-07-19,
+> preserved below exactly as written — it is not updated in place. Since then, the project has
+> moved past several items this report calls **BLOCKER**s:
+>
+> - **Gap #1 (LLM keys exposed client-side) — resolved.** AI Coach calls now go through a
+>   rate-limited backend proxy; no `EXPO_PUBLIC_*` provider keys ship in the client bundle.
+> - **Gap #2 (no real backend) — resolved.** `apps/server` (Fastify + Mongoose/MongoDB) is live;
+>   the mock/MSW layer described throughout this report has been removed entirely.
+> - **Gap #3 (mocked auth) — resolved.** Real JWT access+refresh auth with rotation/theft
+>   detection and role-based guards is in place.
+> - **Gap #5 (no monetization) — resolved.** Real Stripe Checkout + webhooks power membership
+>   billing, auto-renewal, and grace-period access control.
+> - **Gap #8 (push notifications) — resolved.** Real push notifications are wired, not just the
+>   dependency installed.
+> - **Gap #11 (no dark mode) — resolved**, though not as "automatic" theming: the app deliberately
+>   adopted one fixed dark identity (Obsidian Black / Titanium Silver / Electric Volt) rather than
+>   a light/dark toggle.
+> - The project itself was renamed **FitPulse → BarBellix** after this report was written.
+>
+> Still accurate as of 2026-07-30: no automated tests exist yet (`vitest` is now installed in
+> `apps/server`, but zero test files exist anywhere in the monorepo), and offline support,
+> accessibility, i18n, and crash reporting/analytics remain unbuilt.
+>
+> For granular, continuously-updated per-requirement status, see
+> [`Client-Requirements-and-Status.md`](./Client-Requirements-and-Status.md) — the report below is
+> left exactly as originally written.
+
+---
+
 ## Executive Summary
 
 BarBellix is a cross-platform (iOS / Android / Web) gym management and AI-coached training app built on Expo + React Native, serving three distinct roles — member, trainer, and admin — from a single codebase. The build-out is substantial for an early-stage project: 37 screens are implemented (not stubs) across auth, workout logging, progress tracking, nutrition/habits, an AI coach with a real multi-provider LLM backend, trainer member-management, and admin analytics/attendance.

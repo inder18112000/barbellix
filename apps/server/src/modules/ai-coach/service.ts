@@ -3,7 +3,12 @@ import type { AIMessage } from './providers/index.js';
 import { aiCoachService } from './providers/index.js';
 import { buildSystemPrompt } from './context-builder.js';
 import { getRecommendations } from './recommendations.js';
-import { generateWorkoutPlan as generateWorkoutPlanCore, generateDietPlan as generateDietPlanCore } from './plan-generator.js';
+import {
+  generateWorkoutPlan as generateWorkoutPlanCore,
+  generateDietPlan as generateDietPlanCore,
+  regenerateWorkoutPlan as regenerateWorkoutPlanCore,
+  generateFullPlan as generateFullPlanCore,
+} from './plan-generator.js';
 import { BadGatewayError } from '../../lib/errors.js';
 import * as repo from './repository.js';
 
@@ -15,6 +20,17 @@ export async function generateWorkoutPlan(fastify: FastifyInstance, userId: stri
 
 export async function generateDietPlan(fastify: FastifyInstance, userId: string, goal: string) {
   return generateDietPlanCore(fastify, userId, goal);
+}
+
+/** Powers the mobile AI goal wizard's single "generate everything" step. */
+export async function generateFullPlan(fastify: FastifyInstance, userId: string, tenantId: string, goal: string, daysPerWeek: number) {
+  return generateFullPlanCore(fastify, userId, tenantId, goal, daysPerWeek);
+}
+
+/** No fastify param needed unlike the two generators above - this is a pure deterministic
+ * decision engine, not an LLM call (see plan-generator.ts's decidePlanChanges()). */
+export async function regenerateWorkoutPlan(userId: string) {
+  return regenerateWorkoutPlanCore(userId);
 }
 
 export async function acceptRecommendation(userId: string, recommendationId: string) {

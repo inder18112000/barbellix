@@ -22,6 +22,13 @@ import type {
   ClassTemplate,
   ClassSession,
   ClassTemplateOccurrence,
+  PlatformTenantSummary,
+  Meal,
+  MuscleGroup,
+  Equipment,
+  MealType,
+  InjuryEntry,
+  TrainerSummary,
 } from '@barbellix/shared'
 import type { ChangePasswordInput } from '@barbellix/shared'
 import { api } from './client'
@@ -32,6 +39,7 @@ export const queryKeys = {
     members: ['trainer', 'members'] as const,
     stats: ['trainer', 'stats'] as const,
     workoutPlans: ['trainer', 'workout-plans'] as const,
+    injuries: (memberId: string) => ['trainer', 'members', memberId, 'injuries'] as const,
   },
   admin: {
     attendanceAnalytics: ['admin', 'analytics', 'attendance'] as const,
@@ -45,11 +53,16 @@ export const queryKeys = {
     sponsors: ['admin', 'sponsors'] as const,
     classTemplates: ['admin', 'class-templates'] as const,
     trainers: ['admin', 'trainers'] as const,
+    availableTrainers: ['admin', 'available-trainers'] as const,
     classRoster: (sessionId: string) => ['admin', 'class-sessions', sessionId, 'roster'] as const,
     classSchedule: (branchId: string, from: string, to: string) => ['admin', 'class-schedule', branchId, from, to] as const,
   },
   myNotificationPreferences: ['me', 'notification-preferences'] as const,
+  superadmin: {
+    tenants: ['superadmin', 'tenants'] as const,
+  },
   exercises: (q: string) => ['exercises', q] as const,
+  meals: (q: string) => ['meals', q] as const,
   messages: (otherUserId: string) => ['messages', otherUserId] as const,
 }
 
@@ -118,6 +131,25 @@ export const fetchPaymentGatewayStatus = () => api.get<{ stripeConfigured: boole
 
 export const updateMemberInfo = (memberId: string, updates: { firstName?: string; lastName?: string; phone?: string }) =>
   api.patch<TrainerMemberSummary>(`/trainer/members/${memberId}/info`, updates)
+
+export const assignTrainerToMember = (memberId: string, trainerId: string | null) =>
+  api.patch<User>(`/trainer/members/${memberId}/assign-trainer`, { trainerId })
+
+export const fetchAvailableTrainers = () => api.get<TrainerSummary[]>('/trainer/available-trainers')
+
+export const fetchMemberInjuries = (memberId: string) => api.get<InjuryEntry[]>(`/trainer/members/${memberId}/injuries`)
+
+export const setTrainerPermissions = (
+  trainerId: string,
+  updates: { canManageExerciseLibrary?: boolean; canManageMealLibrary?: boolean },
+) => api.patch<User>(`/admin/trainers/${trainerId}/permissions`, updates)
+
+// ─── Super Admin: platform overview ─────────────────────────────────────────────
+
+export const fetchPlatformTenants = () => api.get<PlatformTenantSummary[]>('/superadmin/tenants')
+
+export const setTrainerReportsTo = (trainerId: string, reportsToRole: 'admin' | 'superadmin') =>
+  api.patch<User>(`/superadmin/trainers/${trainerId}/reports-to`, { reportsToRole })
 
 export const generateLoginPairingToken = (memberId: string) =>
   api.post<LoginPairingToken>(`/trainer/members/${memberId}/login-pairing`, {})
@@ -192,6 +224,39 @@ export interface CreateWorkoutPlanInput {
 export const createWorkoutPlan = (input: CreateWorkoutPlanInput) => api.post<WorkoutPlan>('/workout-plans', input)
 
 export const fetchExercises = (q: string) => api.get<Exercise[]>(`/exercises?q=${encodeURIComponent(q)}`)
+
+export interface ExerciseInput {
+  name: string
+  muscleGroups: MuscleGroup[]
+  equipment: Equipment[]
+  instructions: string
+  mediaUrl?: string
+}
+export const createExercise = (input: ExerciseInput) => api.post<Exercise>('/exercises', input)
+export const updateExercise = (id: string, input: Partial<ExerciseInput>) => api.patch<Exercise>(`/exercises/${id}`, input)
+export const deleteExercise = (id: string) => api.delete<{ id: string; deleted: boolean }>(`/exercises/${id}`)
+
+export const uploadExerciseVideo = (id: string, file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.uploadFile<Exercise>(`/exercises/${id}/video`, formData)
+}
+
+// ─── Meal library ───────────────────────────────────────────────────────────────
+
+export const fetchMeals = (q: string) => api.get<Meal[]>(`/meals?q=${encodeURIComponent(q)}`)
+
+export interface MealInput {
+  name: string
+  mealType: MealType
+  calories: number
+  proteinG?: number
+  carbsG?: number
+  fatG?: number
+}
+export const createMeal = (input: MealInput) => api.post<Meal>('/meals', input)
+export const updateMeal = (id: string, input: Partial<MealInput>) => api.patch<Meal>(`/meals/${id}`, input)
+export const deleteMeal = (id: string) => api.delete<{ id: string; deleted: boolean }>(`/meals/${id}`)
 
 // ─── Messaging ────────────────────────────────────────────────────────────────
 

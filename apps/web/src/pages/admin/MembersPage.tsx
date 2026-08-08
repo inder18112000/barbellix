@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode } from 'lucide-react'
+import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode, UserCog2 } from 'lucide-react'
 import type { TrainerMemberSummary, SubscriptionStatus } from '@barbellix/shared'
 import {
   queryKeys,
@@ -15,6 +15,8 @@ import {
   markMemberPaid,
   updateMembershipDates,
   generateLoginPairingToken,
+  fetchAvailableTrainers,
+  assignTrainerToMember,
 } from '@/api/queries'
 import { QRCodeImage } from '@/components/common/QRCodeImage'
 import { Input } from '@/components/ui/input'
@@ -49,6 +51,7 @@ export const MembersPage = observer(function MembersPage() {
   const [datesTarget, setDatesTarget] = useState<TrainerMemberSummary | null>(null)
   const [infoTarget, setInfoTarget] = useState<TrainerMemberSummary | null>(null)
   const [pairingTarget, setPairingTarget] = useState<TrainerMemberSummary | null>(null)
+  const [trainerTarget, setTrainerTarget] = useState<TrainerMemberSummary | null>(null)
 
   const isAdmin = authStore.user?.role === 'admin'
 
@@ -121,6 +124,12 @@ export const MembersPage = observer(function MembersPage() {
       ),
     },
     {
+      key: 'trainer',
+      header: 'Trainer',
+      className: 'text-sm',
+      render: (member) => member.assignedTrainerName ?? <span className="text-muted-foreground">Unassigned</span>,
+    },
+    {
       key: 'expiry',
       header: 'Expiry',
       className: 'text-sm text-muted-foreground',
@@ -153,6 +162,10 @@ export const MembersPage = observer(function MembersPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setInfoTarget(member)}>Edit name / phone</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setTrainerTarget(member)}>
+                  <UserCog2 className="size-4" />
+                  Assign trainer
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPairingTarget(member)}>
                   <QrCode className="size-4" />
                   Generate sign-in QR
@@ -233,6 +246,7 @@ export const MembersPage = observer(function MembersPage() {
       <SendCheckoutLinkDialog member={checkoutTarget} onClose={() => setCheckoutTarget(null)} />
       <EditMembershipDatesDialog member={datesTarget} onClose={() => setDatesTarget(null)} />
       <EditMemberInfoDialog member={infoTarget} onClose={() => setInfoTarget(null)} />
+      <AssignTrainerDialog member={trainerTarget} onClose={() => setTrainerTarget(null)} />
       <LoginPairingDialog member={pairingTarget} onClose={() => setPairingTarget(null)} />
 
       <Dialog open={!!markPaidTarget} onOpenChange={(open) => !open && setMarkPaidTarget(null)}>
@@ -392,6 +406,80 @@ function EditMemberInfoDialog({ member, onClose }: { member: TrainerMemberSummar
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function AssignTrainerDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [trainerId, setTrainerId] = useState<string>('')
+
+  const trainersQuery = useQuery({
+    queryKey: queryKeys.admin.availableTrainers,
+    queryFn: fetchAvailableTrainers,
+    enabled: !!member,
+  })
+
+  const mutation = useMutation({
+    mutationFn: (id: string | null) => {
+      if (!member) throw new Error('No member selected')
+      return assignTrainerToMember(member.id, id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
+      toast.success('Trainer assignment updated')
+      handleClose(false)
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const handleClose = (open: boolean) => {
+    if (open) return
+    setTrainerId('')
+    onClose()
+  }
+
+  return (
+    <Dialog open={!!member} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign trainer</DialogTitle>
+          <DialogDescription>
+            {member?.firstName} {member?.lastName} will only be visible to, and messageable by, the trainer assigned here - not every
+            trainer at this gym.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label>Trainer</Label>
+            <Select value={trainerId} onValueChange={setTrainerId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={trainersQuery.isPending ? 'Loading trainers…' : 'Select a trainer'} />
+              </SelectTrigger>
+              <SelectContent>
+                {(trainersQuery.data ?? []).map((trainer) => (
+                  <SelectItem key={trainer.id} value={trainer.id}>
+                    {trainer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!trainersQuery.isPending && (trainersQuery.data ?? []).length === 0 && (
+              <p className="text-xs text-muted-foreground">No trainers at this gym yet - approve a trainer account first.</p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {member?.assignedTrainerId && (
+              <Button type="button" variant="ghost" disabled={mutation.isPending} onClick={() => mutation.mutate(null)}>
+                Unassign
+              </Button>
+            )}
+            <Button type="button" disabled={!trainerId || mutation.isPending} onClick={() => mutation.mutate(trainerId)}>
+              {mutation.isPending ? 'Saving…' : 'Assign'}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   )

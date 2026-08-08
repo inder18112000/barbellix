@@ -28,6 +28,7 @@ interface UpdateBranchInput {
   autoCheckoutEnabled?: boolean;
   autoCheckoutAfterMins?: number;
   guestPassEnabled?: boolean;
+  checkInIntervalDays?: number;
 }
 
 export async function updateBranch(tenantId: string, updates: UpdateBranchInput): Promise<Branch> {
@@ -42,13 +43,14 @@ export async function getDashboardStats(tenantId: string): Promise<AdminDashboar
   startOfMonth.setUTCDate(1);
   startOfMonth.setUTCHours(0, 0, 0, 0);
 
-  const [membershipCounts, newEnrollmentsThisMonth, clientsBreakdown] = await Promise.all([
+  const [membershipCounts, newEnrollmentsThisMonth, clientsBreakdown, activeInjuriesMemberCount] = await Promise.all([
     getMembershipCounts(tenantId),
     repo.countNewEnrollments(tenantId, startOfMonth),
     repo.countClientsBreakdown(tenantId),
+    repo.countMembersWithInjuries(tenantId),
   ]);
 
-  return { ...clientsBreakdown, ...membershipCounts, newEnrollmentsThisMonth };
+  return { ...clientsBreakdown, ...membershipCounts, newEnrollmentsThisMonth, activeInjuriesMemberCount };
 }
 
 /** Admin-side "Client Progress" drill-in - verifies the member belongs to this admin's tenant

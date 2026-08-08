@@ -35,6 +35,10 @@ export interface Branch {
   name: string;
   location: string;
   qrCodeToken: string;
+  /** 6-digit code for the "No QR? Enter PIN instead" fallback in the mobile check-in flow -
+   * front desk staff read it off to a member whose camera/QR isn't working. Verified server-side
+   * in attendance/service.ts's checkIn(); editable here like any other branch setting. */
+  checkInPin: string;
   capacity?: number;
   checkInMethods: CheckInMethod[];
   autoCheckoutEnabled: boolean;
@@ -44,6 +48,28 @@ export interface Branch {
    * period entirely (block immediately on expiry). Enforced lazily at login/refresh time, not
    * by a background job - see billing/service.ts's isAccessBlocked(). */
   gracePeriodDays: number;
+  /** How often (in days) a member is expected to submit a progress check-in before their plan is
+   * eligible for AI regeneration. Same lazy-evaluation philosophy as gracePeriodDays above - no
+   * scheduled job computes this, it's derived on request from the member's last logged metric.
+   * See progress/service.ts's computeCheckInStatus(). Default 7, per the product's stated goal of
+   * a weekly-by-default adaptive check-in. */
+  checkInIntervalDays: number;
+}
+
+/** Cross-tenant summary row for the Super Admin's Platform Overview - the one capability on this
+ * platform that structurally cannot belong to Admin, since Admin is always scoped to their own
+ * tenant (see docs/prd/01-rbac-and-data-model.md §1.1's Tenant vs. Global scope distinction). */
+export interface PlatformTenantSummary {
+  id: string;
+  name: string;
+  planTier: PlanTier;
+  memberCount: number;
+  trainerCount: number;
+  activeMembershipCount: number;
+  createdAt: string;
+  /** Members with at least one injury logged, not a count of injury entries - see
+   * superadmin/repository.ts's countInjuriesReportedByTenant(). */
+  injuriesReportedCount: number;
 }
 
 export interface Sponsor {
@@ -58,6 +84,89 @@ export interface Sponsor {
 
 // ─── User ─────────────────────────────────────────────────────────────────────
 
+export type DietPreference = 'vegetarian' | 'vegan' | 'non_vegetarian';
+export type GymAccess = 'full_gym' | 'home_bodyweight' | 'home_with_dumbbells';
+export type InjurySeverity = 'mild' | 'moderate' | 'severe';
+
+/** A curated set of common, named injury/rehab conditions, organized by region - picking one of
+ * these (rather than only a coarse body part) is what lets the app show real condition-aware
+ * guidance and seed real rehab exercise content (see constants.ts's
+ * INJURY_CONDITION_MUSCLE_GROUPS and db/seed.ts's rehab exercise set on the server). Optional:
+ * a member can still log an injury by body part alone without picking a specific condition. */
+export type InjuryCondition =
+  // Lower back
+  | 'lumbar_strain'
+  | 'disc_herniation'
+  | 'radiculopathy_sciatica'
+  | 'spinal_stenosis'
+  | 'spondylolisthesis'
+  // Knee
+  | 'acl_tear'
+  | 'pcl_tear'
+  | 'mcl_tear'
+  | 'lcl_tear'
+  | 'meniscus_tear'
+  | 'patellofemoral_pain'
+  | 'patellar_tendinopathy'
+  | 'quadriceps_tendinopathy'
+  // Shoulder
+  | 'rotator_cuff_tendinopathy'
+  | 'rotator_cuff_tear'
+  | 'shoulder_impingement'
+  | 'shoulder_instability'
+  | 'labral_tear'
+  | 'frozen_shoulder'
+  // Neck
+  | 'cervical_strain'
+  | 'cervical_radiculopathy'
+  // Ankle
+  | 'lateral_ankle_sprain'
+  | 'high_ankle_sprain'
+  | 'achilles_tendinopathy'
+  | 'achilles_rupture'
+  // Hip
+  | 'hip_flexor_strain'
+  | 'adductor_strain'
+  | 'gluteal_tendinopathy'
+  | 'hip_bursitis'
+  | 'hip_osteoarthritis'
+  // Thigh
+  | 'hamstring_strain'
+  | 'quadriceps_strain'
+  // Calf
+  | 'calf_strain'
+  // Elbow
+  | 'tennis_elbow'
+  | 'golfers_elbow'
+  // Wrist / hand
+  | 'wrist_sprain'
+  | 'wrist_tendinopathy'
+  | 'carpal_tunnel'
+  // Foot
+  | 'plantar_fasciitis'
+  | 'metatarsal_injury'
+  // General / unclassified
+  | 'muscle_strain'
+  | 'ligament_sprain'
+  | 'tendon_injury'
+  | 'postoperative_rehabilitation';
+
+/** A member-self-reported injury. `bodyPart` deliberately reuses the MuscleGroup enum (not a
+ * separate taxonomy) so matching an injury against Exercise.muscleGroups is a plain set
+ * intersection - see ai-coach/plan-generator.ts's injury-aware filtering. `condition`, if picked,
+ * is the more clinically specific label (e.g. "ACL tear") and auto-suggests `bodyPart` via
+ * INJURY_CONDITION_MUSCLE_GROUPS (constants.ts) - but `bodyPart` is what actually drives exercise
+ * filtering, so it's always required even when `condition` is set. Deleting an entry means
+ * "resolved" - there's no separate active flag to keep the CRUD surface (POST/DELETE) simple. */
+export interface InjuryEntry {
+  id: string;
+  bodyPart: MuscleGroup;
+  condition?: InjuryCondition;
+  note?: string;
+  severity: InjurySeverity;
+  loggedAt: string;
+}
+
 export interface UserProfile {
   goals: FitnessGoal[];
   dob: string;
@@ -67,6 +176,12 @@ export interface UserProfile {
   gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   avatarUrl?: string;
   bio?: string;
+  /** What the AI goal wizard's plan generation optimizes toward, alongside `goals` above. */
+  targetWeightKg?: number;
+  dietPreference?: DietPreference;
+  /** Constrains which Exercise.equipment values the AI plan generator will select from. */
+  gymAccess?: GymAccess;
+  injuries?: InjuryEntry[];
 }
 
 export type FitnessGoal =
@@ -76,6 +191,15 @@ export type FitnessGoal =
   | 'increase_strength'
   | 'general_fitness'
   | 'sport_performance';
+
+/** Per-trainer capability flags, settable only by admin/superadmin (see
+ * trainer/service.ts's setTrainerPermissions()). Defaults true for both - a trainer keeps today's
+ * full exercise/meal-library access until an admin/superadmin explicitly revokes it, rather than
+ * every trainer starting locked out. */
+export interface TrainerPermissions {
+  canManageExerciseLibrary: boolean;
+  canManageMealLibrary: boolean;
+}
 
 export interface User {
   id: string;
@@ -89,6 +213,15 @@ export interface User {
   lastName: string;
   profile: UserProfile;
   createdAt: string;
+  /** The trainer (User.id, role 'trainer') this member is assigned to - unset if the member has
+   * no trainer yet. Only the assigned trainer may view/edit this member's plans or message them;
+   * see trainer/repository.ts's findMembersByTenant() and messaging/service.ts's scope check. */
+  assignedTrainerId?: string;
+  /** Trainer-only fields. `reportsToRole` decides who may manage this trainer's permissions and
+   * whose Trainer Management view they appear in: 'admin' (their own tenant's admin, the default)
+   * or 'superadmin' (escalated to platform-level oversight - only superadmin can set this). */
+  trainerPermissions?: TrainerPermissions;
+  reportsToRole?: 'admin' | 'superadmin';
 }
 
 /** Returned when an admin generates a device-pairing QR for a member's first login - the token
@@ -159,7 +292,18 @@ export type MuscleGroup =
   | 'hamstrings'
   | 'glutes'
   | 'calves'
-  | 'full_body';
+  | 'full_body'
+  /** Added for injury-region coverage (neck/hip/knee/ankle/foot/elbow/wrist strains and joint
+   * injuries aren't well represented by the original 12 values above) - also usable as a real
+   * Exercise.muscleGroups tag for exercises that target these areas (e.g. neck isometrics, ankle
+   * mobility work). */
+  | 'neck'
+  | 'hip'
+  | 'knee'
+  | 'ankle'
+  | 'foot'
+  | 'elbow'
+  | 'wrist_hand';
 
 export type Equipment =
   | 'barbell'
@@ -172,6 +316,8 @@ export type Equipment =
   | 'smith_machine'
   | 'other';
 
+export type ExerciseTag = 'fat_loss' | 'muscle_gain' | 'mobility' | 'rehabilitation' | 'low_impact';
+
 export interface Exercise {
   id: string;
   name: string;
@@ -179,6 +325,11 @@ export interface Exercise {
   equipment: Equipment[];
   instructions: string;
   mediaUrl?: string;
+  /** What kind of media mediaUrl points at, so clients know whether to render an image or hand
+   * off to a video player. Unset/omitted is treated as 'image' for backward compatibility with
+   * exercises created before video upload existed. */
+  mediaType?: 'image' | 'video';
+  tags?: ExerciseTag[];
   isCustom: boolean;
   tenantId?: string;
 }
@@ -193,10 +344,23 @@ export interface WorkoutPlan {
   active: boolean;
   days: WorkoutDay[];
   createdAt: string;
+  /** 1 for a plan created from scratch; incremented each time the AI regenerates it off a
+   * progress check-in (see ai-coach/plan-generator.ts's regenerateWorkoutPlan()). */
+  version: number;
+  /** The plan this one replaced, if any - lets the UI show a version history / diff. */
+  previousPlanId?: string;
+  /** Human-readable bullet list of what changed vs. the previous version and why (e.g. "Reduced
+   * squat/bench sets from 4 to 3 - recent RPE was very high"). Only set on regenerated plans. */
+  changeSummary?: string[];
 }
 
 export interface WorkoutDay {
   dayLabel: string; // e.g. "Day 1 - Push"
+  /** 0-6, matches JS Date.getDay() - same convention as ClassTemplateOccurrence.dayOfWeek. Unset
+   * for plans created before this existed; clients fall back to a rotation-based "today" instead
+   * of a calendar-based one in that case. Assigned deterministically by the AI generator (never
+   * left to the LLM to decide) - see ai-coach/plan-generator.ts. */
+  dayOfWeek?: DayOfWeek;
   exercises: PlannedExercise[];
 }
 
@@ -242,6 +406,10 @@ export interface BodyMetric {
   weightKg?: number;
   bodyFatPct?: number;
   measurements?: BodyMeasurements;
+  /** Where this reading came from. Defaults to 'manual' server-side when omitted. Purely a
+   * provenance field today - no wearable sync is implemented - but keeps the door open for Apple
+   * Health / Google Fit ingestion later without a schema change. */
+  source?: 'manual' | 'apple_health' | 'google_fit';
 }
 
 export interface BodyMeasurements {
@@ -250,6 +418,16 @@ export interface BodyMeasurements {
   hipsCm?: number;
   armCm?: number;
   thighCm?: number;
+}
+
+/** Whether this member is due for a periodic progress check-in, computed lazily from their last
+ * logged BodyMetric and the branch's checkInIntervalDays - never from a scheduled job. See
+ * progress/service.ts's computeCheckInStatus(). */
+export interface CheckInStatus {
+  dueAt: string;
+  isDue: boolean;
+  lastCheckInAt?: string;
+  intervalDays: number;
 }
 
 export interface PersonalRecord {
@@ -275,9 +453,35 @@ export interface AIRecommendation {
   accepted?: boolean;
 }
 
+/** Result of the AI goal wizard's combined generation call - built from Promise.allSettled, so
+ * either half may be absent with an error message instead, rather than the whole request failing
+ * if only one of the two LLM calls fails. */
+export interface GenerateFullPlanResult {
+  workoutPlan?: WorkoutPlan;
+  workoutPlanError?: string;
+  dietPlan?: DietPlan;
+  dietPlanError?: string;
+}
+
 // ─── Nutrition ────────────────────────────────────────────────────────────────
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
+/** Reusable meal-library entry, authored once by a trainer and referenced from any DietPlan -
+ * Exercise's dietary counterpart. `tenantId` unset means the shared global catalog, same
+ * global-vs-tenant convention as Exercise.tenantId. Distinct from MealEntry (a member's log of
+ * what they actually ate) below. */
+export interface Meal {
+  id: string;
+  tenantId?: string;
+  name: string;
+  mealType: MealType;
+  calories: number;
+  proteinG?: number;
+  carbsG?: number;
+  fatG?: number;
+  isCustom: boolean;
+}
 
 export interface MealEntry {
   id: string;
@@ -373,6 +577,18 @@ export interface TrainerMemberSummary {
   subscriptionStatus?: SubscriptionStatus;
   membershipStartDate?: string;
   membershipEndDate?: string;
+  assignedTrainerId?: string;
+  assignedTrainerName?: string;
+}
+
+/** A tenant's trainer roster row - backs both the admin assign-trainer dropdown (id/name only)
+ * and the Trainer Management page (also shows/edits trainerPermissions and reportsToRole). */
+export interface TrainerSummary {
+  id: string;
+  name: string;
+  email: string;
+  trainerPermissions: TrainerPermissions;
+  reportsToRole: 'admin' | 'superadmin';
 }
 
 export interface TrainerStats {
@@ -389,6 +605,8 @@ export interface AdminDashboardStats {
   pendingPayments: number;
   onlinePayments: number;
   cashPayments: number;
+  /** Members with at least one injury logged, not a count of injury entries. */
+  activeInjuriesMemberCount: number;
 }
 
 export type PaymentEventType = 'checkout_completed' | 'subscription_renewed' | 'subscription_cancelled' | 'payment_failed' | 'marked_paid';

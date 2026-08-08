@@ -1,6 +1,22 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { WorkoutDay, FitnessGoal, ClassSession } from '@barbellix/shared';
+import type { WorkoutDay, FitnessGoal, ClassSession, MuscleGroup, InjuryCondition, InjurySeverity, DietPreference, GymAccess } from '@barbellix/shared';
+
+/** Accumulated across the AI Goal Wizard's chained screens (AIWizardBasics -> ... ->
+ * AIWizardReview), the same navigate('NextStep', { ...accumulated, newField }) pattern already
+ * used by GoalSelection -> BodyStats in AuthNavigator. Everything is optional because each step
+ * only fills in its own slice; AIWizardReview is the first place all fields are expected to be set. */
+export interface AIWizardData {
+  weightKg?: number;
+  heightCm?: number;
+  targetWeightKg?: number;
+  goal?: FitnessGoal;
+  goalNote?: string;
+  daysPerWeek?: number;
+  dietPreference?: DietPreference;
+  gymAccess?: GymAccess;
+  injuries?: { bodyPart: MuscleGroup; condition?: InjuryCondition; severity: InjurySeverity; note?: string }[];
+}
 
 export type AuthStackParams = {
   Splash: undefined;
@@ -26,6 +42,12 @@ export type HomeStackParams = {
   ClassesHome: undefined;
   ClassDetail: { session: ClassSession & { trainerName?: string } };
   MyBookings: undefined;
+  AIWizardBasics: undefined;
+  AIWizardGoal: AIWizardData;
+  AIWizardDiet: AIWizardData;
+  AIWizardGymAccess: AIWizardData;
+  AIWizardInjuries: AIWizardData;
+  AIWizardReview: AIWizardData;
 };
 
 export type WorkoutStackParams = {

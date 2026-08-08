@@ -37,8 +37,11 @@ export function loadPersistedTokens() {
 }
 
 async function rawRequest(path: string, options: RequestInit): Promise<Response> {
+  // FormData bodies (file uploads) must NOT get an explicit Content-Type - the browser sets its
+  // own multipart boundary header, and overriding it here would break the upload.
+  const isFormData = options.body instanceof FormData
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string>),
   }
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
@@ -94,4 +97,7 @@ export const api = {
   put: <T>(path: string, body: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
   patch: <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  /** Reuses request()'s existing 401-refresh-retry logic, just with a FormData body instead of a
+   * JSON one - the only other client method that needs this today is exercise video upload. */
+  uploadFile: <T>(path: string, formData: FormData) => request<T>(path, { method: 'POST', body: formData }),
 }

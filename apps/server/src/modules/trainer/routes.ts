@@ -1,6 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { assignPlanSchema, memberIdParamSchema, updateMemberStatusSchema, updateMemberInfoSchema } from './schemas.js';
+import {
+  assignPlanSchema,
+  memberIdParamSchema,
+  updateMemberStatusSchema,
+  updateMemberInfoSchema,
+  assignTrainerSchema,
+  trainerIdParamSchema,
+  setTrainerPermissionsSchema,
+} from './schemas.js';
 import * as trainerService from './service.js';
 
 export default async function trainerRoutes(fastify: FastifyInstance) {
@@ -10,11 +18,11 @@ export default async function trainerRoutes(fastify: FastifyInstance) {
   const preHandler = [fastify.authenticate, fastify.requireRole('trainer', 'admin', 'superadmin')];
 
   app.get('/trainer/members', { preHandler }, async (request) => {
-    return trainerService.listMembers(request.user.tenantId);
+    return trainerService.listMembers(request.user.tenantId, { id: request.user.sub, role: request.user.role });
   });
 
   app.get('/trainer/stats', { preHandler }, async (request) => {
-    return trainerService.getStats(request.user.tenantId);
+    return trainerService.getStats(request.user.tenantId, { id: request.user.sub, role: request.user.role });
   });
 
   app.post(
@@ -22,11 +30,63 @@ export default async function trainerRoutes(fastify: FastifyInstance) {
     { schema: { params: memberIdParamSchema, body: assignPlanSchema }, preHandler },
     async (request) => {
       return trainerService.assignPlan(
-        request.user.sub,
+        { id: request.user.sub, role: request.user.role },
         request.user.tenantId,
         request.params.memberId,
         request.body.planId,
       );
+    },
+  );
+
+  app.get(
+    '/trainer/members/:memberId/injuries',
+    { schema: { params: memberIdParamSchema }, preHandler },
+    async (request) => {
+      return trainerService.getMemberInjuries(
+        { id: request.user.sub, role: request.user.role },
+        request.user.tenantId,
+        request.params.memberId,
+      );
+    },
+  );
+
+  app.get(
+    '/trainer/available-trainers',
+    { preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')] },
+    async (request) => {
+      return trainerService.listAvailableTrainers(request.user.tenantId);
+    },
+  );
+
+  // Path lives under /admin (not /trainer) since this is an owner-level governance action, same
+  // convention as the member-status/info routes below - admin AND superadmin can call it, but the
+  // service layer further restricts superadmin-reporting trainers to superadmin-only.
+  app.patch(
+    '/admin/trainers/:trainerId/permissions',
+    {
+      schema: { params: trainerIdParamSchema, body: setTrainerPermissionsSchema },
+      preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')],
+    },
+    async (request) => {
+      return trainerService.setTrainerPermissions(
+        request.user.tenantId,
+        request.params.trainerId,
+        request.body,
+        request.user.role,
+      );
+    },
+  );
+
+  // Owner-level action, like suspend/status/info below - only admin/superadmin decide who a
+  // member's trainer is, a trainer can't self-assign new members.
+  app.patch(
+    '/trainer/members/:memberId/assign-trainer',
+    {
+      schema: { params: memberIdParamSchema, body: assignTrainerSchema },
+      preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')],
+    },
+    async (request) => {
+      return trainerService.assignTrainer(request.user.tenantId, request.params.memberId, request.body.trainerId);
     },
   );
 

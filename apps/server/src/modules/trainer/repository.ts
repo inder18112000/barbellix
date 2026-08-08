@@ -4,12 +4,59 @@ import { WorkoutPlanModel } from '../../db/models/WorkoutPlan.js';
 import { WorkoutSessionModel } from '../../db/models/WorkoutSession.js';
 import { AttendanceRecordModel } from '../../db/models/AttendanceRecord.js';
 
-export async function findMembersByTenant(tenantId: string) {
-  return UserModel.find({ tenantId, role: 'member' });
+/** trainerId scopes the roster to that trainer's own assigned members only - pass undefined for
+ * the tenant-wide roster (legitimate for admin/superadmin, who manage the whole gym, but never for
+ * a trainer - see trainer/service.ts's listMembers(), which is the only caller that decides this). */
+export async function findMembersByTenant(tenantId: string, trainerId?: string) {
+  return UserModel.find({ tenantId, role: 'member', ...(trainerId ? { assignedTrainerId: trainerId } : {}) });
 }
 
 export async function findMemberByIdInTenant(memberId: string, tenantId: string) {
   return UserModel.findOne({ _id: memberId, tenantId, role: 'member' });
+}
+
+/** Same lookup, additionally scoped to a specific assigned trainer - used wherever a trainer (as
+ * opposed to an admin) reaches for one member's record by id, so a trainer can never fetch a
+ * member who isn't actually theirs just by guessing an id. */
+export async function findAssignedMemberByIdInTenant(memberId: string, tenantId: string, trainerId: string) {
+  return UserModel.findOne({ _id: memberId, tenantId, role: 'member', assignedTrainerId: trainerId });
+}
+
+export async function findTrainerByIdInTenant(trainerId: string, tenantId: string) {
+  return UserModel.findOne({ _id: trainerId, tenantId, role: 'trainer' });
+}
+
+/** Real trainers only (role: 'trainer') - distinct from classes/repository.ts's
+ * findTrainersByTenant(), which also includes admin/superadmin since an owner can lead a class
+ * too. Assigning a *member's trainer* is narrower: it must be an actual trainer account, because
+ * every scoping check elsewhere (roster, messaging) keys specifically off role === 'trainer'.
+ * Full documents (not just firstName/lastName) - also backs the Trainer Management page, which
+ * needs trainerPermissions/reportsToRole per trainer, not just an id/name pair for a dropdown. */
+export async function findRealTrainersByTenant(tenantId: string) {
+  return UserModel.find({ tenantId, role: 'trainer' });
+}
+
+export async function updateTrainerPermissions(
+  trainerId: string,
+  tenantId: string,
+  updates: { canManageExerciseLibrary?: boolean; canManageMealLibrary?: boolean },
+) {
+  const setOps: Record<string, boolean> = {};
+  if (updates.canManageExerciseLibrary !== undefined) setOps['trainerPermissions.canManageExerciseLibrary'] = updates.canManageExerciseLibrary;
+  if (updates.canManageMealLibrary !== undefined) setOps['trainerPermissions.canManageMealLibrary'] = updates.canManageMealLibrary;
+  return UserModel.findOneAndUpdate({ _id: trainerId, tenantId, role: 'trainer' }, { $set: setOps }, { new: true });
+}
+
+export async function assignTrainerToMember(memberId: string, tenantId: string, trainerId: string | null) {
+  const update = trainerId ? { $set: { assignedTrainerId: trainerId } } : { $unset: { assignedTrainerId: '' } };
+  return UserModel.findOneAndUpdate({ _id: memberId, tenantId, role: 'member' }, update, { new: true });
+}
+
+/** id -> "First Last" lookup map, used to attach each member's assigned trainer name onto the
+ * roster without a per-member query (see trainer/service.ts's listMembers). */
+export async function findNamesByIds(userIds: string[]) {
+  const docs = await UserModel.find({ _id: { $in: userIds } }).select('firstName lastName');
+  return new Map(docs.map((d) => [d._id.toString(), `${d.firstName} ${d.lastName}`]));
 }
 
 export async function updateMemberStatus(memberId: string, tenantId: string, status: 'active' | 'inactive' | 'suspended') {

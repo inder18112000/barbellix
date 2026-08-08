@@ -11,7 +11,11 @@ import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { Card } from '../../components/common/Card';
 import { Avatar } from '../../components/common/Avatar';
-import { queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile } from '../../api/queries';
+import { BrandMark } from '../../components/common/BrandMark';
+import {
+  queryKeys, fetchAIRecommendations, fetchAttendanceSummary, fetchWorkoutSessions, updateProfile,
+  fetchPersonalRecords, fetchProgressMetrics,
+} from '../../api/queries';
 import { useAuthStore } from '../../store/authStore';
 import type { User } from '@barbellix/shared';
 import { format } from 'date-fns';
@@ -70,6 +74,28 @@ function StatCard({ label, value, unit, emoji }: { label: string; value: string 
   );
 }
 
+// ─── Performance Metrics (SRP) - a quick-glance summary built entirely from data already
+// available elsewhere in the app (PRs, sessions, attendance, body metrics), not new tracking. ───
+
+function PerformanceMetricsSection({
+  prsThisMonth, avgRpe, checkInsThisMonth, weightTrendKg,
+}: { prsThisMonth: number; avgRpe: number | null; checkInsThisMonth: number; weightTrendKg: number | null }) {
+  const trendLabel = weightTrendKg === null ? '—' : `${weightTrendKg > 0 ? '+' : ''}${weightTrendKg.toFixed(1)}`;
+  const trendEmoji = weightTrendKg === null ? '⚖️' : weightTrendKg < 0 ? '📉' : weightTrendKg > 0 ? '📈' : '⚖️';
+
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Performance</Text>
+      <View style={styles.performanceGrid}>
+        <View style={styles.performanceCell}><StatCard label="PRs this month" value={prsThisMonth} emoji="🥇" /></View>
+        <View style={styles.performanceCell}><StatCard label="Avg RPE" value={avgRpe !== null ? avgRpe.toFixed(1) : '—'} emoji="🔥" /></View>
+        <View style={styles.performanceCell}><StatCard label="Check-ins this month" value={checkInsThisMonth} emoji="📅" /></View>
+        <View style={styles.performanceCell}><StatCard label="Weight trend" value={trendLabel} unit={weightTrendKg !== null ? 'kg' : undefined} emoji={trendEmoji} /></View>
+      </View>
+    </View>
+  );
+}
+
 // ─── AI Card (SRP) ───────────────────────────────────────────────────────────
 
 function AICard({ title, description, onAccept }: { title: string; description: string; onAccept: () => void }) {
@@ -100,22 +126,34 @@ function AICard({ title, description, onAccept }: { title: string; description: 
   );
 }
 
-// ─── Quick Action (SRP) ──────────────────────────────────────────────────────
+// ─── Explore Card (SRP) - icon badge + title + one-line description + chevron affordance ──────
 
-function QuickAction({ emoji, label, onPress, glowColor }: { emoji: string; label: string; onPress: () => void; glowColor: string }) {
+function ExploreCard({
+  emoji, title, description, onPress, accentColor,
+}: { emoji: string; title: string; description: string; onPress: () => void; accentColor: string }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const handlePress = () => {
     Animated.sequence([
-      Animated.timing(scaleAnim, { toValue: 0.92, duration: 80, useNativeDriver: true }),
+      Animated.timing(scaleAnim, { toValue: 0.95, duration: 80, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 200, friction: 7, useNativeDriver: true }),
     ]).start();
     onPress();
   };
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <TouchableOpacity style={[styles.quickAction, glass.card, { borderColor: glowColor + '40' }]} onPress={handlePress} activeOpacity={0.8}>
-        <Text style={styles.quickActionEmoji}>{emoji}</Text>
-        <Text style={styles.quickActionLabel}>{label}</Text>
+      <TouchableOpacity style={[styles.exploreCard, glass.card, { borderColor: accentColor + '35' }]} onPress={handlePress} activeOpacity={0.85}>
+        <View>
+          <View style={[styles.exploreIconBadge, { backgroundColor: accentColor + '20' }]}>
+            <Text style={styles.exploreIconEmoji}>{emoji}</Text>
+          </View>
+          <Text style={styles.exploreTitle}>{title}</Text>
+          <Text style={styles.exploreDesc} numberOfLines={2}>{description}</Text>
+        </View>
+        <View style={styles.exploreFooterRow}>
+          <View style={[styles.exploreChevronBtn, { backgroundColor: accentColor + '18' }]}>
+            <Text style={[styles.exploreChevronText, { color: accentColor }]}>→</Text>
+          </View>
+        </View>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -123,7 +161,7 @@ function QuickAction({ emoji, label, onPress, glowColor }: { emoji: string; labe
 
 // ─── Profile Card (SRP) - photo/name/editable bio, per the client's Home screen spec ────────
 
-function ProfileCard() {
+function ProfileCard({ onViewProfile }: { onViewProfile: () => void }) {
   const { user, setUser } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(user?.profile.bio ?? '');
@@ -170,44 +208,70 @@ function ProfileCard() {
 
   return (
     <Card style={styles.profileCard}>
-      <Avatar
-        uri={user?.profile.avatarUrl}
-        initials={initials}
-        onPress={handlePickPhoto}
-        disabled={pickingPhoto}
-        badge={<Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>}
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
-        {editing ? (
-          <TextInput
-            style={styles.profileBioInput}
-            value={draft}
-            onChangeText={setDraft}
-            placeholder="Add a short bio…"
-            placeholderTextColor={colors.textMuted}
-            autoFocus
-            maxLength={280}
-            onSubmitEditing={() => saveProfile({ bio: draft })}
-            onBlur={() => saveProfile({ bio: draft })}
-            editable={!isPending}
-          />
-        ) : (
-          <Text style={styles.profileBio} numberOfLines={2}>
-            {user?.profile.bio || 'Tap the pencil to add a bio'}
-          </Text>
-        )}
+      <Text style={styles.profileLabel}>YOUR PROFILE</Text>
+      <View style={styles.profileCardTop}>
+        <Avatar
+          size={64}
+          uri={user?.profile.avatarUrl}
+          initials={initials}
+          onPress={handlePickPhoto}
+          disabled={pickingPhoto}
+          badge={<Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>}
+        />
+        <View style={styles.profileTextBlock}>
+          <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
+          {editing ? (
+            <TextInput
+              style={styles.profileBioInput}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder="Add a short bio…"
+              placeholderTextColor={colors.textMuted}
+              autoFocus
+              maxLength={280}
+              onSubmitEditing={() => saveProfile({ bio: draft })}
+              onBlur={() => saveProfile({ bio: draft })}
+              editable={!isPending}
+            />
+          ) : (
+            <Text style={styles.profileBio} numberOfLines={2}>
+              {user?.profile.bio || 'Stay focused, stay strong.'}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.profileEditBtn}
+          onPress={() => {
+            if (editing) saveProfile({ bio: draft });
+            else setEditing(true);
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>{editing ? '✓' : '✏️'}</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={styles.profileEditBtn}
-        onPress={() => {
-          if (editing) saveProfile({ bio: draft });
-          else setEditing(true);
-        }}
-      >
-        <Text style={{ fontSize: 16 }}>{editing ? '✓' : '✏️'}</Text>
-      </TouchableOpacity>
+      <View style={styles.profileBottomRow}>
+        <TouchableOpacity style={styles.viewProfileBtn} onPress={onViewProfile} activeOpacity={0.85}>
+          <Text style={styles.viewProfileBtnText}>VIEW PROFILE</Text>
+        </TouchableOpacity>
+        <Text style={styles.profileChevron}>›</Text>
+      </View>
     </Card>
+  );
+}
+
+// ─── AI Goal Wizard CTA (SRP) - the client's headline feature: set a goal from real body data,
+// let the AI build a workout + diet plan from it. ────────────────────────────────────────────
+
+function AIWizardCTA({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity style={[styles.wizardCard, glass.cardStrong, glow.primary]} onPress={onPress} activeOpacity={0.88}>
+      <Text style={styles.wizardEmoji}>🎯</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.wizardTitle}>Get Your Personalized AI Plan</Text>
+        <Text style={styles.wizardDesc}>Set your goal, and let AI build your workout + diet plan</Text>
+      </View>
+      <Text style={styles.wizardArrow}>→</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -229,6 +293,8 @@ export function HomeScreen() {
   const { data: attendance } = useQuery({ queryKey: queryKeys.attendance.summary, queryFn: fetchAttendanceSummary });
   const { data: sessions } = useQuery({ queryKey: queryKeys.workoutSessions, queryFn: fetchWorkoutSessions });
   const { data: recommendations } = useQuery({ queryKey: queryKeys.ai.recommendations, queryFn: fetchAIRecommendations });
+  const { data: prs } = useQuery({ queryKey: queryKeys.progress.prs, queryFn: fetchPersonalRecords });
+  const { data: metrics } = useQuery({ queryKey: queryKeys.progress.metrics, queryFn: fetchProgressMetrics });
 
   const headerFade = useRef(new Animated.Value(0)).current;
   useEffect(() => { Animated.timing(headerFade, { toValue: 1, duration: 800, useNativeDriver: true }).start(); }, []);
@@ -243,22 +309,46 @@ export function HomeScreen() {
 
   const topRec = recommendations?.[0];
 
+  const now = new Date();
+  const prsThisMonth = prs?.filter((p) => {
+    const d = new Date(p.achievedAt);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length ?? 0;
+
+  const recentEfforts = sessions?.slice(0, 7).map((s) => s.perceivedEffort).filter((r): r is number => r !== undefined) ?? [];
+  const avgRpe = recentEfforts.length > 0 ? recentEfforts.reduce((a, b) => a + b, 0) / recentEfforts.length : null;
+
+  const weighIns = (metrics ?? [])
+    .filter((m) => m.weightKg !== undefined)
+    .slice()
+    .sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+  const weightTrendKg = weighIns.length >= 2 ? weighIns[0].weightKg! - weighIns[1].weightKg! : null;
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+
+        {/* Brand */}
+        <Animated.View style={[styles.brandRow, { opacity: headerFade }]}>
+          <BrandMark size={24} />
+          <Text style={styles.brandWordmark}>Barbell<Text style={styles.brandWordmarkAccent}>ix</Text></Text>
+        </Animated.View>
 
         {/* Header */}
         <Animated.View style={[styles.header, { opacity: headerFade }]}>
           <View>
             <Text style={styles.greeting}>{greeting},</Text>
             <Text style={styles.name}>{user?.firstName} 👋</Text>
+            <View style={styles.nameUnderline} />
           </View>
           <TouchableOpacity style={[styles.notifBtn, glass.card]}>
             <Text style={{ fontSize: 20 }}>🔔</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        <ProfileCard />
+        <ProfileCard onViewProfile={() => parent?.navigate('Profile')} />
+
+        <AIWizardCTA onPress={() => navigation.navigate('AIWizardBasics')} />
 
         <View style={styles.datePill}>
           <Text style={styles.datePillText}>{format(new Date(), 'EEEE, MMMM d')}</Text>
@@ -273,6 +363,13 @@ export function HomeScreen() {
           </View>
         </View>
 
+        <PerformanceMetricsSection
+          prsThisMonth={prsThisMonth}
+          avgRpe={avgRpe}
+          checkInsThisMonth={attendance?.totalThisMonth ?? 0}
+          weightTrendKg={weightTrendKg}
+        />
+
         {/* AI Recommendation */}
         {topRec && (
           <View style={styles.section}>
@@ -285,16 +382,34 @@ export function HomeScreen() {
           </View>
         )}
 
-        {/* Quick Actions */}
+        {/* Explore */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <QuickAction emoji="🏋️" label="Workout"   onPress={() => parent?.navigate('Workout')}                                  glowColor={colors.primary} />
-            <QuickAction emoji="🥗" label="Diet"       onPress={() => parent?.navigate('Progress', { screen: 'Nutrition' })}        glowColor={colors.success} />
-            <QuickAction emoji="⚖️" label="Weight"     onPress={() => parent?.navigate('Progress', { screen: 'BodyMetrics' })}      glowColor={'#FFB347'} />
-            <QuickAction emoji="📊" label="Progress"   onPress={() => parent?.navigate('Progress')}                                 glowColor={colors.accent} />
-            <QuickAction emoji="🤝" label="Sponsors"   onPress={() => parent?.navigate('Profile', { screen: 'Sponsorship' })}      glowColor={'#AF52DE'} />
-            <QuickAction emoji="🧘" label="Classes"    onPress={() => navigation.navigate('ClassesHome')}                             glowColor={'#22A5AC'} />
+          <Text style={styles.sectionTitle}>Explore</Text>
+          <View style={styles.exploreGrid}>
+            <ExploreCard
+              emoji="🏋️" title="Workout" description="Plan your workout"
+              onPress={() => parent?.navigate('Workout')} accentColor={colors.primary}
+            />
+            <ExploreCard
+              emoji="🥗" title="Diet" description="Track your nutrition"
+              onPress={() => parent?.navigate('Progress', { screen: 'Nutrition' })} accentColor={colors.success}
+            />
+            <ExploreCard
+              emoji="⚖️" title="Weight Tracker" description="Track your progress"
+              onPress={() => parent?.navigate('Progress', { screen: 'BodyMetrics' })} accentColor="#FFB347"
+            />
+            <ExploreCard
+              emoji="📊" title="Progress Report" description="View your growth"
+              onPress={() => parent?.navigate('Progress')} accentColor={colors.accent}
+            />
+            <ExploreCard
+              emoji="🤝" title="Sponsorship" description="Explore opportunities"
+              onPress={() => parent?.navigate('Profile', { screen: 'Sponsorship' })} accentColor="#AF52DE"
+            />
+            <ExploreCard
+              emoji="🧘" title="Classes" description="Book your sessions"
+              onPress={() => navigation.navigate('ClassesHome')} accentColor="#22A5AC"
+            />
           </View>
         </View>
 

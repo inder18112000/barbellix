@@ -84,4 +84,38 @@ export default async function aiCoachRoutes(fastify: FastifyInstance) {
       return reply.status(201).send(plan);
     },
   );
+
+  app.post(
+    '/ai/coach/generate-full-plan',
+    {
+      schema: { body: generateWorkoutPlanSchema },
+      preHandler: [fastify.authenticate],
+      // Lower than /generate-plan's 8/hour - this does two LLM calls per request (workout + diet).
+      config: { rateLimit: { max: 5, timeWindow: '1 hour', keyGenerator: rateLimitKeyGenerator(fastify) } },
+    },
+    async (request, reply) => {
+      const result = await aiCoachService.generateFullPlan(
+        fastify,
+        request.user.sub,
+        request.user.tenantId,
+        request.body.goal,
+        request.body.daysPerWeek,
+      );
+      return reply.status(201).send(result);
+    },
+  );
+
+  app.post(
+    '/ai/coach/regenerate-plan',
+    {
+      preHandler: [fastify.authenticate],
+      // No LLM call involved (pure decision engine) - same generous ceiling as /generate-plan
+      // anyway, since it's still meant to be an occasional, check-in-driven action, not spammable.
+      config: { rateLimit: { max: 8, timeWindow: '1 hour', keyGenerator: rateLimitKeyGenerator(fastify) } },
+    },
+    async (request, reply) => {
+      const plan = await aiCoachService.regenerateWorkoutPlan(request.user.sub);
+      return reply.status(201).send(plan);
+    },
+  );
 }

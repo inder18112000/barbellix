@@ -25,6 +25,7 @@ interface FormState {
   location: string
   capacity: string
   checkInMethods: CheckInMethod[]
+  checkInPin: string
   autoCheckoutEnabled: boolean
   autoCheckoutAfterMins: string
   guestPassEnabled: boolean
@@ -43,6 +44,7 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
       location: data.location,
       capacity: data.capacity != null ? String(data.capacity) : '',
       checkInMethods: data.checkInMethods,
+      checkInPin: data.checkInPin,
       autoCheckoutEnabled: data.autoCheckoutEnabled,
       autoCheckoutAfterMins: String(data.autoCheckoutAfterMins),
       guestPassEnabled: data.guestPassEnabled,
@@ -94,11 +96,16 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
             toast.error('Enable at least one check-in method.')
             return
           }
+          if (form.checkInMethods.includes('pin') && !/^\d{6}$/.test(form.checkInPin)) {
+            toast.error('Check-in PIN must be exactly 6 digits.')
+            return
+          }
           mutation.mutate({
             name: form.name,
             location: form.location,
             capacity: form.capacity ? Number(form.capacity) : undefined,
             checkInMethods: form.checkInMethods,
+            checkInPin: form.checkInPin,
             autoCheckoutEnabled: form.autoCheckoutEnabled,
             autoCheckoutAfterMins: Number(form.autoCheckoutAfterMins) || 60,
             guestPassEnabled: form.guestPassEnabled,
@@ -157,6 +164,32 @@ export const BranchSettingsPage = observer(function BranchSettingsPage() {
                 })}
               </div>
             </div>
+
+            {form.checkInMethods.includes('pin') && (
+              <div className="flex flex-col gap-1.5 pl-1">
+                <Label htmlFor="checkInPin">Check-in PIN</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="checkInPin"
+                    inputMode="numeric"
+                    value={form.checkInPin}
+                    onChange={(e) => setForm({ ...form, checkInPin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                    className="max-w-32 font-mono tracking-widest"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setForm({ ...form, checkInPin: String(Math.floor(100000 + Math.random() * 900000)) })}
+                  >
+                    Regenerate
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Give this to members at the front desk if they can't scan the QR code.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between rounded-md border px-3 py-2.5">
               <div>

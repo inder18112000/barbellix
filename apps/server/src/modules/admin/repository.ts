@@ -33,12 +33,14 @@ export function toDomainBranch(doc: HydratedDocument<BranchDocument>): Branch {
     name: doc.name,
     location: doc.location,
     qrCodeToken: doc.qrCodeToken,
+    checkInPin: doc.checkInPin,
     capacity: doc.capacity,
     checkInMethods: doc.checkInMethods,
     autoCheckoutEnabled: doc.autoCheckoutEnabled,
     autoCheckoutAfterMins: doc.autoCheckoutAfterMins,
     guestPassEnabled: doc.guestPassEnabled,
     gracePeriodDays: doc.gracePeriodDays,
+    checkInIntervalDays: doc.checkInIntervalDays,
   };
 }
 
@@ -80,4 +82,11 @@ export async function countClientsBreakdown(tenantId: string) {
     UserModel.countDocuments({ tenantId, role: 'member', status: 'active' }),
   ]);
   return { totalClients, activeClients };
+}
+
+/** Members with >=1 injury logged, not a count of injury entries. `'profile.injuries.0': {
+ * $exists: true }` is the standard Mongo idiom for "array is non-empty" - no aggregation/$unwind
+ * needed since this counts matching User documents, not array elements. */
+export async function countMembersWithInjuries(tenantId: string) {
+  return UserModel.countDocuments({ tenantId, role: 'member', 'profile.injuries.0': { $exists: true } });
 }

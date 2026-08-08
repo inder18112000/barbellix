@@ -23,3 +23,7 @@ npm-debug.log*
 # Claude Code local settings (may contain credentials)
 .claude/settings.local.json
 packages/shared/dist/
+
+# Locally-uploaded media (see apps/server/src/lib/storage.ts) - never committed, and not the
+# real storage backend anyway (S3/Azure Blob replaces this in production)
+apps/server/uploads/

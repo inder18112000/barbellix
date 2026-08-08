@@ -18,7 +18,7 @@
       "android": {
         "buildType": "apk",
         "env": {
-          "EXPO_PUBLIC_API_BASE_URL": "https://barbellix-server.onrender.com"
+          "EXPO_PUBLIC_API_BASE_URL": "https://barbellix-server.vercel.app"
         }
       }
     },
@@ -27,7 +27,7 @@
       "android": {
         "buildType": "app-bundle",
         "env": {
-          "EXPO_PUBLIC_API_BASE_URL": "https://barbellix-server.onrender.com"
+          "EXPO_PUBLIC_API_BASE_URL": "https://barbellix-server.vercel.app"
         }
       }
     }

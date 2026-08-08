@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BarBellix — Brand Mark</title>
+<style>
+  :root {
+    --ink: #121212;
+    --ink-raised: #1C1C1E;
+    --ink-raised-2: #242426;
+    --paper: #F0F0F0;
+    --paper-sunk: #E0E0E0;
+    --volt: #C6FF00;
+    --volt-dim: #9FCC00;
+    --text: #E0E0E0;
+    --text-soft: rgba(224,224,224,0.62);
+    --text-faint: rgba(224,224,224,0.38);
+    --line: rgba(224,224,224,0.12);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* One committed world: Obsidian Black, the same ground the shipped app.json splash
+     (backgroundColor #121212) and web index.css already use. A light fallback exists only
+     so the page never looks broken under a light OS preference. */
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --page-bg: var(--paper); --page-text: var(--ink);
+      --page-text-soft: rgba(18,18,18,0.62); --page-line: rgba(18,18,18,0.12);
+    }
+  }
+  :root { --page-bg: var(--ink); --page-text: var(--text); --page-text-soft: var(--text-soft); --page-line: var(--line); }
+  :root[data-theme="light"] { --page-bg: var(--paper); --page-text: var(--ink); --page-text-soft: rgba(18,18,18,0.62); --page-line: rgba(18,18,18,0.12); }
+  :root[data-theme="dark"] { --page-bg: var(--ink); --page-text: var(--text); --page-text-soft: var(--text-soft); --page-line: var(--line); }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page-bg); color: var(--page-text);
+    font-family: var(--sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+  .tabular { font-variant-numeric: tabular-nums; }
+
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--page-text-soft);
+    padding: 28px 0 0;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--volt); box-shadow: 0 0 8px var(--volt); }
+
+  /* ─── Hero ─── */
+  .hero { padding: 56px 0 72px; }
+  .hero-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .hero-mark { width: 84px; height: 84px; flex-shrink: 0; border-radius: 18px; box-shadow: 0 18px 40px -16px rgba(198,255,0,0.35); }
+  .wordmark {
+    font-family: var(--sans); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(40px, 7.5vw, 84px); letter-spacing: -0.01em; line-height: 0.95; margin: 0;
+  }
+  .wordmark .bolt-slash { color: var(--volt); }
+  .hero-sub { max-width: 560px; font-size: 17px; color: var(--page-text-soft); margin: 20px 0 0; }
+  .hero-meta {
+    margin-top: 36px; display: flex; gap: 32px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 12px; color: var(--text-faint); letter-spacing: 0.04em;
+  }
+  .hero-meta b { color: var(--page-text-soft); font-weight: 600; }
+
+  /* ─── Section scaffolding ─── */
+  .section { padding: 56px 0; border-top: 1px solid var(--page-line); }
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+  .section-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--page-text); margin: 0; }
+  .section-note { font-size: 14px; color: var(--page-text-soft); max-width: 46ch; margin: 0; }
+
+  /* ─── Monogram + palette ─── */
+  .monogram-grid { display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); gap: 56px; align-items: center; }
+  @media (max-width: 860px) { .monogram-grid { grid-template-columns: 1fr; gap: 36px; } }
+  .monogram-display { display: flex; align-items: center; gap: 20px; }
+  .monogram-icon { width: 110px; height: 110px; flex-shrink: 0; border-radius: 22px; }
+  .monogram-word { font-family: var(--sans); font-weight: 800; text-transform: uppercase; font-size: clamp(30px, 5vw, 46px); letter-spacing: -0.01em; margin: 0; }
+  .swatches { display: flex; gap: 20px; flex-wrap: wrap; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .swatch-chip { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--page-line); }
+  .swatch-label { font-family: var(--mono); font-size: 11.5px; color: var(--page-text-soft); letter-spacing: 0.02em; }
+  .swatch-name { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ─── Responsive variations ─── */
+  .variant-row { display: flex; gap: 44px; flex-wrap: wrap; align-items: flex-end; }
+  .variant { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .variant-caption { font-family: var(--mono); font-size: 11px; color: var(--page-text-soft); text-align: center; }
+  .variant-caption b { display: block; color: var(--page-text); font-size: 12.5px; margin-bottom: 2px; }
+  .variant-full { display: flex; align-items: center; gap: 14px; }
+  .variant-full .mk { width: 52px; height: 52px; border-radius: 12px; }
+  .variant-full .wd { font-family: var(--sans); font-weight: 800; text-transform: uppercase; font-size: 26px; letter-spacing: -0.01em; }
+  .chip { width: 108px; height: 108px; border-radius: 24px; box-shadow: 0 10px 30px -14px rgba(0,0,0,0.5); }
+  .chip.on-ink { background: var(--ink-raised); border: 1px solid var(--line); }
+  .chip.on-volt { background: var(--volt); }
+
+  /* ─── Platform previews ─── */
+  .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 28px; }
+  .platform-card { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 16px; border-radius: 16px; background: var(--ink-raised); border: 1px solid var(--line); }
+  .platform-caption { text-align: center; }
+  .platform-caption b { display: block; font-size: 13px; color: var(--page-text); margin-bottom: 2px; }
+  .platform-caption span { font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+  .fav-row { display: flex; align-items: flex-end; gap: 10px; }
+  .fav-row .f16 { width: 16px; height: 16px; border-radius: 4px; }
+  .fav-row .f32 { width: 32px; height: 32px; border-radius: 7px; }
+  .fav-row .f64 { width: 64px; height: 64px; border-radius: 13px; }
+  .platform-icon { width: 88px; height: 88px; border-radius: 20px; }
+  .platform-icon.squircle { border-radius: 24px; }
+  .safe-zone-frame { position: relative; width: 88px; height: 88px; border-radius: 20px; background: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .safe-zone-frame .ring { position: absolute; inset: 12px; border-radius: 50%; border: 1.5px dashed rgba(224,224,224,0.35); }
+  .safe-zone-frame .fg { width: 88px; height: 88px; }
+  .notif-frame { width: 88px; height: 88px; border-radius: 20px; background: #2b2b2b; display: flex; align-items: center; justify-content: center; }
+  .notif-frame svg { width: 46px; height: 46px; }
+
+  /* ─── Live in product ─── */
+  .live-grid { display: grid; grid-template-columns: minmax(0,220px) minmax(0,1fr); gap: 28px; }
+  @media (max-width: 700px) { .live-grid { grid-template-columns: 1fr; } }
+  .mock-sidebar { background: #0D0D0D; border-radius: 14px; border: 1px solid var(--line); padding: 18px 14px; display: flex; flex-direction: column; gap: 14px; }
+  .mock-brand { display: flex; align-items: center; gap: 9px; }
+  .mock-brand svg { width: 30px; height: 30px; border-radius: 7px; }
+  .mock-brand span { font-family: var(--sans); font-weight: 800; text-transform: uppercase; font-size: 13px; letter-spacing: 0.02em; color: var(--text); }
+  .mock-nav-item { height: 10px; border-radius: 5px; background: rgba(224,224,224,0.1); }
+  .mock-nav-item.active { background: rgba(198,255,0,0.16); }
+  .mock-splash { background: var(--ink); border-radius: 30px; border: 1px solid rgba(255,255,255,0.08); aspect-ratio: 9/16; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; box-shadow: 0 24px 50px -20px rgba(0,0,0,0.6); }
+  .mock-splash svg { width: 64px; height: 64px; }
+  .mock-splash .sw { font-family: var(--sans); font-weight: 800; text-transform: uppercase; font-size: 18px; letter-spacing: 0.02em; color: var(--text); }
+  .mock-splash .st { font-family: var(--mono); font-size: 10px; color: var(--text-faint); letter-spacing: 0.04em; }
+  .live-copy { display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+  .live-copy p { font-size: 14.5px; color: var(--page-text-soft); margin: 0; max-width: 50ch; }
+  .live-copy code { font-family: var(--mono); font-size: 12.5px; background: var(--ink-raised); border: 1px solid var(--line); padding: 2px 6px; border-radius: 5px; color: var(--text); }
+
+  footer {
+    padding: 40px 0 64px; border-top: 1px solid var(--page-line);
+    font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span> BarBellix — Brand Mark &nbsp;·&nbsp; Shipped in web + mobile</div>
+</div>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-row">
+      <svg class="hero-mark" viewBox="0 0 200 200">
+        <rect width="200" height="200" rx="40" fill="#121212"/>
+        <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+        <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+      </svg>
+      <h1 class="wordmark">Barbell<span class="bolt-slash">ix</span></h1>
+    </div>
+    <p class="hero-sub">
+      A bold "B", sliced once by the bolt. It reads as a letter at wordmark size and as a mark
+      at 16px, which is the only test that actually matters for an icon — everything below is
+      the same asset, not a mockup of it.
+    </p>
+    <div class="hero-meta">
+      <span><b>1</b> mark, one construction</span>
+      <span><b>3</b> colors</span>
+      <span>Live: sidebar · login · splash · app icon · favicon</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+
+  <!-- Bold Monogram + Palette -->
+  <section class="section">
+    <div class="monogram-grid">
+      <div>
+        <p class="section-title" style="margin-bottom:20px;">Bold Monogram</p>
+        <div class="monogram-display">
+          <svg class="monogram-icon" viewBox="0 0 200 200">
+            <rect width="200" height="200" rx="40" fill="#121212"/>
+            <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+            <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+          </svg>
+          <h2 class="monogram-word">Barbell<span class="bolt-slash">ix</span></h2>
+        </div>
+      </div>
+      <div>
+        <p class="section-title" style="margin-bottom:20px;">Color Palette</p>
+        <div class="swatches">
+          <div class="swatch">
+            <div class="swatch-chip" style="background:#121212;"></div>
+            <div><div class="swatch-label">#121212</div><div class="swatch-name">Obsidian</div></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-chip" style="background:#C6FF00;"></div>
+            <div><div class="swatch-label">#C6FF00</div><div class="swatch-name">Electric Volt</div></div>
+          </div>
+          <div class="swatch">
+            <div class="swatch-chip" style="background:#E0E0E0;"></div>
+            <div><div class="swatch-label">#E0E0E0</div><div class="swatch-name">Titanium</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Responsive Variations -->
+  <section class="section">
+    <div class="section-head">
+      <p class="section-title">Responsive Variations</p>
+      <p class="section-note">Same construction, three contexts: full lockup for headers, the mark alone for tight spaces, and single-color builds for print or a busy background.</p>
+    </div>
+    <div class="variant-row">
+      <div class="variant">
+        <div class="variant-full">
+          <svg class="mk" viewBox="0 0 200 200">
+            <rect width="200" height="200" rx="40" fill="#121212"/>
+            <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+            <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+          </svg>
+          <span class="wd">Barbell<span class="bolt-slash">ix</span></span>
+        </div>
+        <div class="variant-caption"><b>Full Logo</b>Mark + wordmark</div>
+      </div>
+      <div class="variant">
+        <div class="chip on-ink" style="display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 200 200">
+            <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+            <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+          </svg>
+        </div>
+        <div class="variant-caption"><b>Icon</b>On Obsidian</div>
+      </div>
+      <div class="variant">
+        <div class="chip on-ink" style="display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 200 200">
+            <path fill-rule="evenodd" fill="#FFFFFF" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+            <path fill="#FFFFFF" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+          </svg>
+        </div>
+        <div class="variant-caption"><b>Pure White</b>#FFFFFF</div>
+      </div>
+      <div class="variant">
+        <div class="chip on-volt" style="display:flex;align-items:center;justify-content:center;">
+          <svg width="60" height="60" viewBox="0 0 200 200">
+            <path fill-rule="evenodd" fill="#121212" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+            <path fill="#121212" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+          </svg>
+        </div>
+        <div class="variant-caption"><b>Volt Reversed</b>Dark on #C6FF00</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-Platform Asset Previews -->
+  <section class="section">
+    <div class="section-head">
+      <p class="section-title">Multi-Platform Asset Previews</p>
+      <p class="section-note">What actually ships: <code style="font-family:var(--mono);font-size:12.5px;">apps/web/public/favicon.svg</code> and five real PNGs in <code style="font-family:var(--mono);font-size:12.5px;">apps/mobile/assets/</code>, generated straight from this vector — no separate exports to keep in sync.</p>
+    </div>
+    <div class="platform-grid">
+
+      <div class="platform-card">
+        <div class="fav-row">
+          <svg class="f16" viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#121212"/><path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/><path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/></svg>
+          <svg class="f32" viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#121212"/><path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/><path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/></svg>
+          <svg class="f64" viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#121212"/><path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/><path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/></svg>
+        </div>
+        <div class="platform-caption"><b>Website Favicon</b><span>16×16 · 32×32 · 64×64</span></div>
+      </div>
+
+      <div class="platform-card">
+        <svg class="platform-icon" viewBox="0 0 200 200">
+          <rect width="200" height="200" fill="#121212"/>
+          <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+          <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+        </svg>
+        <div class="platform-caption"><b>iOS App Icon</b><span>1024×1024, no pre-mask</span></div>
+      </div>
+
+      <div class="platform-card">
+        <div class="safe-zone-frame">
+          <div class="ring"></div>
+          <svg class="fg" viewBox="0 0 200 200">
+            <g transform="translate(100,100) scale(0.62) translate(-100,-100)">
+              <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+              <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+            </g>
+          </svg>
+        </div>
+        <div class="platform-caption"><b>Android Adaptive Icon</b><span>Foreground, layered view</span></div>
+      </div>
+
+      <div class="platform-card">
+        <svg class="platform-icon squircle" viewBox="0 0 200 200">
+          <rect width="200" height="200" rx="40" fill="#121212"/>
+          <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+          <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+        </svg>
+        <div class="platform-caption"><b>macOS Desktop Icon</b><span>1024×1024 squircle</span></div>
+      </div>
+
+      <div class="platform-card">
+        <div class="notif-frame">
+          <svg viewBox="0 0 200 200">
+            <g transform="translate(100,100) scale(0.62) translate(-100,-100)">
+              <path fill-rule="evenodd" fill="#FFFFFF" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+              <path fill="#FFFFFF" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+            </g>
+          </svg>
+        </div>
+        <div class="platform-caption"><b>Android Notification</b><span>White alpha, tinted #C6FF00</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Live in product -->
+  <section class="section">
+    <p class="section-title" style="margin-bottom:24px;">Live In Product</p>
+    <div class="live-grid">
+      <div class="mock-splash">
+        <svg viewBox="0 0 200 200">
+          <rect width="200" height="200" rx="40" fill="#121212"/>
+          <path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/>
+          <path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/>
+        </svg>
+        <div class="sw">Barbell<span class="bolt-slash">ix</span></div>
+        <div class="st">FEEL EVERY REP.</div>
+      </div>
+      <div class="live-copy">
+        <div class="mock-sidebar" style="max-width:220px;">
+          <div class="mock-brand">
+            <svg viewBox="0 0 200 200"><rect width="200" height="200" rx="40" fill="#121212"/><path fill-rule="evenodd" fill="#E0E0E0" d="M34,26 L128,26 A36,36 0 0 1 128,98 L134,98 A38,38 0 0 1 134,174 L34,174 Z M64,40 L118,40 A22,22 0 0 1 118,84 L64,84 Z M64,112 L124,112 A26,26 0 0 1 124,164 L64,164 Z"/><path fill="#C6FF00" d="M112,9 L53,120 L98,120 L72,191 L157,87 L105,87 Z"/></svg>
+            <span>Barbellix</span>
+          </div>
+          <div class="mock-nav-item active"></div>
+          <div class="mock-nav-item"></div>
+          <div class="mock-nav-item"></div>
+          <div class="mock-nav-item"></div>
+        </div>
+        <p>
+          <code>apps/web/src/components/common/BrandMark.tsx</code> and
+          <code>apps/mobile/src/components/common/BrandMark.tsx</code> render this exact path
+          data — the admin sidebar, the staff login screen, the mobile splash, login, and
+          scan-to-sign-in screens all pull from the same two source files, not five separate
+          exports.
+        </p>
+        <p>
+          The five PNGs this replaced in <code>apps/mobile/assets/</code> were 1×1 placeholder
+          stubs — 68 bytes each, never actually generated. This is the first real app icon,
+          adaptive icon, splash, notification icon, and favicon the mobile app has shipped with.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>BarBellix — brand mark, 2026-07-30. One construction, every surface.</footer>
+
+</body>
+</html>

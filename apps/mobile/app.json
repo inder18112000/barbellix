@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#121212"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.barbellix.app"
@@ -42,7 +44,8 @@
           "icon": "./assets/notification-icon.png",
           "color": "#C6FF00"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ]
   }
 }

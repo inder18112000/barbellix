@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import mongoose from 'mongoose';
 import { validatorCompiler, serializerCompiler } from 'fastify-type-provider-zod';
 import configPlugin from './plugins/config.js';
@@ -15,6 +16,8 @@ import workoutsRoutes from './modules/workouts/routes.js';
 import attendanceRoutes from './modules/attendance/routes.js';
 import progressRoutes from './modules/progress/routes.js';
 import nutritionRoutes from './modules/nutrition/routes.js';
+import mealsRoutes from './modules/meals/routes.js';
+import uploadsRoutes from './modules/uploads/routes.js';
 import habitsRoutes from './modules/habits/routes.js';
 import trainerRoutes from './modules/trainer/routes.js';
 import adminRoutes from './modules/admin/routes.js';
@@ -25,6 +28,7 @@ import stripeWebhookRoutes from './modules/billing/webhookRoutes.js';
 import sponsorsRoutes from './modules/sponsors/routes.js';
 import classesRoutes from './modules/classes/routes.js';
 import notificationsRoutes from './modules/notifications/routes.js';
+import superadminRoutes from './modules/superadmin/routes.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -44,6 +48,9 @@ export async function buildApp() {
   await app.register(authPlugin);
   // global: false - only routes that explicitly opt in via config.rateLimit are limited
   await app.register(rateLimit, { global: false });
+  // Video uploads only (exercises/routes.ts's POST /exercises/:id/video) - the JSON body parser's
+  // default limit is unrelated and unaffected by this.
+  await app.register(multipart, { limits: { fileSize: 100 * 1024 * 1024 } });
 
   await app.register(authRoutes, { prefix: '/auth' });
   await app.register(usersRoutes);
@@ -52,6 +59,8 @@ export async function buildApp() {
   await app.register(attendanceRoutes);
   await app.register(progressRoutes);
   await app.register(nutritionRoutes);
+  await app.register(mealsRoutes);
+  await app.register(uploadsRoutes);
   await app.register(habitsRoutes);
   await app.register(trainerRoutes);
   await app.register(adminRoutes);
@@ -62,6 +71,7 @@ export async function buildApp() {
   await app.register(sponsorsRoutes);
   await app.register(classesRoutes);
   await app.register(notificationsRoutes);
+  await app.register(superadminRoutes);
 
   app.get('/health', async () => ({
     status: 'ok',

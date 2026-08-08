@@ -7,8 +7,11 @@ import { RootNavigator } from './src/navigation/RootNavigator';
 import { useAuthStore } from './src/store/authStore';
 import { usePushRegistration } from './src/hooks/usePushRegistration';
 import { colors } from './src/theme';
+import { initSentry, Sentry } from './src/lib/sentry';
 
-export default function App() {
+initSentry();
+
+function App() {
   const hydrate = useAuthStore((s) => s.hydrate);
   const isHydrating = useAuthStore((s) => s.isHydrating);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -32,3 +35,5 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   loadingRoot: { flex: 1, backgroundColor: colors.background },
 });
+
+export default Sentry.wrap(App);

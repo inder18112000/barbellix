@@ -74,7 +74,7 @@ function ScannerFrame({ active, permission, onRequestPermission, onScan }: Scann
     if (!permission.granted) {
       return (
         <View style={styles.cameraPlaceholder}>
-          <Ionicons name="camera-off-outline" size={40} color={colors.textMuted} />
+          <Ionicons name="videocam-off-outline" size={40} color={colors.textMuted} />
           <Text style={[styles.cameraText, { marginTop: 12 }]}>Camera access needed</Text>
           <TouchableOpacity style={localStyles.permissionBtn} onPress={onRequestPermission}>
             <Text style={localStyles.permissionBtnText}>Grant Access</Text>
@@ -223,15 +223,17 @@ export function QRCheckInScreen() {
                   onRequestPermission={requestPermission}
                   onScan={scanQR}
                 />
-                <TouchableOpacity
-                  style={[styles.simulateBtn, glass.cardStrong, glow.primary]}
-                  onPress={() => scanQR('mock_qr_' + Date.now())}
-                  disabled={isProcessing}
-                >
-                  <Text style={styles.simulateBtnText}>
-                    {isProcessing ? 'Processing…' : 'Simulate Scan (Dev)'}
-                  </Text>
-                </TouchableOpacity>
+                {__DEV__ && (
+                  <TouchableOpacity
+                    style={[styles.simulateBtn, glass.cardStrong, glow.primary]}
+                    onPress={() => scanQR('mock_qr_' + Date.now())}
+                    disabled={isProcessing}
+                  >
+                    <Text style={styles.simulateBtnText}>
+                      {isProcessing ? 'Processing…' : 'Simulate Scan (Dev)'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.pinToggle} onPress={() => setShowPinPad(true)}>
                   <Text style={styles.pinToggleText}>No QR? Enter PIN instead</Text>
                 </TouchableOpacity>

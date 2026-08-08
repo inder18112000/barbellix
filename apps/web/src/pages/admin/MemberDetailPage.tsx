@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
+import { InjuriesCard } from '@/components/common/InjuriesCard'
 import { UserStatusBadge, SubscriptionStatusBadge } from '@/lib/statusBadges'
 import { cn } from '@/lib/utils'
 import type { PaymentEvent } from '@barbellix/shared'
@@ -192,18 +193,29 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
               ) : (
                 <ul className="flex flex-col divide-y divide-border">
                   {progressQuery.data!.plans.map((plan) => (
-                    <li key={plan.id} className="flex items-center justify-between py-2.5 text-sm">
-                      <div className="flex items-center gap-2">
-                        {plan.generatedBy === 'ai' && <Sparkles className="size-4 text-primary" />}
-                        <span className="font-medium">{plan.name}</span>
-                        <Badge variant="outline" className="capitalize">
-                          {plan.goal.replace(/_/g, ' ')}
-                        </Badge>
+                    <li key={plan.id} className="flex flex-col gap-1 py-2.5 text-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {plan.generatedBy === 'ai' && <Sparkles className="size-4 text-primary" />}
+                          <span className="font-medium">{plan.name}</span>
+                          <Badge variant="outline" className="capitalize">
+                            {plan.goal.replace(/_/g, ' ')}
+                          </Badge>
+                          {plan.version > 1 && <Badge variant="secondary">v{plan.version}</Badge>}
+                          {!plan.active && <Badge variant="outline">Superseded</Badge>}
+                        </div>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <ClipboardList className="size-3.5" />
+                          {plan.days.length} day{plan.days.length === 1 ? '' : 's'}
+                        </span>
                       </div>
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <ClipboardList className="size-3.5" />
-                        {plan.days.length} day{plan.days.length === 1 ? '' : 's'}
-                      </span>
+                      {plan.changeSummary && plan.changeSummary.length > 0 && (
+                        <ul className="ml-6 list-disc text-xs text-muted-foreground">
+                          {plan.changeSummary.map((note, i) => (
+                            <li key={i}>{note}</li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -299,6 +311,8 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
               </CardContent>
             </Card>
           </div>
+
+          <InjuriesCard memberId={memberId!} />
         </>
       )}
     </div>

@@ -8,7 +8,15 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
-import { queryKeys, fetchWorkoutPlans, fetchWorkoutSessions, fetchAttendanceSummary, generateWorkoutPlan } from '../../api/queries';
+import {
+  queryKeys,
+  fetchWorkoutPlans,
+  fetchWorkoutSessions,
+  fetchAttendanceSummary,
+  generateWorkoutPlan,
+  fetchCheckInStatus,
+  regeneratePlanFromProgress,
+} from '../../api/queries';
 import type { WorkoutStackParams } from '../../navigation/types';
 import type { WorkoutDay } from '@barbellix/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
@@ -144,14 +152,45 @@ function RecentSummaryCard({ date, duration, sets }: { date: string; duration: n
   );
 }
 
+// ─── Check-in-due banner (SRP) ────────────────────────────────────────────────
+
+function CheckInDueBanner({ onUpdate, isUpdating }: { onUpdate: () => void; isUpdating: boolean }) {
+  return (
+    <View style={[styles.recentCard, glass.card, { marginBottom: 12 }]}>
+      <Text style={{ fontSize: 24 }}>📈</Text>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.recentDate}>Progress check-in due</Text>
+        <Text style={styles.recentStats}>Update your plan based on your recent progress and effort.</Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.regenerateBtn, glass.card, isUpdating && { opacity: 0.6 }]}
+        onPress={onUpdate}
+        disabled={isUpdating}
+      >
+        <Text style={styles.regenerateBtnText}>{isUpdating ? 'Updating…' : '🔄 Update plan'}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export function WorkoutHomeScreen() {
   const navigation = useNavigation<Nav>();
+  const qc = useQueryClient();
   const [showGenerate, setShowGenerate] = useState(false);
   const { data: plans = [], isLoading, isError, refetch } = useQuery({ queryKey: queryKeys.workoutPlans, queryFn: fetchWorkoutPlans });
   const { data: sessions = [] } = useQuery({ queryKey: queryKeys.workoutSessions, queryFn: fetchWorkoutSessions });
   const { data: attendance } = useQuery({ queryKey: queryKeys.attendance.summary, queryFn: fetchAttendanceSummary });
+  const { data: checkInStatus } = useQuery({ queryKey: queryKeys.progress.checkInStatus, queryFn: fetchCheckInStatus });
+
+  const { mutate: updateFromProgress, isPending: isUpdatingPlan } = useMutation({
+    mutationFn: regeneratePlanFromProgress,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.workoutPlans });
+      qc.invalidateQueries({ queryKey: queryKeys.progress.checkInStatus });
+    },
+  });
 
   if (isLoading) return (
     <SafeAreaView style={styles.container}>
@@ -192,6 +231,10 @@ export function WorkoutHomeScreen() {
           </View>
           {plan && <Text style={styles.subtitle}>{plan.name}</Text>}
         </View>
+
+        {plan && checkInStatus?.isDue && (
+          <CheckInDueBanner onUpdate={() => updateFromProgress()} isUpdating={isUpdatingPlan} />
+        )}
 
         {plan ? (
           <>

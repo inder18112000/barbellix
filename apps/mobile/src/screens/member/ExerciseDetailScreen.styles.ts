@@ -23,4 +23,11 @@ export const styles = StyleSheet.create({
   prValue: { ...typography.h2, color: colors.textPrimary },
   prLabel: { ...typography.caption, color: colors.textMuted },
   prNone: { ...typography.body, color: colors.textMuted },
+
+  videoBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    padding: spacing.md, borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary + '18', borderWidth: 1, borderColor: colors.primary + '40',
+  },
+  videoBtnText: { ...typography.body, color: colors.primary, fontWeight: '600', flex: 1 },
 });

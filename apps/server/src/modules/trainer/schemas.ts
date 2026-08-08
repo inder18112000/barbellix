@@ -17,3 +17,16 @@ export const updateMemberInfoSchema = z.object({
   lastName: z.string().min(1).optional(),
   phone: z.string().optional(),
 });
+
+export const assignTrainerSchema = z.object({
+  trainerId: z.string().nullable(),
+});
+
+export const trainerIdParamSchema = z.object({
+  trainerId: z.string(),
+});
+
+export const setTrainerPermissionsSchema = z.object({
+  canManageExerciseLibrary: z.boolean().optional(),
+  canManageMealLibrary: z.boolean().optional(),
+});

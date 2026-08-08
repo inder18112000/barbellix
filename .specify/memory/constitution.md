@@ -1,13 +1,30 @@
 <!--
 Sync Impact Report
-Version change: [TEMPLATE] → 1.0.0 (initial ratification)
-Modified principles: n/a (first concrete adoption; all 5 slots filled from placeholders)
-Added sections: Core Principles (I-V), Technology Constraints, Development Workflow, Governance
+Version change: 1.0.0 → 2.0.0
+Modified principles:
+  - III. Mock-First, Contract-Driven Development → III. Contract-Driven Development (Shared Types, Real Backend)
+    Redefined incompatibly: the mock/MSW layer this principle described has been fully replaced by a
+    real Fastify + Mongoose/MongoDB backend (apps/server) since the 2026-07-19 ratification. The
+    contract chain now runs through packages/shared (Zod schemas + TS types) instead of src/mocks/.
+  - I. Type-Safe TypeScript Everywhere — clarified (not redefined): domain types' single source of
+    truth moved from mobile-only `src/types/` to monorepo-wide `packages/shared/src/types.ts`,
+    matching the same real-backend shift as Principle III.
+  - IV. Consistent Design System — clarified (not redefined): disambiguated the theme file paths
+    now that this is a 3-app monorepo (`apps/mobile/src/theme/*` vs. `apps/web/src/index.css`),
+    named the shared dark palette both apps now use, and pointed at the new canonical brand
+    reference `docs/brand/Brand-Guide.html`.
+Modified sections:
+  - Technology Constraints — removed MSW; added the real backend stack (Fastify, Mongoose/MongoDB,
+    JWT, Stripe, packages/shared) alongside the existing client-side stack
+  - Development Workflow — replaced dangling references to README sections that no longer exist
+    ("SOLID Principles Applied", "Adding a new API endpoint", "Switching a stub to a real screen")
+    with the current equivalent workflow
+Added sections: none
 Removed sections: none
 Templates requiring updates:
-  ✅ plan-template.md — Constitution Check gate is generic ("[Gates determined based on constitution file]"), no edit needed
+  ✅ plan-template.md — Constitution Check gate is generic, no edit needed
   ✅ spec-template.md — no constitution-specific references, no edit needed
-  ✅ tasks-template.md — tests already marked OPTIONAL by default, consistent with Principle III's deferred testing gate
+  ✅ tasks-template.md — tests still OPTIONAL by default, still consistent with Principle III's deferred testing gate
   ✅ checklist-template.md — generic, no edit needed
 Follow-up TODOs: none
 -->
@@ -20,10 +37,11 @@ Follow-up TODOs: none
 All code MUST pass `tsc` under `strict: true` (see `tsconfig.json`). The `any` type
 MUST NOT be used except when interfacing with an untyped third-party module, and
 such uses MUST be isolated behind a typed wrapper. Domain types (User, Exercise,
-Session, etc.) live in `src/types/` as the single source of truth — screens,
-queries, and mock handlers MUST import from there rather than redeclaring shapes.
-Path aliases (`@/`, `@components/`, `@screens/`, etc.) MUST be used instead of
-relative `../../..` chains.
+Session, etc.) live in `packages/shared/src/types.ts` as the single source of
+truth across all three apps — server routes, client queries, and screens MUST
+import from there rather than redeclaring shapes. Path aliases (`@/`,
+`@components/`, `@screens/`, etc.) MUST be used instead of relative `../../..`
+chains.
 
 **Rationale**: This is a solo-maintained cross-platform app; the type checker is
 the primary safety net that a larger team's code review would otherwise provide.
@@ -33,42 +51,60 @@ Every component and hook MUST have one clear responsibility. Screens compose
 smaller building blocks rather than growing monolithic; shared behavior (e.g.
 `ScreenShell`, `PlaceholderScreen`) is extended through composition, not modified
 per-use. New screens or API endpoints MUST be additive — existing contracts
-(query keys, fetchers, mutators, mock handlers) are extended, not restructured,
-unless the change is the explicit goal of the work. Screens MUST consume data via
-TanStack Query hooks / custom hooks and MUST NOT call `fetch()` or MSW directly.
+(query keys, fetchers, mutators, Fastify route handlers) are extended, not
+restructured, unless the change is the explicit goal of the work. Screens MUST
+consume data via TanStack Query hooks / custom hooks and MUST NOT call
+`fetch()` directly.
 
-**Rationale**: Explicitly established as a project convention in `README.md`
-("SOLID Principles Applied") — keeping it codified here prevents drift as the
-screen count grows.
+**Rationale**: Keeps each layer (screen, hook, query function, route handler)
+independently testable and swappable as the screen and endpoint count grows
+across three role surfaces (member/trainer/admin).
 
-### III. Mock-First, Contract-Driven Development
-New features start by defining the data contract, in this order: (1) types in
-`src/types/`, (2) mock data in `src/mocks/data.ts`, (3) an MSW handler in
-`src/mocks/handlers/index.ts`, (4) a query/mutation function + query key in
-`src/api/queries.ts`, (5) the screen. This lets UI work proceed without a live
-backend and keeps the eventual real API swap to a single point of change
-(`BASE_URL` in `src/api/client.ts`).
+### III. Contract-Driven Development (Shared Types, Real Backend)
+New features start by defining the data contract, in this order: (1) the Zod
+schema + TypeScript type in `packages/shared/src` (`schemas.ts`/`types.ts`),
+(2) rebuild the shared package (`npm run build --workspace=@barbellix/shared`),
+(3) the real, Zod-validated, role-guarded Fastify route in `apps/server/src`,
+(4) a query/mutation function + query key in the consuming client's API layer
+(`apps/mobile/src/api/queries.ts` or `apps/web/src/api/queries.ts`), (5) the
+screen/page. `packages/shared` is the single source of truth for these shapes
+— apps/server, apps/web, and apps/mobile all import from it rather than
+redeclaring contracts locally.
 
 Formal automated testing (unit/integration/E2E) is NOT currently required as a
-merge gate — no test runner is installed yet and the project is in an active
-UI-first build-out phase. This is a deliberate, temporary state: revisit once
-core member/trainer/admin flows stabilize, and prefer adding tests for pure
-business logic (validation, calculations, query/mutation functions) first.
+merge gate — `apps/server` has vitest installed (`npm test`) but zero test
+files exist yet anywhere in the monorepo. This is a deliberate, temporary
+state: revisit once core member/trainer/admin flows stabilize, and prefer
+adding tests for pure business logic (validation, calculations, the
+grace-period/access-block check, query/mutation functions) first.
 
-**Rationale**: Matches the documented "UI-first phase" workflow and the existing
-MSW-backed mock layer; avoids inventing a testing mandate the project isn't
-resourced to enforce yet, while leaving a clear trigger for when to add one.
+**Rationale**: The mock-first/MSW phase this principle originally described
+ended once `apps/server` (Fastify + Mongoose/MongoDB, real JWT auth, Stripe
+billing) replaced the mock layer entirely — codifying the current real
+contract chain here prevents drift back toward ad hoc, per-app type
+duplication now that three consumers (server, web, mobile) share one
+contract surface.
 
 ### IV. Consistent Design System
 All visual styling (colors, spacing, typography, radii, shadows, glow, gradients,
-glassmorphism, pulse/shimmer animation config) MUST come from `src/theme/index.ts`
-and `src/theme/effects.ts`. Hard-coded hex colors, magic spacing numbers, or
-inline shadow/gradient definitions in screen or component files are NOT allowed —
-extend the theme module instead. Any new reusable visual effect is added to
-`effects.ts` so it stays discoverable and reusable across screens.
+glassmorphism, pulse/shimmer animation config) MUST come from the shared token
+layer for that app — `apps/mobile/src/theme/index.ts` +
+`apps/mobile/src/theme/effects.ts` on mobile, the CSS custom properties in
+`apps/web/src/index.css` on web. Hard-coded hex colors, magic spacing numbers,
+or inline shadow/gradient definitions in screen or component files are NOT
+allowed — extend the token layer instead. Any new reusable visual effect is
+added to `effects.ts` (mobile) so it stays discoverable and reusable across
+screens. The brand palette itself (Obsidian Black / Titanium Silver / Electric
+Volt) is one deliberate dark identity shared by both apps, not a per-app
+choice or a light/dark toggle. The brand mark (bolt-sliced "B" monogram),
+palette swatches, and every platform variant (favicon, app icon, adaptive
+icon, notification icon, splash) are canonically documented in
+`docs/brand/Brand-Guide.html` — open it in a browser before touching
+`BrandMark.tsx` (web or mobile), `favicon.svg`, or any mobile icon asset, and
+keep it in sync if that construction ever changes.
 
-**Rationale**: Keeps the app's distinct visual identity (glassmorphism, neon
-glows) coherent across member/trainer/admin surfaces as more screens are built
+**Rationale**: Keeps the app's distinct visual identity coherent across
+member/trainer/admin surfaces and across mobile/web as more screens are built
 by a single maintainer over time, and avoids one-off styling that's hard to
 retheme later.
 
@@ -87,23 +123,33 @@ first-class (`Press a/i/w`); silently breaking one platform undermines the
 ## Technology Constraints
 
 The stack is fixed unless a change is explicitly proposed and the constitution
-is amended: Expo + React Native (0.81) for the app shell, TanStack Query for
-server-state, Zustand for client-state, React Navigation for routing, Zod +
-react-hook-form for form validation, MSW for API mocking during UI-first
-development, and `react-native-mmkv` / `expo-secure-store` for local
-persistence. New dependencies that duplicate an already-adopted tool's purpose
-(e.g. a second state manager, a second charting library) require justification
-in the relevant `plan.md`'s Complexity Tracking section.
+is amended.
+
+- **apps/server** (single real backend): Fastify 5, Mongoose 8 / MongoDB, Zod
+  request validation, JWT access+refresh auth, Stripe for billing.
+- **apps/mobile**: Expo + React Native (0.81), TanStack Query for server-state,
+  Zustand for client-state, React Navigation for routing, Zod +
+  react-hook-form for form validation, `react-native-mmkv` / `expo-secure-store`
+  for local persistence.
+- **apps/web**: Vite + React, TanStack Query, MobX for local UI state,
+  Tailwind + shadcn/ui.
+- **packages/shared**: the only place domain types and Zod schemas are
+  defined; all three apps consume it, none redeclare it.
+
+New dependencies that duplicate an already-adopted tool's purpose (e.g. a
+second state manager, a second charting library) require justification in the
+relevant `plan.md`'s Complexity Tracking section.
 
 ## Development Workflow
 
-`npm run lint` (ESLint over `src/**/*.{ts,tsx}`) MUST pass before a change is
-considered done. Placeholder screens (`PlaceholderScreen`) are the expected
-stub for unbuilt UI — replacing one is a self-contained task per the README's
-"Switching a stub to a real screen" workflow and MUST NOT bundle unrelated
-navigation or type changes. Adding an API endpoint MUST follow the 4-step
-sequence in `README.md` ("Adding a new API endpoint") so mocks, types, and
-query layer stay in sync.
+`npm run lint` (runs lint across every workspace that defines a `lint` script)
+MUST pass before a change is considered done. Placeholder screens
+(`PlaceholderScreen`) are the expected stub for unbuilt mobile UI — replacing
+one is a self-contained task and MUST NOT bundle unrelated navigation or type
+changes. Adding an API endpoint MUST follow the 5-step contract chain in
+Principle III (shared schema → rebuild shared → route → client query function
+→ screen) so `packages/shared`, `apps/server`, and the consuming client stay
+in sync.
 
 ## Governance
 
@@ -119,4 +165,4 @@ changed is preserved. Complexity or deviation from a principle MUST be justified
 in the relevant `plan.md` Complexity Tracking table rather than silently
 ignored.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-07-19
+**Version**: 2.0.0 | **Ratified**: 2026-07-19 | **Last Amended**: 2026-07-30

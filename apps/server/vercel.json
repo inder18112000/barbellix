@@ -1,0 +1,7 @@
+{
+  "installCommand": "cd ../.. && npm ci",
+  "buildCommand": "cd ../.. && npm run build --workspace=@barbellix/shared",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api" }
+  ]
+}

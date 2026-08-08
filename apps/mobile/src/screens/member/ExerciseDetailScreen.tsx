@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, ScrollView, Animated } from 'react-native';
+import { View, Text, ScrollView, Animated, TouchableOpacity, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
@@ -107,6 +108,18 @@ export function ExerciseDetailScreen() {
               <Text style={styles.instructionsText}>{exercise.instructions}</Text>
             </View>
           </View>
+
+          {/* Video demonstration */}
+          {exercise.mediaType === 'video' && exercise.mediaUrl && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Video Demonstration</Text>
+              <TouchableOpacity style={styles.videoBtn} onPress={() => Linking.openURL(exercise.mediaUrl!)}>
+                <Ionicons name="play-circle" size={22} color={colors.primary} />
+                <Text style={styles.videoBtnText}>Watch video</Text>
+                <Ionicons name="arrow-forward" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
         </Animated.ScrollView>
       </SafeAreaView>
     </ScreenShell>

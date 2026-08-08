@@ -60,6 +60,38 @@ export const styles = StyleSheet.create({
   genderChipText: { ...typography.label, color: colors.textSecondary },
   genderChipTextActive: { color: colors.accent },
 
+  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  chip: {
+    paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border,
+  },
+  chipActive: { borderColor: colors.primary, backgroundColor: colors.primary + '20' },
+  chipText: { ...typography.label, color: colors.textSecondary, textTransform: 'none' },
+  chipTextActive: { color: colors.primary },
+
+  injuryItem: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    padding: spacing.md, borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceElevated, marginBottom: spacing.sm,
+  },
+  injuryItemText: { flex: 1 },
+  injuryItemTitle: { ...typography.body, color: colors.textPrimary, fontWeight: '600' },
+  injuryItemMeta: { ...typography.caption, color: colors.textMuted, marginTop: 2, textTransform: 'capitalize' },
+  removeBtn: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  removeBtnText: { color: colors.error, fontSize: 18 },
+  emptyText: { ...typography.body, color: colors.textMuted, marginBottom: spacing.md },
+
+  addInjuryToggle: {
+    alignItems: 'center', justifyContent: 'center', padding: spacing.md,
+    borderRadius: borderRadius.md, borderWidth: 1.5, borderColor: colors.primary,
+    borderStyle: 'dashed', marginBottom: spacing.md,
+  },
+  addInjuryToggleText: { ...typography.body, color: colors.primary, fontWeight: '600' },
+  addInjuryForm: {
+    padding: spacing.md, borderRadius: borderRadius.lg,
+    backgroundColor: colors.surfaceElevated, marginBottom: spacing.md,
+  },
+
   saveBtn: { marginTop: spacing.xl },
 
   successToast: {

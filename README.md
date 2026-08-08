@@ -71,6 +71,14 @@ everything except creating a real Checkout session — set `STRIPE_SECRET_KEY` /
 | `trainer` | web | manages assigned members, builds/assigns workout plans, messaging |
 | `admin` / `superadmin` | web | "gym owner" — everything trainers can do, plus billing, branch settings, member status |
 
+## Brand
+
+The bolt-sliced "B" monogram, the Obsidian Black / Titanium Silver / Electric Volt palette, and
+every platform variant (favicon, app icon, adaptive icon, notification icon, splash) are
+documented in [`docs/brand/Brand-Guide.html`](docs/brand/Brand-Guide.html) — open it in a browser.
+`BrandMark.tsx` (in both `apps/web` and `apps/mobile`) and `apps/web/public/favicon.svg` render
+this exact construction; treat the guide as canonical before changing any of them.
+
 ## Development notes
 
 - Workspaces are npm workspaces (not pnpm — Expo/Metro's module resolution doesn't play well

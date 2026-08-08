@@ -17,6 +17,7 @@ export interface PlannedExerciseSubdoc {
 
 export interface WorkoutDaySubdoc {
   dayLabel: string;
+  dayOfWeek?: number;
   exercises: PlannedExerciseSubdoc[];
 }
 
@@ -30,6 +31,9 @@ export interface WorkoutPlanDocument {
   active: boolean;
   days: WorkoutDaySubdoc[];
   createdAt: Date;
+  version: number;
+  previousPlanId?: Types.ObjectId;
+  changeSummary?: string[];
 }
 
 const plannedExerciseSchema = new Schema<PlannedExerciseSubdoc>(
@@ -46,6 +50,7 @@ const plannedExerciseSchema = new Schema<PlannedExerciseSubdoc>(
 const workoutDaySchema = new Schema<WorkoutDaySubdoc>(
   {
     dayLabel: { type: String, required: true },
+    dayOfWeek: { type: Number, min: 0, max: 6 },
     exercises: { type: [plannedExerciseSchema], default: [] },
   },
   { _id: false },
@@ -60,6 +65,9 @@ const workoutPlanSchema = new Schema<WorkoutPlanDocument>(
     generatedBy: { type: String, enum: GENERATED_BY, required: true },
     active: { type: Boolean, required: true, default: true },
     days: { type: [workoutDaySchema], default: [] },
+    version: { type: Number, required: true, default: 1 },
+    previousPlanId: { type: Schema.Types.ObjectId, ref: 'WorkoutPlan' },
+    changeSummary: { type: [String] },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

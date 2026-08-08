@@ -23,6 +23,11 @@ import type {
   ClassTemplate,
   BookingWithSession,
   NotificationPreferences,
+  CheckInStatus,
+  MuscleGroup,
+  InjuryCondition,
+  InjurySeverity,
+  GenerateFullPlanResult,
 } from '@barbellix/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -39,6 +44,7 @@ export const queryKeys = {
   progress: {
     metrics: ['progress', 'metrics'] as const,
     prs: ['progress', 'prs'] as const,
+    checkInStatus: ['progress', 'check-in-status'] as const,
   },
   ai: {
     recommendations: ['ai', 'recommendations'] as const,
@@ -87,6 +93,14 @@ export const fetchWorkoutPlans = () =>
 export const generateWorkoutPlan = (goal: string, daysPerWeek: number) =>
   api.post<WorkoutPlan>('/ai/coach/generate-plan', { goal, daysPerWeek });
 
+/** Adjusts the member's *existing* active plan (sets/reps volume only) based on their two most
+ * recent progress check-ins - distinct from generateWorkoutPlan above, which replaces the plan
+ * with a brand new one built from a fresh goal/day-count prompt. */
+export const regeneratePlanFromProgress = () =>
+  api.post<WorkoutPlan>('/ai/coach/regenerate-plan', {});
+
+export const fetchCheckInStatus = () => api.get<CheckInStatus>('/progress/check-in-status');
+
 export const fetchWorkoutPlan = (id: string) =>
   api.get<WorkoutPlan>(`/workout-plans/${id}`);
 
@@ -130,6 +144,18 @@ export const acceptRecommendation = (id: string) =>
 
 export const updateProfile = (profile: Partial<User['profile']>) =>
   api.put<User>('/me/profile', profile);
+
+export const addInjury = (injury: { bodyPart: MuscleGroup; condition?: InjuryCondition; severity: InjurySeverity; note?: string }) =>
+  api.post<User>('/me/injuries', injury);
+
+export const removeInjury = (id: string) => api.delete<User>(`/me/injuries/${id}`);
+
+/** Runs the workout + diet AI generators together off the member's already-saved profile
+ * (goal/gymAccess/dietPreference/injuries) - see the wizard screens in screens/member/AIWizard*.
+ * Uses Promise.allSettled server-side, so a partial result (one plan created, the other errored)
+ * is a success response, not a thrown error - check workoutPlanError/dietPlanError on the result. */
+export const generateFullPlan = (goal: string, daysPerWeek: number) =>
+  api.post<GenerateFullPlanResult>('/ai/coach/generate-full-plan', { goal, daysPerWeek });
 
 export const fetchTrainerMembers = () =>
   api.get<TrainerMemberSummary[]>('/trainer/members');
