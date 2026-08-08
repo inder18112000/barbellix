@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme';
 import { glass, glow } from '../../theme/effects';
 import { Card } from '../../components/common/Card';
@@ -22,6 +23,8 @@ import { format } from 'date-fns';
 import { styles } from './HomeScreen.styles';
 
 const { width } = Dimensions.get('window');
+
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
 
 // ─── Pulse Ring (SRP) ────────────────────────────────────────────────────────
 
@@ -54,7 +57,7 @@ function StreakBadge({ streak }: { streak: number }) {
     <Animated.View style={[styles.streakCard, glass.cardStrong, { transform: [{ scale: bounceAnim }] }]}>
       <View style={styles.streakInner}>
         <PulseRing color={colors.accent} />
-        <Text style={styles.streakEmoji}>🔥</Text>
+        <Ionicons name="flame" size={26} color={colors.accent} />
       </View>
       <Text style={styles.streakCount}>{streak}</Text>
       <Text style={styles.streakLabel}>Day Streak</Text>
@@ -64,10 +67,14 @@ function StreakBadge({ streak }: { streak: number }) {
 
 // ─── Stat Card (SRP) ─────────────────────────────────────────────────────────
 
-function StatCard({ label, value, unit, emoji }: { label: string; value: string | number; unit?: string; emoji: string }) {
+function StatCard({
+  label, value, unit, icon, iconColor = colors.primary,
+}: { label: string; value: string | number; unit?: string; icon: IoniconName; iconColor?: string }) {
   return (
     <View style={[styles.statCard, glass.card]}>
-      <Text style={styles.statEmoji}>{emoji}</Text>
+      <View style={[styles.statIconBadge, { backgroundColor: iconColor + '18' }]}>
+        <Ionicons name={icon} size={16} color={iconColor} />
+      </View>
       <Text style={styles.statValue}>{value}{unit && <Text style={styles.statUnit}> {unit}</Text>}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
@@ -81,16 +88,17 @@ function PerformanceMetricsSection({
   prsThisMonth, avgRpe, checkInsThisMonth, weightTrendKg,
 }: { prsThisMonth: number; avgRpe: number | null; checkInsThisMonth: number; weightTrendKg: number | null }) {
   const trendLabel = weightTrendKg === null ? '—' : `${weightTrendKg > 0 ? '+' : ''}${weightTrendKg.toFixed(1)}`;
-  const trendEmoji = weightTrendKg === null ? '⚖️' : weightTrendKg < 0 ? '📉' : weightTrendKg > 0 ? '📈' : '⚖️';
+  const trendIcon: IoniconName = weightTrendKg === null || weightTrendKg === 0 ? 'remove-outline' : weightTrendKg < 0 ? 'trending-down-outline' : 'trending-up-outline';
+  const trendColor = weightTrendKg === null || weightTrendKg === 0 ? colors.textMuted : weightTrendKg < 0 ? colors.success : colors.warning;
 
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Performance</Text>
       <View style={styles.performanceGrid}>
-        <View style={styles.performanceCell}><StatCard label="PRs this month" value={prsThisMonth} emoji="🥇" /></View>
-        <View style={styles.performanceCell}><StatCard label="Avg RPE" value={avgRpe !== null ? avgRpe.toFixed(1) : '—'} emoji="🔥" /></View>
-        <View style={styles.performanceCell}><StatCard label="Check-ins this month" value={checkInsThisMonth} emoji="📅" /></View>
-        <View style={styles.performanceCell}><StatCard label="Weight trend" value={trendLabel} unit={weightTrendKg !== null ? 'kg' : undefined} emoji={trendEmoji} /></View>
+        <View style={styles.performanceCell}><StatCard label="PRs this month" value={prsThisMonth} icon="trophy-outline" iconColor={colors.warning} /></View>
+        <View style={styles.performanceCell}><StatCard label="Avg RPE" value={avgRpe !== null ? avgRpe.toFixed(1) : '—'} icon="flame-outline" iconColor={colors.accent} /></View>
+        <View style={styles.performanceCell}><StatCard label="Check-ins this month" value={checkInsThisMonth} icon="checkmark-circle-outline" iconColor={colors.success} /></View>
+        <View style={styles.performanceCell}><StatCard label="Weight trend" value={trendLabel} unit={weightTrendKg !== null ? 'kg' : undefined} icon={trendIcon} iconColor={trendColor} /></View>
       </View>
     </View>
   );
@@ -110,13 +118,17 @@ function AICard({ title, description, onAccept }: { title: string; description: 
   return (
     <Animated.View style={[styles.aiCard, glass.cardStrong, glow.primary, { transform: [{ translateY: slideIn }], opacity: fadeIn }]}>
       <View style={styles.aiCardHeader}>
-        <Text style={styles.aiChip}>✨ AI Coach</Text>
+        <View style={styles.aiChip}>
+          <Ionicons name="sparkles-outline" size={12} color={colors.primary} />
+          <Text style={styles.aiChipText}>AI Coach</Text>
+        </View>
       </View>
       <Text style={styles.aiCardTitle}>{title}</Text>
       <Text style={styles.aiCardDesc}>{description}</Text>
       <View style={styles.aiCardActions}>
         <TouchableOpacity style={styles.aiAcceptBtn} onPress={onAccept}>
-          <Text style={styles.aiAcceptText}>Start Now →</Text>
+          <Text style={styles.aiAcceptText}>Start Now</Text>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.aiSkipBtn}>
           <Text style={styles.aiSkipText}>Skip</Text>
@@ -129,8 +141,8 @@ function AICard({ title, description, onAccept }: { title: string; description: 
 // ─── Explore Card (SRP) - icon badge + title + one-line description + chevron affordance ──────
 
 function ExploreCard({
-  emoji, title, description, onPress, accentColor,
-}: { emoji: string; title: string; description: string; onPress: () => void; accentColor: string }) {
+  icon, title, description, onPress, accentColor,
+}: { icon: IoniconName; title: string; description: string; onPress: () => void; accentColor: string }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const handlePress = () => {
     Animated.sequence([
@@ -144,14 +156,14 @@ function ExploreCard({
       <TouchableOpacity style={[styles.exploreCard, glass.card, { borderColor: accentColor + '35' }]} onPress={handlePress} activeOpacity={0.85}>
         <View>
           <View style={[styles.exploreIconBadge, { backgroundColor: accentColor + '20' }]}>
-            <Text style={styles.exploreIconEmoji}>{emoji}</Text>
+            <Ionicons name={icon} size={18} color={accentColor} />
           </View>
           <Text style={styles.exploreTitle}>{title}</Text>
           <Text style={styles.exploreDesc} numberOfLines={2}>{description}</Text>
         </View>
         <View style={styles.exploreFooterRow}>
           <View style={[styles.exploreChevronBtn, { backgroundColor: accentColor + '18' }]}>
-            <Text style={[styles.exploreChevronText, { color: accentColor }]}>→</Text>
+            <Ionicons name="arrow-forward" size={12} color={accentColor} />
           </View>
         </View>
       </TouchableOpacity>
@@ -216,7 +228,9 @@ function ProfileCard({ onViewProfile }: { onViewProfile: () => void }) {
           initials={initials}
           onPress={handlePickPhoto}
           disabled={pickingPhoto}
-          badge={<Text style={{ fontSize: 10 }}>{pickingPhoto ? '⏳' : '📷'}</Text>}
+          badge={pickingPhoto
+            ? <Ionicons name="hourglass-outline" size={11} color={colors.textSecondary} />
+            : <Ionicons name="camera" size={11} color={colors.textSecondary} />}
         />
         <View style={styles.profileTextBlock}>
           <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
@@ -246,14 +260,14 @@ function ProfileCard({ onViewProfile }: { onViewProfile: () => void }) {
             else setEditing(true);
           }}
         >
-          <Text style={{ fontSize: 16 }}>{editing ? '✓' : '✏️'}</Text>
+          <Ionicons name={editing ? 'checkmark' : 'pencil'} size={16} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
       <View style={styles.profileBottomRow}>
         <TouchableOpacity style={styles.viewProfileBtn} onPress={onViewProfile} activeOpacity={0.85}>
           <Text style={styles.viewProfileBtnText}>VIEW PROFILE</Text>
         </TouchableOpacity>
-        <Text style={styles.profileChevron}>›</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
       </View>
     </Card>
   );
@@ -265,12 +279,14 @@ function ProfileCard({ onViewProfile }: { onViewProfile: () => void }) {
 function AIWizardCTA({ onPress }: { onPress: () => void }) {
   return (
     <TouchableOpacity style={[styles.wizardCard, glass.cardStrong, glow.primary]} onPress={onPress} activeOpacity={0.88}>
-      <Text style={styles.wizardEmoji}>🎯</Text>
+      <View style={styles.wizardIconBadge}>
+        <Ionicons name="flag" size={20} color={colors.onPrimary} />
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.wizardTitle}>Get Your Personalized AI Plan</Text>
         <Text style={styles.wizardDesc}>Set your goal, and let AI build your workout + diet plan</Text>
       </View>
-      <Text style={styles.wizardArrow}>→</Text>
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
     </TouchableOpacity>
   );
 }
@@ -342,7 +358,7 @@ export function HomeScreen() {
             <View style={styles.nameUnderline} />
           </View>
           <TouchableOpacity style={[styles.notifBtn, glass.card]}>
-            <Text style={{ fontSize: 20 }}>🔔</Text>
+            <Ionicons name="notifications-outline" size={20} color={colors.textPrimary} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -358,8 +374,8 @@ export function HomeScreen() {
         <View style={styles.statsRow}>
           <StreakBadge streak={attendance?.streak ?? 0} />
           <View style={styles.statsColumn}>
-            <StatCard label="This Week" value={thisWeekSessions} unit="sessions" emoji="📅" />
-            <StatCard label="Volume" value={Math.round(totalVolume / 1000)} unit="t" emoji="⚖️" />
+            <StatCard label="This Week" value={thisWeekSessions} unit="sessions" icon="calendar-outline" iconColor={colors.info} />
+            <StatCard label="Volume" value={Math.round(totalVolume / 1000)} unit="t" icon="barbell-outline" iconColor={colors.primary} />
           </View>
         </View>
 
@@ -387,27 +403,27 @@ export function HomeScreen() {
           <Text style={styles.sectionTitle}>Explore</Text>
           <View style={styles.exploreGrid}>
             <ExploreCard
-              emoji="🏋️" title="Workout" description="Plan your workout"
+              icon="barbell-outline" title="Workout" description="Plan your workout"
               onPress={() => parent?.navigate('Workout')} accentColor={colors.primary}
             />
             <ExploreCard
-              emoji="🥗" title="Diet" description="Track your nutrition"
+              icon="nutrition-outline" title="Diet" description="Track your nutrition"
               onPress={() => parent?.navigate('Progress', { screen: 'Nutrition' })} accentColor={colors.success}
             />
             <ExploreCard
-              emoji="⚖️" title="Weight Tracker" description="Track your progress"
+              icon="analytics-outline" title="Weight Tracker" description="Track your progress"
               onPress={() => parent?.navigate('Progress', { screen: 'BodyMetrics' })} accentColor="#FFB347"
             />
             <ExploreCard
-              emoji="📊" title="Progress Report" description="View your growth"
+              icon="stats-chart-outline" title="Progress Report" description="View your growth"
               onPress={() => parent?.navigate('Progress')} accentColor={colors.accent}
             />
             <ExploreCard
-              emoji="🤝" title="Sponsorship" description="Explore opportunities"
+              icon="ribbon-outline" title="Sponsorship" description="Explore opportunities"
               onPress={() => parent?.navigate('Profile', { screen: 'Sponsorship' })} accentColor="#AF52DE"
             />
             <ExploreCard
-              emoji="🧘" title="Classes" description="Book your sessions"
+              icon="people-outline" title="Classes" description="Book your sessions"
               onPress={() => navigation.navigate('ClassesHome')} accentColor="#22A5AC"
             />
           </View>

@@ -56,10 +56,12 @@ export const styles = StyleSheet.create({
     padding: spacing.md, borderRadius: borderRadius.xl,
     marginBottom: spacing.lg,
   },
-  wizardEmoji: { fontSize: 32 },
+  wizardIconBadge: {
+    width: 44, height: 44, borderRadius: borderRadius.md,
+    backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center',
+  },
   wizardTitle: { ...typography.h4, color: colors.textPrimary },
   wizardDesc: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
-  wizardArrow: { ...typography.h3, color: colors.primary },
 
   datePill: {
     alignSelf: 'flex-start',
@@ -86,7 +88,6 @@ export const styles = StyleSheet.create({
     position: 'absolute', width: 56, height: 56,
     borderRadius: 28, borderWidth: 2,
   },
-  streakEmoji: { fontSize: 28 },
   streakCount: { ...typography.h2, color: colors.primary },
   streakLabel: { ...typography.caption, color: colors.textSecondary },
 
@@ -95,7 +96,10 @@ export const styles = StyleSheet.create({
     flex: 1, padding: spacing.md, borderRadius: borderRadius.lg,
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
   },
-  statEmoji: { fontSize: 20 },
+  statIconBadge: {
+    width: 30, height: 30, borderRadius: borderRadius.sm,
+    alignItems: 'center', justifyContent: 'center',
+  },
   statValue: { ...typography.h4, color: colors.textPrimary },
   statUnit: { ...typography.caption, color: colors.textSecondary },
   statLabel: { ...typography.caption, color: colors.textMuted },
@@ -109,21 +113,21 @@ export const styles = StyleSheet.create({
   aiCard: { padding: spacing.lg, borderRadius: borderRadius.xl },
   aiCardHeader: { marginBottom: spacing.sm },
   aiChip: {
-    ...typography.label,
-    color: colors.primary,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: colors.primary + '18',
     paddingHorizontal: spacing.sm, paddingVertical: 4,
     borderRadius: borderRadius.full,
     alignSelf: 'flex-start',
-    overflow: 'hidden',
   },
+  aiChipText: { ...typography.label, color: colors.primary, fontWeight: '700' },
   aiCardTitle: { ...typography.h4, color: colors.textPrimary, marginBottom: spacing.xs },
   aiCardDesc: { ...typography.body, color: colors.textSecondary, lineHeight: 22, marginBottom: spacing.md },
   aiCardActions: { flexDirection: 'row', gap: spacing.sm },
   aiAcceptBtn: {
-    flex: 1, backgroundColor: colors.primary,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: colors.primary,
     paddingVertical: spacing.sm, paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md, alignItems: 'center',
+    borderRadius: borderRadius.md,
   },
   aiAcceptText: { ...typography.label, color: '#fff', fontWeight: '700' },
   aiSkipBtn: { paddingHorizontal: spacing.md, justifyContent: 'center' },
@@ -139,7 +143,6 @@ export const styles = StyleSheet.create({
     width: 38, height: 38, borderRadius: borderRadius.md,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs,
   },
-  exploreIconEmoji: { fontSize: 18 },
   exploreTitle: { ...typography.label, color: colors.textPrimary, fontWeight: '700', fontSize: 12.5 },
   exploreDesc: { ...typography.caption, color: colors.textMuted, fontSize: 10.5, lineHeight: 13, marginTop: 2 },
   exploreFooterRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.xs },
@@ -147,7 +150,6 @@ export const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11,
     alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceElevated,
   },
-  exploreChevronText: { color: colors.textSecondary, fontSize: 12, fontWeight: '700' },
 
   sessionCard: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
