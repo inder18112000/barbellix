@@ -154,6 +154,9 @@ export const setTrainerReportsTo = (trainerId: string, reportsToRole: 'admin' | 
 export const generateLoginPairingToken = (memberId: string) =>
   api.post<LoginPairingToken>(`/trainer/members/${memberId}/login-pairing`, {})
 
+export const generateTrainerLoginPairingToken = (trainerId: string) =>
+  api.post<LoginPairingToken>(`/admin/trainers/${trainerId}/login-pairing`, {})
+
 // ─── Sponsors ─────────────────────────────────────────────────────────────────
 
 export const fetchAllSponsors = () => api.get<Sponsor[]>('/admin/sponsors')

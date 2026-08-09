@@ -45,6 +45,23 @@ export async function createRecord(input: {
   return AttendanceRecordModel.create(input);
 }
 
+/** A record is "open" (still at the gym, ready to be closed by a second scan) if it has no
+ * checkOutAt yet and was checked in within the branch's autoCheckoutAfterMins window - reuses
+ * that existing setting as the toggle window instead of introducing a separate one. */
+export async function findOpenRecord(userId: string, branchId: string, sinceMinutesAgo: number) {
+  const cutoff = new Date(Date.now() - sinceMinutesAgo * 60_000);
+  return AttendanceRecordModel.findOne({
+    userId,
+    branchId,
+    checkedInAt: { $gte: cutoff },
+    checkOutAt: { $exists: false },
+  }).sort({ checkedInAt: -1 });
+}
+
+export async function setCheckOut(recordId: string) {
+  return AttendanceRecordModel.findByIdAndUpdate(recordId, { checkOutAt: new Date() }, { new: true });
+}
+
 export async function findHistory(userId: string) {
   return AttendanceRecordModel.find({ userId }).sort({ checkedInAt: -1 });
 }

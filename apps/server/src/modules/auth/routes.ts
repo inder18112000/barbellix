@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema } from '@barbellix/shared';
+import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema, loginWithGoogleSchema } from '@barbellix/shared';
 import * as authService from './service.js';
 
 const refreshBodySchema = z.object({ refreshToken: z.string().min(1) });
@@ -26,6 +26,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
     { schema: { body: loginSchema }, config: { rateLimit: { max: 10, timeWindow: '15 minutes' } } },
     async (request) => {
       return authService.login(fastify, request.body);
+    },
+  );
+
+  // Same IP-keyed rate limit as /login - a Google ID token still needs to be checked against
+  // GOOGLE_CLIENT_ID before we know who's asking, so the same credential-stuffing-style concern
+  // applies even though the "password" here is Google's, not ours.
+  app.post(
+    '/google',
+    { schema: { body: loginWithGoogleSchema }, config: { rateLimit: { max: 10, timeWindow: '15 minutes' } } },
+    async (request) => {
+      return authService.loginWithGoogle(fastify, request.body.idToken);
     },
   );
 

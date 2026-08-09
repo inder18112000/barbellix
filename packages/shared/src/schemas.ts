@@ -25,6 +25,14 @@ export const forgotPasswordSchema = z.object({
 });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
+/** The idToken is a Google-signed JWT from the client-side Google Sign-In SDK (web) or
+ * expo-auth-session (mobile) - the server verifies its signature itself (see
+ * lib/googleAuth.ts), so nothing else needs to be trusted from the client here. */
+export const loginWithGoogleSchema = z.object({
+  idToken: z.string().min(1, 'Missing Google ID token'),
+});
+export type LoginWithGoogleInput = z.infer<typeof loginWithGoogleSchema>;
+
 export const bodyStatsSchema = z.object({
   heightCm: z.coerce.number().min(100, 'Enter a valid height').max(250, 'Enter a valid height'),
   weightKg: z.coerce.number().min(30, 'Enter a valid weight').max(300, 'Enter a valid weight'),

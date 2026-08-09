@@ -183,6 +183,21 @@ export async function setTrainerPermissions(
   return toDomainUser(updated);
 }
 
+/** Same QR device-pairing mechanism as generateLoginPairingToken() above, for a trainer account
+ * instead of a member - and the same reportsToRole gating as setTrainerPermissions(): an admin
+ * can only pair a trainer's device for trainers who report to them. */
+export async function generateTrainerLoginPairingToken(tenantId: string, trainerId: string, requesterRole: UserRole) {
+  const trainer = await repo.findTrainerByIdInTenant(trainerId, tenantId);
+  if (!trainer) throw new NotFoundError('Trainer not found');
+
+  if (trainer.reportsToRole === 'superadmin' && requesterRole !== 'superadmin') {
+    throw new ForbiddenError('This trainer reports directly to a super admin - only a super admin can generate their sign-in QR');
+  }
+
+  const { token, expiresAt } = await issuePairingToken(new Types.ObjectId(trainerId), new Types.ObjectId(tenantId));
+  return { token, expiresAt: expiresAt.toISOString() };
+}
+
 /** Backs both the assign-trainer dropdown (id/name only, used) and the Trainer Management page
  * (also reads email/trainerPermissions/reportsToRole) - one endpoint, since both are "list this
  * tenant's real trainers" and splitting them would just be two near-identical queries. */

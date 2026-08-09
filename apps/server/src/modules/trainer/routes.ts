@@ -124,4 +124,17 @@ export default async function trainerRoutes(fastify: FastifyInstance) {
       return trainerService.generateLoginPairingToken(request.user.tenantId, request.params.memberId);
     },
   );
+
+  // Same admin/superadmin scope as the permissions route above - the service layer further
+  // restricts superadmin-reporting trainers to superadmin-only.
+  app.post(
+    '/admin/trainers/:trainerId/login-pairing',
+    {
+      schema: { params: trainerIdParamSchema },
+      preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')],
+    },
+    async (request) => {
+      return trainerService.generateTrainerLoginPairingToken(request.user.tenantId, request.params.trainerId, request.user.role);
+    },
+  );
 }

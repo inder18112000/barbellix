@@ -128,7 +128,7 @@ export const fetchMessageThread = (otherUserId: string) =>
 // ─── Mutation Functions ───────────────────────────────────────────────────────
 
 export const checkIn = (payload: { qrToken?: string; pin?: string }) =>
-  api.post<{ record: AttendanceRecord; summary: AttendanceSummary }>(
+  api.post<{ record: AttendanceRecord; summary: AttendanceSummary; action: 'checked_in' | 'checked_out' }>(
     '/attendance/check-in',
     payload,
   );

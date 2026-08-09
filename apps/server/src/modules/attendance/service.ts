@@ -97,6 +97,17 @@ export async function checkIn(
 
   const method = input.qrToken ? 'qr' : input.pin ? 'pin' : 'manual';
 
+  // Scanning again while already checked in (within the branch's auto-checkout window) closes
+  // that session instead of creating a second open one - mirrors a physical gym badge reader:
+  // tap in, tap out.
+  const openRecord = await repo.findOpenRecord(userId, branch._id.toString(), branch.autoCheckoutAfterMins);
+  if (openRecord) {
+    const closed = await repo.setCheckOut(openRecord._id.toString());
+    const record = repo.toDomainRecord(closed!);
+    const summary = await computeSummary(userId);
+    return { record, summary, action: 'checked_out' as const };
+  }
+
   const doc = await repo.createRecord({ userId, branchId: branch._id.toString(), method });
   const record = repo.toDomainRecord(doc);
   const summary = await computeSummary(userId);
@@ -112,5 +123,5 @@ export async function checkIn(
     }
   }
 
-  return { record, summary };
+  return { record, summary, action: 'checked_in' as const };
 }

@@ -120,7 +120,7 @@ const localStyles = RNStyleSheet.create({
 
 // ─── Success Burst ─────────────────────────────────────────────────────────────
 
-function SuccessBurst({ streak }: { streak: number }) {
+function SuccessBurst({ streak, action }: { streak: number; action: 'checked_in' | 'checked_out' }) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const ring1 = useRef(new Animated.Value(0)).current;
   const ring2 = useRef(new Animated.Value(0)).current;
@@ -145,8 +145,12 @@ function SuccessBurst({ streak }: { streak: number }) {
       <View style={[styles.successCircle, glow.success]}>
         <Ionicons name="checkmark" size={52} color="#fff" />
       </View>
-      <Text style={styles.successTitle}>Checked In!</Text>
-      <Text style={styles.successStreak}>🔥 {streak} day streak</Text>
+      <Text style={styles.successTitle}>{action === 'checked_out' ? 'Checked Out!' : 'Checked In!'}</Text>
+      {action === 'checked_out' ? (
+        <Text style={styles.successStreak}>See you next time 👋</Text>
+      ) : (
+        <Text style={styles.successStreak}>🔥 {streak} day streak</Text>
+      )}
     </Animated.View>
   );
 }
@@ -194,7 +198,7 @@ export function QRCheckInScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [showPinPad, setShowPinPad] = useState(false);
 
-  const { checkInState, streak, scanQR, enterPin } = useCheckIn(() => navigation.goBack());
+  const { checkInState, streak, action, scanQR, enterPin } = useCheckIn(() => navigation.goBack());
 
   const isProcessing = checkInState === 'processing';
 
@@ -202,17 +206,17 @@ export function QRCheckInScreen() {
     <ScreenShell title="Check In" onBack={() => navigation.goBack()}>
       <View style={styles.container}>
         {checkInState === 'success' ? (
-          <SuccessBurst streak={streak} />
+          <SuccessBurst streak={streak} action={action} />
         ) : (
           <>
             <Text style={styles.instruction}>
               {isProcessing
-                ? 'Verifying your check-in…'
+                ? 'Verifying…'
                 : checkInState === 'error'
                   ? 'Invalid code. Please try again.'
                   : showPinPad
                     ? 'Enter the 6-digit gym PIN'
-                    : 'Point camera at the gym QR code'}
+                    : 'Point camera at the gym QR code - scan again later to check out'}
             </Text>
 
             {!showPinPad ? (

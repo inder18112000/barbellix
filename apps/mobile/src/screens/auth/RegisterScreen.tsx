@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
@@ -25,7 +26,7 @@ export function RegisterScreen() {
     defaultValues: { firstName: '', lastName: '', email: '', password: '', confirmPassword: '' },
   });
 
-  const { mutate: doRegister, isPending } = useMutation({
+  const { mutate: doRegister, isPending, isError, error } = useMutation({
     mutationFn: (data: RegisterForm) => register(data),
     onSuccess: async ({ user, accessToken, refreshToken }) => {
       // Real tokens now, not the hardcoded 'mock_token' BodyStatsScreen used to fake -
@@ -48,6 +49,13 @@ export function RegisterScreen() {
           </View>
 
           <View style={[styles.card, glass.card]}>
+            {isError && (
+              <View style={styles.errorBanner}>
+                <Ionicons name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorBannerText}>{error instanceof Error ? error.message : 'Something went wrong. Please try again.'}</Text>
+              </View>
+            )}
+
             <View style={styles.nameRow}>
               <View style={{ flex: 1 }}>
                 <Controller control={control} name="firstName" render={({ field: { onChange, value, onBlur } }) => (
@@ -67,7 +75,7 @@ export function RegisterScreen() {
 
             <Controller control={control} name="password" render={({ field: { onChange, value, onBlur } }) => (
               <FormInput label="Password" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.password?.message} secureTextEntry={!showPassword} autoCapitalize="none" placeholder="Min. 8 characters"
-                rightIcon={<Text style={{ fontSize: 18 }}>{showPassword ? '🙈' : '👁'}</Text>}
+                rightIcon={<Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />}
                 onRightIconPress={() => setShowPassword((v) => !v)}
               />
             )} />

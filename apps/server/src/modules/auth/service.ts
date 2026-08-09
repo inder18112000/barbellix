@@ -1,9 +1,11 @@
+import { randomBytes } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import type { HydratedDocument } from 'mongoose';
 import type { UserRole } from '@barbellix/shared';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
 import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken } from '../../lib/refreshToken.js';
 import { redeemPairingToken } from '../../lib/pairingToken.js';
+import { verifyGoogleIdToken } from '../../lib/googleAuth.js';
 import { ConflictError, UnauthorizedError, ForbiddenError } from '../../lib/errors.js';
 import { findMembershipByUserId } from '../billing/repository.js';
 import { isAccessBlocked } from '../billing/service.js';
@@ -88,6 +90,44 @@ export async function login(fastify: FastifyInstance, input: { email: string; pa
   if (!valid) throw new UnauthorizedError('Invalid email or password');
 
   return establishSession(fastify, doc);
+}
+
+/** Signs in with a Google Identity Services ID token instead of a password. Matching email means
+ * matching account - an existing password-based account signs straight in via that same email,
+ * exactly like the web/mobile "Sign in with Google" convention most products use. A first-time
+ * Google sign-in self-registers a new member the same way register() does (same default tenant),
+ * just with a random unusable password instead of one the user chose - passwordHash is a required
+ * schema field even for accounts that will only ever authenticate via Google. */
+export async function loginWithGoogle(fastify: FastifyInstance, idToken: string) {
+  const clientId = fastify.config.GOOGLE_CLIENT_ID;
+  if (!clientId) throw new UnauthorizedError('Google sign-in is not configured on this server');
+
+  let profile;
+  try {
+    profile = await verifyGoogleIdToken(idToken, clientId);
+  } catch {
+    throw new UnauthorizedError('Invalid Google sign-in');
+  }
+
+  const existing = await repo.findUserByEmail(profile.email);
+  if (existing) return establishSession(fastify, existing);
+
+  const tenant = await repo.getOrCreateDefaultTenant();
+  const passwordHash = await hashPassword(randomBytes(32).toString('hex'));
+
+  const doc = await repo.createUser({
+    tenantId: tenant._id,
+    role: 'member',
+    email: profile.email,
+    firstName: profile.firstName,
+    lastName: profile.lastName || profile.firstName,
+    passwordHash,
+  });
+
+  const user = repo.toDomainUser(doc);
+  const accessToken = signAccessToken(fastify, user);
+  const refreshToken = await issueRefreshToken(doc._id, fastify.config.JWT_REFRESH_EXPIRES_IN_DAYS);
+  return { user, accessToken, refreshToken };
 }
 
 /** Redeems a one-time QR device-pairing token (see lib/pairingToken.ts and

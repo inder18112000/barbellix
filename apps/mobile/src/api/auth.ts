@@ -9,6 +9,9 @@ interface AuthTokens {
 export const login = (input: LoginInput) =>
   api.post<{ user: User } & AuthTokens>('/auth/login', input);
 
+export const loginWithGoogle = (idToken: string) =>
+  api.post<{ user: User } & AuthTokens>('/auth/google', { idToken });
+
 export const register = (input: RegisterInput) =>
   api.post<{ user: User } & AuthTokens>('/auth/register', input);
 

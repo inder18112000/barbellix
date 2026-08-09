@@ -11,6 +11,7 @@ export const styles = StyleSheet.create({
   card: { padding: spacing.lg, borderRadius: borderRadius.xl, marginBottom: spacing.lg },
   cardTitle: { ...typography.h3, color: colors.textPrimary, marginBottom: spacing.lg },
   errorBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
     backgroundColor: colors.error + '20',
     borderRadius: borderRadius.md,
     padding: spacing.sm,
@@ -21,6 +22,9 @@ export const styles = StyleSheet.create({
   errorBannerText: { ...typography.body, color: colors.error },
   forgotLink: { alignSelf: 'flex-end', marginBottom: spacing.lg, marginTop: -spacing.sm },
   forgotLinkText: { ...typography.caption, color: colors.primary },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.md },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  dividerText: { ...typography.caption, color: colors.textMuted },
   scanLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.lg, padding: spacing.sm },
   scanLinkText: { ...typography.body, color: colors.primary, fontWeight: '600' },
   registerLink: { alignItems: 'center', padding: spacing.sm },

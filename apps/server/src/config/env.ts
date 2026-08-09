@@ -39,6 +39,11 @@ const envSchema = z.object({
   STORAGE_BACKEND: z.enum(['local', 'gcs']).default('local'),
   GCS_BUCKET_NAME: z.string().optional(),
   GCS_CREDENTIALS_JSON: z.string().optional(),
+  // OAuth client ID from Google Cloud Console (APIs & Services > Credentials) - absent means
+  // POST /auth/google rejects with a clear "not configured" error instead of a crash (see
+  // lib/googleAuth.ts). The web and mobile clients need this same value on their side too, since
+  // Google Identity Services ties the ID token's audience to whichever client ID requested it.
+  GOOGLE_CLIENT_ID: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

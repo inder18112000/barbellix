@@ -18,7 +18,7 @@ import {
   fetchAvailableTrainers,
   assignTrainerToMember,
 } from '@/api/queries'
-import { QRCodeImage } from '@/components/common/QRCodeImage'
+import { LoginPairingDialog } from '@/components/common/LoginPairingDialog'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/common/ErrorState'
@@ -247,7 +247,11 @@ export const MembersPage = observer(function MembersPage() {
       <EditMembershipDatesDialog member={datesTarget} onClose={() => setDatesTarget(null)} />
       <EditMemberInfoDialog member={infoTarget} onClose={() => setInfoTarget(null)} />
       <AssignTrainerDialog member={trainerTarget} onClose={() => setTrainerTarget(null)} />
-      <LoginPairingDialog member={pairingTarget} onClose={() => setPairingTarget(null)} />
+      <LoginPairingDialog
+        target={pairingTarget ? { id: pairingTarget.id, name: pairingTarget.firstName } : null}
+        onClose={() => setPairingTarget(null)}
+        onGenerate={generateLoginPairingToken}
+      />
 
       <Dialog open={!!markPaidTarget} onOpenChange={(open) => !open && setMarkPaidTarget(null)}>
         <DialogContent>
@@ -480,49 +484,6 @@ function AssignTrainerDialog({ member, onClose }: { member: TrainerMemberSummary
             </Button>
           </DialogFooter>
         </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function LoginPairingDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
-  const mutation = useMutation({
-    mutationFn: () => {
-      if (!member) throw new Error('No member selected')
-      return generateLoginPairingToken(member.id)
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-
-  const handleClose = (open: boolean) => {
-    if (open) return
-    mutation.reset()
-    onClose()
-  }
-
-  return (
-    <Dialog open={!!member} onOpenChange={handleClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Sign-in QR code</DialogTitle>
-          <DialogDescription>
-            {member?.firstName} scans this once in the mobile app to sign in instantly - no password needed. Expires in 10 minutes and
-            works only once.
-          </DialogDescription>
-        </DialogHeader>
-
-        {mutation.data ? (
-          <div className="flex flex-col items-center gap-3 py-2">
-            <QRCodeImage value={mutation.data.token} />
-            <p className="text-xs text-muted-foreground">
-              Expires at {new Date(mutation.data.expiresAt).toLocaleTimeString()}
-            </p>
-          </div>
-        ) : (
-          <Button className="w-fit" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
-            {mutation.isPending ? 'Generating…' : 'Generate QR code'}
-          </Button>
-        )}
       </DialogContent>
     </Dialog>
   )

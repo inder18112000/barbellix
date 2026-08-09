@@ -5,14 +5,16 @@ import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '../../theme';
 import { glass } from '../../theme/effects';
 import { BrandMark } from '../../components/common/BrandMark';
 import { FormInput } from '../../components/common/FormInput';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
+import { GoogleSignInButton, isGoogleSignInConfigured } from '../../components/common/GoogleSignInButton';
 import { useAuthStore } from '../../store/authStore';
-import { login as loginRequest } from '../../api/auth';
+import { login as loginRequest, loginWithGoogle } from '../../api/auth';
 import { loginSchema, type LoginInput as LoginForm } from '@barbellix/shared';
 import { styles } from './LoginScreen.styles';
 
@@ -31,6 +33,11 @@ export function LoginScreen() {
     onSuccess: ({ user, accessToken, refreshToken }) => login(user, accessToken, refreshToken),
   });
 
+  const { mutate: doGoogleLogin, isPending: isGooglePending, isError: isGoogleError } = useMutation({
+    mutationFn: (idToken: string) => loginWithGoogle(idToken),
+    onSuccess: ({ user, accessToken, refreshToken }) => login(user, accessToken, refreshToken),
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -45,9 +52,10 @@ export function LoginScreen() {
           <View style={[styles.card, glass.card]}>
             <Text style={styles.cardTitle}>Welcome back</Text>
 
-            {isError && (
+            {(isError || isGoogleError) && (
               <View style={styles.errorBanner}>
-                <Text style={styles.errorBannerText}>⚠️ Invalid email or password</Text>
+                <Ionicons name="alert-circle" size={16} color={colors.error} />
+                <Text style={styles.errorBannerText}>{isGoogleError ? 'Google sign-in failed' : 'Invalid email or password'}</Text>
               </View>
             )}
 
@@ -57,7 +65,7 @@ export function LoginScreen() {
 
             <Controller control={control} name="password" render={({ field: { onChange, value, onBlur } }) => (
               <FormInput label="Password" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.password?.message} secureTextEntry={!showPassword} autoCapitalize="none" placeholder="••••••••"
-                rightIcon={<Text style={{ fontSize: 18 }}>{showPassword ? '🙈' : '👁'}</Text>}
+                rightIcon={<Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.textMuted} />}
                 onRightIconPress={() => setShowPassword((v) => !v)}
               />
             )} />
@@ -68,8 +76,20 @@ export function LoginScreen() {
 
             <PrimaryButton label="Log In" onPress={handleSubmit((data) => doLogin(data))} loading={isPending} />
 
+            {isGoogleSignInConfigured() && (
+              <>
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>or</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <GoogleSignInButton onIdToken={(idToken) => doGoogleLogin(idToken)} disabled={isGooglePending} />
+              </>
+            )}
+
             <TouchableOpacity style={styles.scanLink} onPress={() => navigation.navigate('ScanToSignIn')}>
-              <Text style={{ fontSize: 16 }}>📷</Text>
+              <Ionicons name="camera-outline" size={16} color={colors.textSecondary} />
               <Text style={styles.scanLinkText}>Scan to sign in</Text>
             </TouchableOpacity>
           </View>
