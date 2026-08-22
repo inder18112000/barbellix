@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -14,6 +15,7 @@ import { queryKeys, acceptRecommendation } from '../../api/queries';
 import { api } from '../../api/client';
 import { useAICoach } from '../../hooks/useAICoach';
 import { useLocalCoach, localCoachReply } from '../../hooks/useLocalCoach';
+import { useAuthStore } from '../../store/authStore';
 import type { AIMessage } from '@barbellix/shared';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
 import { styles, CARD_WIDTH } from './AICoachScreen.styles';
@@ -72,6 +74,41 @@ const typingStyles = {
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
 };
 
+// ─── Profile Setup Prompt (SRP) - the freeform chat has no candidate-list/structured-data concept
+// to fall back on, so when the profile is missing what the AI actually needs to give a real
+// exercise/diet recommendation (equipment, goal), it guesses generic defaults instead - e.g.
+// answering "set my exercise routine" with diet macros. Steering to the structured wizard (which
+// collects exactly this data before generating anything) beats letting the AI guess. ────────────
+
+function ProfileSetupPrompt({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity style={[promptStyles.card, glass.cardStrong, glow.primary]} onPress={onPress} activeOpacity={0.88}>
+      <View style={promptStyles.iconBadge}>
+        <Ionicons name="flag" size={18} color={colors.onPrimary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={promptStyles.title}>Complete your profile for real advice</Text>
+        <Text style={promptStyles.desc}>Set your goal and equipment so I can build an actual routine, not a guess.</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+    </TouchableOpacity>
+  );
+}
+
+const promptStyles = {
+  card: {
+    flexDirection: 'row' as const, alignItems: 'center' as const, gap: spacing.md,
+    padding: spacing.md, borderRadius: borderRadius.xl,
+    marginHorizontal: spacing.md, marginTop: spacing.md,
+  },
+  iconBadge: {
+    width: 40, height: 40, borderRadius: borderRadius.md,
+    backgroundColor: colors.primary, alignItems: 'center' as const, justifyContent: 'center' as const,
+  },
+  title: { ...typography.h4, color: colors.textPrimary },
+  desc: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+};
+
 // ─── Swipe card ───────────────────────────────────────────────────────────────
 
 function SwipeCard({ rec, onAccept, onDismiss }: { rec: any; onAccept: () => void; onDismiss: () => void }) {
@@ -116,8 +153,14 @@ function SwipeCard({ rec, onAccept, onDismiss }: { rec: any; onAccept: () => voi
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export function AICoachScreen() {
+  const navigation = useNavigation<any>();
   const qc = useQueryClient();
+  const { user } = useAuthStore();
   const { recommendations, isLoading: recsLoading } = useAICoach();
+  // gymAccess is the single field the structured plan generator can't work without (it drives
+  // which exercises are even eligible - see plan-generator.ts's filterExercisesForProfile) and a
+  // decent proxy for "hasn't been through the goal wizard yet" - a fresh member has neither.
+  const needsProfileSetup = !user?.profile.gymAccess;
   const localCoachData = useLocalCoach();
   const scrollRef = useRef<ScrollView>(null);
   const { bottom: bottomInset } = useSafeAreaInsets();
@@ -232,6 +275,10 @@ export function AICoachScreen() {
             </View>
           )}
         </View>
+
+        {needsProfileSetup && (
+          <ProfileSetupPrompt onPress={() => navigation.navigate('Home', { screen: 'AIWizardBasics' })} />
+        )}
 
         <ScrollView
           ref={scrollRef}

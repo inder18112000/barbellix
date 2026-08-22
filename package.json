@@ -9,6 +9,8 @@
   "scripts": {
     "mobile": "npm run start --workspace=@barbellix/mobile",
     "server": "npm run dev --workspace=@barbellix/server",
+    "web": "npm run dev --workspace=@barbellix/web",
+    "build": "npm run build --workspace=@barbellix/shared && npm run build --workspace=@barbellix/server && npm run build --workspace=@barbellix/web",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {

@@ -152,9 +152,9 @@ function ExploreCard({
     onPress();
   };
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+    <Animated.View style={[styles.exploreCardWrapper, { transform: [{ scale: scaleAnim }] }]}>
       <TouchableOpacity style={[styles.exploreCard, glass.card, { borderColor: accentColor + '35' }]} onPress={handlePress} activeOpacity={0.85}>
-        <View>
+        <View style={styles.exploreContent}>
           <View style={[styles.exploreIconBadge, { backgroundColor: accentColor + '20' }]}>
             <Ionicons name={icon} size={18} color={accentColor} />
           </View>

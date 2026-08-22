@@ -134,17 +134,19 @@ export const styles = StyleSheet.create({
   aiSkipText: { ...typography.body, color: colors.textMuted },
 
   exploreGrid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: spacing.sm, columnGap: spacing.sm },
+  exploreCardWrapper: { width: '31%' },
   exploreCard: {
-    width: '31%', minHeight: 132,
+    width: '100%', minHeight: 132,
     padding: spacing.sm, borderRadius: borderRadius.lg, borderWidth: 1,
     justifyContent: 'space-between',
   },
+  exploreContent: { width: '100%' },
   exploreIconBadge: {
     width: 38, height: 38, borderRadius: borderRadius.md,
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs,
   },
-  exploreTitle: { ...typography.label, color: colors.textPrimary, fontWeight: '700', fontSize: 12.5 },
-  exploreDesc: { ...typography.caption, color: colors.textMuted, fontSize: 10.5, lineHeight: 13, marginTop: 2 },
+  exploreTitle: { ...typography.label, color: colors.textPrimary, fontWeight: '700', fontSize: 12.5, flexShrink: 1, width: '100%' },
+  exploreDesc: { ...typography.caption, color: colors.textMuted, fontSize: 10.5, lineHeight: 13, marginTop: 2, flexShrink: 1, width: '100%' },
   exploreFooterRow: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: spacing.xs },
   exploreChevronBtn: {
     width: 22, height: 22, borderRadius: 11,

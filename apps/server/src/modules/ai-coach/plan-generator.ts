@@ -134,7 +134,15 @@ export async function generateWorkoutPlan(
   const exercises = filterExercisesForProfile(allExercises, injuredMuscleGroups, member.profile.gymAccess);
   if (exercises.length === 0) throw new BadGatewayError('No exercises available to build a plan from - your equipment/injury settings may be excluding the whole library');
 
-  const exerciseMenu = exercises.map((e) => e.name).join(', ');
+  // Beyond just names, so the model can reason about muscle/equipment balance and overlap within
+  // the already-filtered candidate set - e.g. not stacking 5 chest-only exercises into one day, or
+  // picking exercises whose goal-relevant tags don't match what the client asked for.
+  const exerciseMenu = exercises
+    .map((e) => {
+      const tagsPart = e.tags && e.tags.length > 0 ? `; tags: ${e.tags.join('/')}` : '';
+      return `${e.name} (muscles: ${e.muscleGroups.join('/')}; equipment: ${e.equipment.join('/')}${tagsPart})`;
+    })
+    .join(', ');
   const injuryNote =
     injuredMuscleGroups.size > 0
       ? `\n- IMPORTANT: this client has reported injuries affecting: ${[...injuredMuscleGroups].join(', ')}. The exercise list below has already been filtered to exclude exercises targeting these muscle groups - only choose from what's listed.`
@@ -142,13 +150,19 @@ export async function generateWorkoutPlan(
 
   const systemPrompt = `You are an expert strength & conditioning coach. Build a real, structured workout split.
 
+Below is the full list of exercises you may choose from. Each entry shows its name followed by its
+muscles/equipment/tags in parentheses - that parenthetical is context for YOUR reasoning only, never
+copy it into your output: ${exerciseMenu}
+
 Rules:
 - Output ONLY valid JSON, no markdown, no commentary, no code fences - just the raw JSON object.
 - The JSON must match this exact shape:
   { "planName": string, "goal": one of [${FITNESS_GOALS.join(', ')}], "days": [ { "dayLabel": string, "exercises": [ { "exerciseName": string, "sets": number, "reps": string (e.g. "8-10"), "restSecs": number, "notes": string } ] } ] }
 - Produce exactly ${daysPerWeek} days.
 - Each day should have 5-7 exercises appropriate for its focus (e.g. "Push (Chest, Shoulders, Triceps)").
-- "exerciseName" MUST be copied exactly (same spelling/case) from this list of real available exercises - never invent a name: ${exerciseMenu}
+- "exerciseName" MUST be copied exactly (same spelling/case) from the exercise list above, with NO parenthetical - just the bare name, e.g. "Bench Press" not "Bench Press (muscles: chest; equipment: barbell)". Never invent a name that isn't in the list.
+- Use each exercise's muscle groups and equipment to avoid redundant overlap within a day (e.g. don't stack five exercises that all hit the same single muscle with nothing else) and to build a sensible compound-then-isolation order.
+- Where the client's stated goal matches an exercise's tags (fat_loss, muscle_gain, mobility, rehabilitation, low_impact), prefer those tagged exercises over untagged ones when both are otherwise reasonable picks.
 - "goal" must be exactly one of the six enum values listed above - pick the closest match to what the user asked for.
 - "notes" should be a short (under 12 words) coaching cue, e.g. "Control the eccentric."${injuryNote}`;
 
