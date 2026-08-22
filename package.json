@@ -7,13 +7,21 @@
     "packages/*"
   ],
   "scripts": {
-    "mobile": "npm run start --workspace=@barbellix/mobile",
+    "shared": "npm run build --workspace=@barbellix/shared",
+    "shared:watch": "npm run dev --workspace=@barbellix/shared",
     "server": "npm run dev --workspace=@barbellix/server",
     "web": "npm run dev --workspace=@barbellix/web",
-    "build": "npm run build --workspace=@barbellix/shared && npm run build --workspace=@barbellix/server && npm run build --workspace=@barbellix/web",
+    "mobile": "npm run start --workspace=@barbellix/mobile",
+    "mobile:tunnel": "npm run start:tunnel --workspace=@barbellix/mobile",
+    "mobile:typecheck": "npm exec --workspace=@barbellix/mobile -- tsc --noEmit",
+    "build": "npm run shared && npm run build --workspace=@barbellix/server && npm run build --workspace=@barbellix/web",
+    "test": "npm run test --workspace=@barbellix/server",
     "lint": "npm run lint --workspaces --if-present"
   },
   "devDependencies": {
     "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "react-native-worklets": "0.5.1"
   }
 }

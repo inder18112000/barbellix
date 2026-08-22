@@ -20,7 +20,7 @@
     "@fastify/rate-limit": "^10.0.0",
     "@google-cloud/storage": "^7.21.0",
     "@sentry/node": "^10.69.0",
-    "argon2": "^0.41.0",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.0",
     "expo-server-sdk": "^6.1.0",
     "fastify": "^5.0.0",

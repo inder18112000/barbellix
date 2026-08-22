@@ -59,8 +59,8 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-2 text-center">
-          <BrandMark className="size-14 shadow-lg shadow-primary/30 rounded-2xl" />
-          <h1 className="text-xl font-bold uppercase tracking-wide">BarBellix Management</h1>
+          <BrandMark variant="full" className="h-28 w-auto" />
+          <h1 className="text-lg font-semibold uppercase tracking-wide text-muted-foreground">Management Dashboard</h1>
           <p className="text-sm text-muted-foreground">Sign in to your gym dashboard</p>
         </div>
 

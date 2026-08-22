@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { registerDeviceToken } from '../api/queries';
 
 /** Requests notification permission and registers this device's Expo push token with the
@@ -11,6 +11,11 @@ import { registerDeviceToken } from '../api/queries';
 export function usePushRegistration(isAuthenticated: boolean) {
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    // Remote push was removed from Expo Go on Android/iOS as of SDK 53 - calling
+    // getExpoPushTokenAsync() there logs a scary console error every time regardless of this
+    // try/catch, so skip it entirely rather than let it fire and swallow the result.
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) return;
 
     let cancelled = false;
 

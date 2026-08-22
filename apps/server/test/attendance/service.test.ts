@@ -7,6 +7,8 @@ const createRecord = vi.fn();
 const toDomainRecord = vi.fn();
 const findThisMonthCount = vi.fn();
 const findRecentCheckInDates = vi.fn();
+const findOpenRecord = vi.fn();
+const setCheckOut = vi.fn();
 
 vi.mock('../../src/modules/attendance/repository.js', () => ({
   findBranchByQrToken,
@@ -15,6 +17,8 @@ vi.mock('../../src/modules/attendance/repository.js', () => ({
   toDomainRecord,
   findThisMonthCount,
   findRecentCheckInDates,
+  findOpenRecord,
+  setCheckOut,
 }));
 
 const getNotificationPreferences = vi.fn();
@@ -36,6 +40,7 @@ describe('checkIn', () => {
     toDomainRecord.mockReturnValue({ id: 'record-1', method: 'qr' });
     findThisMonthCount.mockResolvedValue(0);
     findRecentCheckInDates.mockResolvedValue([]);
+    findOpenRecord.mockResolvedValue(null);
     getNotificationPreferences.mockResolvedValue({ streakAlerts: true });
   });
 
@@ -56,6 +61,18 @@ describe('checkIn', () => {
 
     expect(findBranchByQrToken).toHaveBeenCalledWith('gym-qr-token');
     expect(createRecord).toHaveBeenCalledWith({ userId: 'user-1', branchId: 'branch-1', method: 'qr' });
+  });
+
+  it('checks out instead of creating a new record when an open record exists', async () => {
+    findOpenRecord.mockResolvedValue({ _id: { toString: () => 'record-1' } });
+    setCheckOut.mockResolvedValue({ _id: 'record-1' });
+    toDomainRecord.mockReturnValue({ id: 'record-1', method: 'pin' });
+
+    const result = await checkIn('user-1', 'tenant-1', { pin: BRANCH.checkInPin });
+
+    expect(setCheckOut).toHaveBeenCalledWith('record-1');
+    expect(createRecord).not.toHaveBeenCalled();
+    expect(result.action).toBe('checked_out');
   });
 
   it('throws NotFoundError when the scanned QR token matches no branch', async () => {

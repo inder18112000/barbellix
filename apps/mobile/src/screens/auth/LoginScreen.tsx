@@ -44,8 +44,7 @@ export function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
           <View style={styles.logoSection}>
-            <BrandMark size={56} style={styles.logoMark} />
-            <Text style={styles.logoText}>BarBellix</Text>
+            <BrandMark variant="full" size={120} style={styles.logoMark} />
             <Text style={styles.tagline}>Feel every rep.</Text>
           </View>
 

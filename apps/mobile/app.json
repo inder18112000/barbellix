@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#121212"
+      "backgroundColor": "#080807"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#121212"
+        "backgroundColor": "#080807"
       },
       "package": "com.barbellix.app"
     },
@@ -43,11 +43,12 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#C6FF00"
+          "color": "#FFD200"
         }
       ],
       "@sentry/react-native",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ]
   }
 }

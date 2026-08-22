@@ -38,7 +38,7 @@ export const DashboardShell = observer(function DashboardShell({ navItems }: Pro
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
         <div className="flex items-center gap-2 px-5 py-5">
-          <BrandMark className="size-8" />
+          <BrandMark className="h-9 w-auto" />
           <span className="font-bold uppercase tracking-wide">BarBellix</span>
         </div>
 
