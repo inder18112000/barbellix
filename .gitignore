@@ -27,3 +27,9 @@ packages/shared/dist/
 # Locally-uploaded media (see apps/server/src/lib/storage.ts) - never committed, and not the
 # real storage backend anyway (S3/Azure Blob replaces this in production)
 apps/server/uploads/
+
+# One-off diagnostic/scratch scripts (run directly via `npx tsx src/db/_whatever.ts`, never
+# imported by the app) - the leading underscore is the naming convention that marks a file as
+# scratch rather than product code. Previously excluded from commits by hand on every `git add`;
+# ignoring them here makes that automatic instead of relying on remembering each time.
+apps/server/src/db/_*.ts

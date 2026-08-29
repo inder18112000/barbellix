@@ -14,11 +14,24 @@ export function toDomainUser(doc: HydratedDocument<UserDocument>): User {
     phone: doc.phone,
     firstName: doc.firstName,
     lastName: doc.lastName,
-    // profile.injuries[] carries a real Mongoose-assigned _id (needed for $push/$pull CRUD) -
-    // explicit id mapping here, not a passthrough, same convention as every other
-    // array-of-subdocuments mapper in this codebase (exercises/repository.ts, workouts/repository.ts).
+    // Explicit field-by-field mapping, not a `{...doc.profile}` spread: doc.profile is a live
+    // Mongoose subdocument, and spreading one copies its internal `$__parent` bookkeeping
+    // property along with it - which is a live reference back to the full parent User document,
+    // including passwordHash (a `select: false` field, but that only filters query results, not
+    // an already-loaded document, so it's present here whenever the caller had it selected, e.g.
+    // the login flow). That leaked the password hash into every API response returning a User.
     profile: {
-      ...doc.profile,
+      goals: doc.profile.goals,
+      dob: doc.profile.dob,
+      heightCm: doc.profile.heightCm,
+      weightKg: doc.profile.weightKg,
+      experienceLevel: doc.profile.experienceLevel,
+      gender: doc.profile.gender,
+      avatarUrl: doc.profile.avatarUrl,
+      bio: doc.profile.bio,
+      targetWeightKg: doc.profile.targetWeightKg,
+      dietPreference: doc.profile.dietPreference,
+      gymAccess: doc.profile.gymAccess,
       injuries: (doc.profile.injuries ?? []).map(toDomainInjury),
     },
     createdAt: isoStr(doc.createdAt),
