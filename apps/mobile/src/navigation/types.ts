@@ -81,6 +81,7 @@ export type ProfileStackParams = {
   ProfileHome: undefined;
   EditProfile: undefined;
   MembershipCard: undefined;
+  PaymentCheckout: { planId: string };
   QRCheckIn: undefined;
   Notifications: undefined;
   Settings: undefined;

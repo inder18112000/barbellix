@@ -26,6 +26,22 @@ export async function findTrainerByIdInTenant(trainerId: string, tenantId: strin
   return UserModel.findOne({ _id: trainerId, tenantId, role: 'trainer' });
 }
 
+/** Admin-initiated account creation for either role - the account gets a random, never-shared
+ * password hash (see trainer/service.ts's createTrainer()/createMember()) since the person's
+ * first login is always the QR device-pairing flow, the same one already used for existing
+ * accounts (see lib/pairingToken.ts), not a password they'd need to be told out of band. */
+export async function createStaffAccount(input: {
+  tenantId: string;
+  role: 'trainer' | 'member';
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  passwordHash: string;
+}) {
+  return UserModel.create(input);
+}
+
 /** Real trainers only (role: 'trainer') - distinct from classes/repository.ts's
  * findTrainersByTenant(), which also includes admin/superadmin since an owner can lead a class
  * too. Assigning a *member's trainer* is narrower: it must be an actual trainer account, because
@@ -115,11 +131,28 @@ export async function findPlanById(id: string) {
   return WorkoutPlanModel.findById(id);
 }
 
+export async function findPlanForMember(planId: string, memberId: string) {
+  return WorkoutPlanModel.findOne({ _id: planId, userId: memberId });
+}
+
+/** Deactivates every other active plan for a member - shared by createPlanCopyForMember and
+ * supersedePlan below, so a member can never end up with two simultaneously active:true plans
+ * (which would contradict the "Superseded" badge's implied one-active-plan invariant in the web
+ * UI). `exceptPlanId` excludes the plan that's about to become the new active one, if it already
+ * exists (supersedePlan creates the new doc after this call, so it has no id yet there). */
+async function deactivateOtherActivePlans(memberId: string, exceptPlanId?: string) {
+  await WorkoutPlanModel.updateMany(
+    { userId: memberId, active: true, ...(exceptPlanId ? { _id: { $ne: exceptPlanId } } : {}) },
+    { $set: { active: false } },
+  );
+}
+
 export async function createPlanCopyForMember(input: {
   sourcePlan: { name: string; goal: string; days: unknown };
   memberId: string;
   trainerId: string;
 }) {
+  await deactivateOtherActivePlans(input.memberId);
   return WorkoutPlanModel.create({
     userId: input.memberId,
     trainerId: input.trainerId,
@@ -128,5 +161,31 @@ export async function createPlanCopyForMember(input: {
     generatedBy: 'trainer',
     active: true,
     days: input.sourcePlan.days,
+  });
+}
+
+/** Edits an existing plan by superseding it - the old doc is deactivated (never mutated in
+ * place), a new version is created carrying the version/previousPlanId/changeSummary chain the
+ * web UI already renders (the "v2" badge, "Superseded" badge, change-note bullets). */
+export async function supersedePlan(
+  oldPlan: { _id: Types.ObjectId; userId: Types.ObjectId; trainerId?: Types.ObjectId; name: string; goal: string; generatedBy: string; days: unknown; version: number },
+  updates: { name?: string; goal?: string; days?: unknown },
+  editedByUserId: string,
+  changeNote?: string,
+) {
+  await WorkoutPlanModel.findByIdAndUpdate(oldPlan._id, { $set: { active: false } });
+  await deactivateOtherActivePlans(oldPlan.userId.toString(), oldPlan._id.toString());
+
+  return WorkoutPlanModel.create({
+    userId: oldPlan.userId,
+    trainerId: new Types.ObjectId(editedByUserId),
+    name: updates.name ?? oldPlan.name,
+    goal: updates.goal ?? oldPlan.goal,
+    generatedBy: oldPlan.generatedBy,
+    active: true,
+    days: updates.days ?? oldPlan.days,
+    version: oldPlan.version + 1,
+    previousPlanId: oldPlan._id,
+    changeSummary: changeNote ? [changeNote] : undefined,
   });
 }

@@ -29,6 +29,7 @@ import type {
   MealType,
   InjuryEntry,
   TrainerSummary,
+  MemberAttendanceEntry,
 } from '@barbellix/shared'
 import type { ChangePasswordInput } from '@barbellix/shared'
 import { api } from './client'
@@ -48,6 +49,7 @@ export const queryKeys = {
     membershipPlans: ['admin', 'membership-plans'] as const,
     dashboardStats: ['admin', 'dashboard-stats'] as const,
     memberProgress: (memberId: string) => ['admin', 'members', memberId, 'progress'] as const,
+    memberAttendance: (memberId: string) => ['admin', 'members', memberId, 'attendance'] as const,
     paymentHistory: (memberId: string) => ['admin', 'members', memberId, 'payment-history'] as const,
     paymentGatewayStatus: ['admin', 'payment-gateway-status'] as const,
     sponsors: ['admin', 'sponsors'] as const,
@@ -78,6 +80,19 @@ export const updateMemberStatus = (memberId: string, status: UserStatus) =>
 
 export const assignPlanToMember = (memberId: string, planId: string) =>
   api.post<{ memberId: string; planId: string; success: boolean }>(`/trainer/members/${memberId}/assign-plan`, { planId })
+
+export interface UpdateMemberPlanInput {
+  name?: string
+  goal?: FitnessGoal
+  days?: Array<{
+    dayLabel: string
+    dayOfWeek?: number
+    exercises: Array<{ exerciseId: string; sets: number; reps: string; restSecs: number; notes?: string }>
+  }>
+  changeNote?: string
+}
+export const updateMemberPlan = (memberId: string, planId: string, input: UpdateMemberPlanInput) =>
+  api.put<{ planId: string; version: number; success: boolean }>(`/trainer/members/${memberId}/plans/${planId}`, input)
 
 // ─── Admin: analytics, branch, attendance ───────────────────────────────────────
 
@@ -127,7 +142,20 @@ export const fetchMemberProgress = (memberId: string) => api.get<MemberProgress>
 
 export const fetchPaymentHistory = (memberId: string) => api.get<PaymentEvent[]>(`/admin/members/${memberId}/payment-history`)
 
-export const fetchPaymentGatewayStatus = () => api.get<{ stripeConfigured: boolean }>('/admin/payment-gateway-status')
+export const fetchMemberAttendance = (memberId: string, limit = 50) =>
+  api.get<MemberAttendanceEntry[]>(`/admin/members/${memberId}/attendance?limit=${limit}`)
+
+export const fetchPaymentGatewayStatus = () => api.get<{ cashfreeConfigured: boolean }>('/admin/payment-gateway-status')
+
+export const initiateCashPayment = (memberId: string, input: { planId?: string; planName: string; amountCents: number; currency: string }) =>
+  api.post<{ expiresAt: string }>(`/admin/members/${memberId}/cash-payment/initiate`, input)
+
+export const confirmCashPayment = (
+  memberId: string,
+  input: { code: string; planId?: string; planName: string; amountCents: number; currency: string; billingInterval: 'month' | 'year' },
+) => api.post(`/admin/members/${memberId}/cash-payment/confirm`, input)
+
+export const sendPaymentReminder = (memberId: string) => api.post(`/admin/members/${memberId}/payment-reminder`, {})
 
 export const updateMemberInfo = (memberId: string, updates: { firstName?: string; lastName?: string; phone?: string }) =>
   api.patch<TrainerMemberSummary>(`/trainer/members/${memberId}/info`, updates)
@@ -156,6 +184,17 @@ export const generateLoginPairingToken = (memberId: string) =>
 
 export const generateTrainerLoginPairingToken = (trainerId: string) =>
   api.post<LoginPairingToken>(`/admin/trainers/${trainerId}/login-pairing`, {})
+
+export interface CreateAccountInput {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+}
+export const createTrainer = (input: CreateAccountInput) =>
+  api.post<{ user: User; pairingToken: LoginPairingToken }>('/admin/trainers', input)
+export const createMember = (input: CreateAccountInput) =>
+  api.post<{ user: User; pairingToken: LoginPairingToken }>('/admin/members', input)
 
 // ─── Sponsors ─────────────────────────────────────────────────────────────────
 

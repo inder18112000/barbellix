@@ -28,6 +28,8 @@ import type {
   InjuryCondition,
   InjurySeverity,
   GenerateFullPlanResult,
+  Membership,
+  MembershipPlan,
 } from '@barbellix/shared';
 
 // Query keys — centralised to avoid typos and enable targeted invalidation
@@ -72,6 +74,8 @@ export const queryKeys = {
     roster: (sessionId: string) => ['classes', 'roster', sessionId] as const,
   },
   notificationPreferences: ['me', 'notification-preferences'] as const,
+  membership: ['me', 'membership'] as const,
+  membershipPlans: ['me', 'membership-plans'] as const,
 };
 
 // ─── Query Functions ──────────────────────────────────────────────────────────
@@ -212,6 +216,14 @@ export const registerDeviceToken = (expoPushToken: string, platform: 'ios' | 'an
 export const fetchNotificationPreferences = () => api.get<NotificationPreferences>('/me/notification-preferences');
 export const updateNotificationPreferences = (updates: Partial<NotificationPreferences>) =>
   api.put<NotificationPreferences>('/me/notification-preferences', updates);
+
+export interface MembershipWithStatus extends Membership {
+  subscriptionStatus: 'active' | 'pending' | 'expired';
+}
+export const fetchMembership = () => api.get<MembershipWithStatus | null>('/me/membership');
+export const fetchMembershipPlans = () => api.get<MembershipPlan[]>('/me/membership-plans');
+export const createMembershipCheckoutSession = (planId: string) =>
+  api.post<{ checkoutUrl: string }>('/me/membership/checkout-session', { planId });
 
 export const fetchClassRoster = (sessionId: string) =>
   api.get<{ session: ClassSession; bookings: { id: string; userId: string; status: string; memberName?: string; memberEmail?: string }[] }>(

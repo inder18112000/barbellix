@@ -240,8 +240,6 @@ export interface MembershipPlan {
   priceCents: number;
   currency: string;
   billingInterval: 'month' | 'year';
-  stripeProductId?: string;
-  stripePriceId?: string;
   active: boolean;
 }
 
@@ -254,11 +252,12 @@ export interface Membership {
   status: MembershipStatus;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
+  /** Last successful Cashfree order id - support/debugging reference only. */
+  gatewayOrderId?: string;
   currentPeriodEnd?: string;
   startDate: string;
   endDate?: string;
+  lastPaymentReminderAt?: string;
 }
 
 // ─── Attendance ───────────────────────────────────────────────────────────────
@@ -276,6 +275,13 @@ export interface AttendanceSummary {
   totalThisMonth: number;
   streak: number;
   lastCheckedIn?: string;
+}
+
+/** Admin-facing per-member check-in/check-out view - durationMins is computed at read time
+ * (checkOutAt - checkedInAt), never stored, so this is deliberately a response-only extension of
+ * AttendanceRecord rather than a change to the persisted shape. undefined means still checked in. */
+export interface MemberAttendanceEntry extends AttendanceRecord {
+  durationMins?: number;
 }
 
 // ─── Exercise & Workout ───────────────────────────────────────────────────────

@@ -22,12 +22,6 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  // Stripe: STRIPE_SECRET_KEY absent -> billing module still works for plan CRUD/manual
-  // mark-paid, just without real checkout sessions (see lib/stripe.ts's isConfigured()).
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_SUCCESS_URL: z.string().default('http://localhost:5173/billing/success'),
-  STRIPE_CANCEL_URL: z.string().default('http://localhost:5173/billing/cancel'),
   // Absolute origin this server is reachable at, used to build URLs for locally-stored uploads
   // (lib/storage.ts). Defaults to http://localhost:${PORT} - only needs setting in a real
   // deployment where the public origin differs from that.
@@ -44,6 +38,23 @@ const envSchema = z.object({
   // lib/googleAuth.ts). The web and mobile clients need this same value on their side too, since
   // Google Identity Services ties the ID token's audience to whichever client ID requested it.
   GOOGLE_CLIENT_ID: z.string().optional(),
+  // SMS delivery for cash-payment OTP confirmation - swappable backend, same convention as
+  // STORAGE_BACKEND above; only 'twilio' exists today. Absent Twilio credentials means the
+  // cash-payment OTP flow rejects clearly (see lib/sms.ts) rather than crashing.
+  SMS_PROVIDER: z.enum(['twilio']).default('twilio'),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(),
+  // Cashfree payment gateway (replaces Stripe) - Orders API for one-time payment collection, not
+  // their Subscriptions product (this app's philosophy is lazy/on-demand checks, not
+  // scheduled-job-driven auto-renewal - see billing/service.ts's isAccessBlocked()). Absent means
+  // plan CRUD still works (no real gateway ids attached), same "optional key disables just the
+  // live-checkout path" convention as Stripe had.
+  CASHFREE_APP_ID: z.string().optional(),
+  CASHFREE_SECRET_KEY: z.string().optional(),
+  CASHFREE_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+  CASHFREE_WEBHOOK_SECRET: z.string().optional(),
+  CASHFREE_RETURN_URL: z.string().default('http://localhost:5173/billing/return'),
 });
 
 export type Env = z.infer<typeof envSchema>;

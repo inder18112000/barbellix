@@ -1,8 +1,13 @@
-import type Stripe from 'stripe';
-import type { MembershipPlan, MembershipStatus, PaymentStatus, SubscriptionStatus } from '@barbellix/shared';
+import { randomUUID } from 'node:crypto';
+import type { MembershipStatus, PaymentStatus, SubscriptionStatus } from '@barbellix/shared';
 import type { Env } from '../../config/env.js';
-import { NotFoundError, BadGatewayError } from '../../lib/errors.js';
-import * as stripeLib from '../../lib/stripe.js';
+import { NotFoundError, ValidationError } from '../../lib/errors.js';
+import * as cashfreeLib from '../../lib/cashfree.js';
+import { toE164 } from '../../lib/phone.js';
+import { sendSms } from '../../lib/sms.js';
+import { issueCashPaymentOtp, verifyCashPaymentOtp } from '../../lib/cashPaymentOtp.js';
+import { sendPushToUser } from '../../lib/push.js';
+import { CashfreeOrderModel } from '../../db/models/CashfreeOrder.js';
 import { findMemberByIdInTenant } from '../trainer/repository.js';
 import * as repo from './repository.js';
 
@@ -36,9 +41,17 @@ export function isAccessBlocked(
 
 // ─── Plans ────────────────────────────────────────────────────────────────────
 
-export async function listPlans(tenantId: string): Promise<MembershipPlan[]> {
+export async function listPlans(tenantId: string) {
   const docs = await repo.findPlansByTenant(tenantId);
   return docs.map(repo.toDomainPlan);
+}
+
+/** Member-facing plan list for the mobile "pay now" flow - active plans only, unlike the admin
+ * listPlans() above which shows every plan (including inactive ones, so admin can still see and
+ * reactivate them). */
+export async function listActivePlans(tenantId: string) {
+  const plans = await listPlans(tenantId);
+  return plans.filter((p) => p.active);
 }
 
 function toMembershipSummary(doc: Awaited<ReturnType<typeof repo.findMembershipByUserId>> | undefined) {
@@ -51,6 +64,7 @@ function toMembershipSummary(doc: Awaited<ReturnType<typeof repo.findMembershipB
     subscriptionStatus: deriveSubscriptionStatus(doc.status, doc.paymentStatus),
     startDate: doc.startDate?.toISOString(),
     endDate: doc.endDate?.toISOString(),
+    lastPaymentReminderAt: doc.lastPaymentReminderAt?.toISOString(),
   };
 }
 
@@ -101,27 +115,17 @@ interface CreatePlanInput {
   billingInterval: 'month' | 'year';
 }
 
-export async function createPlan(tenantId: string, input: CreatePlanInput): Promise<MembershipPlan> {
-  const currency = input.currency ?? 'usd';
-
-  // Stripe product/price creation is best-effort: if STRIPE_SECRET_KEY isn't configured yet,
-  // the plan is still created (usable for display/manual tracking) - just without real Stripe
-  // ids, so checkout-session creation for it will fail clearly later rather than the whole
-  // "create a plan" action being blocked on Stripe being set up first.
-  const product = await stripeLib.createProduct(input.name, input.description);
-  const price = product
-    ? await stripeLib.createPrice({ productId: product.id, priceCents: input.priceCents, currency, interval: input.billingInterval })
-    : null;
-
+export async function createPlan(tenantId: string, input: CreatePlanInput) {
+  // No provider-side product/price object needed for Cashfree's Orders API (unlike Stripe) -
+  // an order references the plan's priceCents/currency directly at checkout time, so plan
+  // creation is now pure local data with no external API call at all.
   const doc = await repo.createPlan({
     tenantId,
     name: input.name,
     description: input.description,
     priceCents: input.priceCents,
-    currency,
+    currency: input.currency ?? 'inr',
     billingInterval: input.billingInterval,
-    stripeProductId: product?.id,
-    stripePriceId: price?.id,
   });
 
   return repo.toDomainPlan(doc);
@@ -131,13 +135,11 @@ interface UpdatePlanInput {
   name?: string;
   description?: string;
   active?: boolean;
-  // Changing price/interval creates a new Stripe Price (Stripe prices are immutable once
-  // created) and archives the old one - not a mutation of the existing price.
   priceCents?: number;
   billingInterval?: 'month' | 'year';
 }
 
-export async function updatePlan(tenantId: string, planId: string, input: UpdatePlanInput): Promise<MembershipPlan> {
+export async function updatePlan(tenantId: string, planId: string, input: UpdatePlanInput) {
   const existing = await repo.findPlanById(planId, tenantId);
   if (!existing) throw new NotFoundError('Membership plan not found');
 
@@ -145,61 +147,106 @@ export async function updatePlan(tenantId: string, planId: string, input: Update
   if (input.name !== undefined) updates.name = input.name;
   if (input.description !== undefined) updates.description = input.description;
   if (input.active !== undefined) updates.active = input.active;
-
-  const priceChanged = input.priceCents !== undefined || input.billingInterval !== undefined;
-  if (priceChanged && existing.stripeProductId) {
-    const newPrice = await stripeLib.createPrice({
-      productId: existing.stripeProductId,
-      priceCents: input.priceCents ?? existing.priceCents,
-      currency: existing.currency,
-      interval: input.billingInterval ?? existing.billingInterval,
-    });
-    if (newPrice) {
-      if (existing.stripePriceId) await stripeLib.archivePrice(existing.stripePriceId);
-      updates.stripePriceId = newPrice.id;
-    }
-    if (input.priceCents !== undefined) updates.priceCents = input.priceCents;
-    if (input.billingInterval !== undefined) updates.billingInterval = input.billingInterval;
-  } else if (priceChanged) {
-    // No Stripe product exists yet (created before Stripe was configured) - just update the
-    // stored numbers, there's no Stripe price to rotate.
-    if (input.priceCents !== undefined) updates.priceCents = input.priceCents;
-    if (input.billingInterval !== undefined) updates.billingInterval = input.billingInterval;
-  }
+  if (input.priceCents !== undefined) updates.priceCents = input.priceCents;
+  if (input.billingInterval !== undefined) updates.billingInterval = input.billingInterval;
 
   const updated = await repo.updatePlan(planId, tenantId, updates);
   if (!updated) throw new NotFoundError('Membership plan not found');
   return repo.toDomainPlan(updated);
 }
 
+// ─── Shared payment-recording core ─────────────────────────────────────────────
+
+/**
+ * The single place both the Cashfree webhook path and the cash-OTP confirm path fund a
+ * successful payment through - see repository.ts's extendMembershipAtomic() for why this must
+ * never be a read-then-write in application code (a member paying online at the same moment an
+ * admin confirms a cash payment for them must never let one payment's credit silently vanish).
+ */
+async function recordSuccessfulPayment(
+  tenantId: string,
+  memberId: string,
+  input: {
+    planId?: string;
+    planName: string;
+    amountCents: number;
+    currency: string;
+    method: 'online' | 'cash';
+    billingInterval: 'month' | 'year';
+    gatewayOrderId?: string;
+  },
+) {
+  await repo.extendMembershipAtomic(memberId, {
+    tenantId,
+    planId: input.planId,
+    planName: input.planName,
+    paymentStatus: 'paid' as PaymentStatus,
+    paymentMethod: input.method,
+    billingInterval: input.billingInterval,
+    gatewayOrderId: input.gatewayOrderId,
+  });
+
+  await repo.recordPaymentEvent({
+    tenantId,
+    userId: memberId,
+    type: input.method === 'online' ? 'checkout_completed' : 'marked_paid',
+    amountCents: input.amountCents,
+    currency: input.currency,
+    planName: input.planName,
+  });
+}
+
 // ─── Member-facing membership actions ──────────────────────────────────────────
 
+/** Used both by the admin "send checkout link" action and the member's own self-service "pay
+ * now" - memberId is the caller's own id in the self-service case, someone else's in the admin
+ * case, but the logic (and security boundary: member's email/phone looked up server-side, never
+ * trusted from the request) is identical either way. */
 export async function createCheckoutSessionForMember(
   tenantId: string,
   memberId: string,
   planId: string,
-  config: Pick<Env, 'STRIPE_SUCCESS_URL' | 'STRIPE_CANCEL_URL'>,
+  config: Pick<Env, 'CASHFREE_RETURN_URL'>,
+  returnUrlOverride?: string,
 ) {
-  // The member's email is looked up server-side, never trusted from the request body - a
-  // checkout link must always be for the real member it claims to be for.
   const member = await findMemberByIdInTenant(memberId, tenantId);
   if (!member) throw new NotFoundError('Member not found');
 
   const plan = await repo.findPlanById(planId, tenantId);
   if (!plan) throw new NotFoundError('Membership plan not found');
-  if (!plan.stripePriceId) throw new BadGatewayError('This plan has no associated Stripe price yet - configure Stripe and recreate the plan');
 
-  const session = await stripeLib.createCheckoutSession({
-    priceId: plan.stripePriceId,
+  const customerPhoneE164 = toE164(member.phone);
+  const orderId = `membership-${randomUUID()}`;
+
+  const order = await cashfreeLib.createOrder({
+    orderId,
+    amountCents: plan.priceCents,
+    currency: plan.currency,
+    customerId: memberId,
     customerEmail: member.email,
-    successUrl: config.STRIPE_SUCCESS_URL,
-    cancelUrl: config.STRIPE_CANCEL_URL,
-    metadata: { userId: memberId, tenantId, planId },
+    customerPhoneE164,
+    returnUrl: returnUrlOverride ?? config.CASHFREE_RETURN_URL,
+    tags: { userId: memberId, tenantId, planId },
   });
 
-  return { checkoutUrl: session.url };
+  await CashfreeOrderModel.create({
+    tenantId,
+    userId: memberId,
+    planId,
+    cashfreeOrderId: order.cfOrderId,
+    paymentSessionId: order.paymentSessionId,
+    amountCents: plan.priceCents,
+    currency: plan.currency,
+    status: 'created',
+  });
+
+  return { checkoutUrl: order.checkoutUrl };
 }
 
+/** Admin override with no member-side confirmation at all - kept deliberately separate from the
+ * OTP-confirmed cash-payment flow below (see billing/service.ts's confirmCashPayment): needed for
+ * genuine comps (no real payment occurred, so there's nothing to OTP-confirm) and the rare case
+ * where a member's phone can't receive SMS. */
 export async function markPaid(tenantId: string, memberId: string, planName: string) {
   const doc = await repo.upsertMembership(memberId, {
     tenantId,
@@ -215,7 +262,7 @@ export async function markPaid(tenantId: string, memberId: string, planName: str
 /** Never exposes the actual key - only whether one is configured - so the web Settings page can
  * show real status without the UI (or its network tab) ever seeing a secret. */
 export function getPaymentGatewayStatus() {
-  return { stripeConfigured: stripeLib.isConfigured() };
+  return { cashfreeConfigured: cashfreeLib.isConfigured() };
 }
 
 export async function getPaymentHistory(tenantId: string, memberId: string) {
@@ -226,84 +273,145 @@ export async function getPaymentHistory(tenantId: string, memberId: string) {
   return docs.map(repo.toDomainPaymentEvent);
 }
 
+/** Lightweight self-service lookup for the mobile app to poll after returning from a hosted
+ * checkout - the webhook, not the browser redirect, is the actual source of truth for whether a
+ * payment succeeded, so the client polls this rather than trusting redirect query params.
+ * Includes the derived subscriptionStatus (not part of the stored Membership document) so the
+ * client doesn't need to duplicate deriveSubscriptionStatus()'s logic itself. */
+export async function getMembershipForSelf(userId: string) {
+  const doc = await repo.findMembershipByUserId(userId);
+  if (!doc) return null;
+
+  const membership = repo.toDomainMembership(doc);
+  return { ...membership, subscriptionStatus: deriveSubscriptionStatus(doc.status, doc.paymentStatus) };
+}
+
+// ─── Cash-payment OTP confirmation ─────────────────────────────────────────────
+
+export async function initiateCashPayment(
+  tenantId: string,
+  memberId: string,
+  initiatedByAdminId: string,
+  input: { planId?: string; planName: string; amountCents: number; currency: string },
+) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const phoneE164 = toE164(member.phone);
+
+  const { code, expiresAt } = await issueCashPaymentOtp({
+    tenantId,
+    memberId,
+    initiatedByAdminId,
+    amountCents: input.amountCents,
+    currency: input.currency,
+    planId: input.planId,
+    planName: input.planName,
+  });
+
+  await sendSms(phoneE164, `Your BarBellix payment code is ${code}. Give this to the front desk to confirm your payment. Expires in 10 minutes.`);
+
+  return { expiresAt: expiresAt.toISOString() };
+}
+
+export async function confirmCashPayment(
+  tenantId: string,
+  memberId: string,
+  input: { code: string; planId?: string; planName: string; amountCents: number; currency: string; billingInterval: 'month' | 'year' },
+) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  await verifyCashPaymentOtp({ memberId, amountCents: input.amountCents, code: input.code });
+
+  await recordSuccessfulPayment(tenantId, memberId, {
+    planId: input.planId,
+    planName: input.planName,
+    amountCents: input.amountCents,
+    currency: input.currency,
+    method: 'cash',
+    billingInterval: input.billingInterval,
+  });
+
+  return { success: true };
+}
+
+// ─── Payment reminders ──────────────────────────────────────────────────────────
+
+const PAYMENT_REMINDER_COOLDOWN_HOURS = 6;
+
+export async function sendPaymentReminder(tenantId: string, memberId: string) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const membership = await repo.findMembershipByUserId(memberId);
+  if (!membership) throw new NotFoundError('This member has no membership to remind them about');
+
+  if (membership.lastPaymentReminderAt) {
+    const cooldownEnds = new Date(membership.lastPaymentReminderAt);
+    cooldownEnds.setUTCHours(cooldownEnds.getUTCHours() + PAYMENT_REMINDER_COOLDOWN_HOURS);
+    if (new Date() < cooldownEnds) {
+      throw new ValidationError(`Already reminded recently - wait until ${cooldownEnds.toISOString()} to send another`);
+    }
+  }
+
+  // Deliberately bypasses NotificationPreferences - this is a one-off, admin-initiated message
+  // about money owed, not an automated recurring nudge a member should be able to silence via a
+  // toggle meant for streak alerts/tips.
+  await sendPushToUser(memberId, {
+    title: 'Payment due',
+    body: `Your ${membership.planName} membership payment is due. Pay in the app or visit the front desk.`,
+    data: { type: 'payment_reminder' },
+  });
+
+  const doc = await repo.upsertMembership(memberId, { tenantId, lastPaymentReminderAt: new Date() });
+  return repo.toDomainMembership(doc);
+}
+
 // ─── Webhook handling ───────────────────────────────────────────────────────────
 
-export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
-  switch (event.type) {
-    case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const { userId, tenantId, planId } = session.metadata ?? {};
-      if (!userId || !tenantId) break; // not one of our sessions
+interface CashfreeWebhookPayload {
+  type?: string;
+  data?: {
+    order?: {
+      order_id?: string;
+      cf_order_id?: string;
+      order_amount?: number;
+      order_currency?: string;
+    };
+    payment?: {
+      payment_status?: string;
+    };
+  };
+}
 
-      const plan = planId ? await repo.findPlanById(planId, tenantId) : null;
+export async function handleCashfreeWebhook(rawBody: string, signature: string, timestamp: string): Promise<void> {
+  const payload = cashfreeLib.verifyWebhookSignature(rawBody, signature, timestamp) as CashfreeWebhookPayload;
 
-      await repo.upsertMembership(userId, {
-        tenantId,
-        planId: plan?._id.toString(),
-        planName: plan?.name ?? 'Membership',
-        status: 'active' as MembershipStatus,
-        paymentStatus: 'paid' as PaymentStatus,
-        paymentMethod: 'online',
-        stripeCustomerId: typeof session.customer === 'string' ? session.customer : session.customer?.id,
-        stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
-      });
-      await repo.recordPaymentEvent({
-        tenantId,
-        userId,
-        type: 'checkout_completed',
-        amountCents: session.amount_total ?? undefined,
-        currency: session.currency ?? undefined,
-        planName: plan?.name,
-      });
-      break;
-    }
+  if (payload.type !== 'PAYMENT_SUCCESS_WEBHOOK') return;
 
-    case 'customer.subscription.updated': {
-      const subscription = event.data.object as Stripe.Subscription;
-      const membership = await repo.findMembershipByStripeSubscriptionId(subscription.id);
-      if (!membership) break;
+  const cfOrderId = payload.data?.order?.cf_order_id;
+  if (!cfOrderId) return;
 
-      const periodEnd = (subscription as unknown as { current_period_end?: number }).current_period_end;
-      await repo.upsertMembership(membership.userId.toString(), {
-        status: subscription.status === 'active' ? ('active' as MembershipStatus) : ('paused' as MembershipStatus),
-        currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : undefined,
-      });
-      if (subscription.status === 'active') {
-        await repo.recordPaymentEvent({ tenantId: membership.tenantId.toString(), userId: membership.userId.toString(), type: 'subscription_renewed', planName: membership.planName });
-      }
-      break;
-    }
+  // Atomic created->paid transition - a null result means this cf_order_id is already 'paid' (or
+  // 'failed'/'cancelled'), i.e. a duplicate webhook delivery (gateways retry on timeout/failure) -
+  // skip re-applying the payment side effects rather than double-crediting the membership.
+  const order = await CashfreeOrderModel.findOneAndUpdate(
+    { cashfreeOrderId: cfOrderId, status: 'created' },
+    { $set: { status: 'paid' } },
+    { new: true },
+  );
+  if (!order) return;
 
-    case 'customer.subscription.deleted': {
-      const subscription = event.data.object as Stripe.Subscription;
-      const membership = await repo.findMembershipByStripeSubscriptionId(subscription.id);
-      if (!membership) break;
+  const plan = order.planId ? await repo.findPlanById(order.planId.toString(), order.tenantId.toString()) : null;
 
-      await repo.upsertMembership(membership.userId.toString(), { status: 'cancelled' as MembershipStatus });
-      await repo.recordPaymentEvent({ tenantId: membership.tenantId.toString(), userId: membership.userId.toString(), type: 'subscription_cancelled', planName: membership.planName });
-      break;
-    }
-
-    case 'invoice.payment_failed': {
-      const invoice = event.data.object as Stripe.Invoice;
-      const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
-      if (!customerId) break;
-      const membership = await repo.findMembershipByStripeCustomerId(customerId);
-      if (!membership) break;
-
-      await repo.upsertMembership(membership.userId.toString(), { paymentStatus: 'overdue' as PaymentStatus });
-      await repo.recordPaymentEvent({
-        tenantId: membership.tenantId.toString(),
-        userId: membership.userId.toString(),
-        type: 'payment_failed',
-        amountCents: invoice.amount_due ?? undefined,
-        currency: invoice.currency ?? undefined,
-        planName: membership.planName,
-      });
-      break;
-    }
-
-    default:
-      break;
-  }
+  await recordSuccessfulPayment(order.tenantId.toString(), order.userId.toString(), {
+    planId: order.planId?.toString(),
+    planName: plan?.name ?? 'Membership',
+    amountCents: order.amountCents,
+    currency: order.currency,
+    method: 'online',
+    billingInterval: plan?.billingInterval ?? 'month',
+    gatewayOrderId: cfOrderId,
+  });
 }

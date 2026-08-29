@@ -31,3 +31,19 @@ export const updateMembershipDatesSchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
 });
+
+export const initiateCashPaymentSchema = z.object({
+  planId: z.string().optional(),
+  planName: z.string().min(1),
+  amountCents: z.number().min(1),
+  currency: z.string().min(1),
+});
+
+export const confirmCashPaymentSchema = z.object({
+  code: z.string().length(6),
+  planId: z.string().optional(),
+  planName: z.string().min(1),
+  amountCents: z.number().min(1),
+  currency: z.string().min(1),
+  billingInterval: z.enum(['month', 'year']),
+});

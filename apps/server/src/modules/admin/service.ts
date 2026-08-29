@@ -4,6 +4,7 @@ import { getMembershipCounts } from '../billing/service.js';
 import { findMemberByIdInTenant } from '../trainer/repository.js';
 import { listMetrics, listPRs } from '../progress/service.js';
 import { listPlans, listSessions } from '../workouts/service.js';
+import { getHistoryForMember } from '../attendance/service.js';
 import * as repo from './repository.js';
 
 export async function getAttendanceAnalytics(tenantId: string): Promise<AttendanceAnalytics[]> {
@@ -68,6 +69,16 @@ export async function getMemberProgress(tenantId: string, memberId: string) {
   ]);
 
   return { metrics, prs, sessions, plans };
+}
+
+/** Per-member check-in/check-out ("hours") history for the admin's member-detail view - distinct
+ * from getRecentAttendance below (a flat gym-wide feed) and from WorkoutSession-based "sessions"
+ * shown elsewhere on the same page (self-logged workouts, not attendance check-ins). */
+export async function getMemberAttendanceHistory(tenantId: string, memberId: string, limit?: number) {
+  const member = await findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  return getHistoryForMember(memberId, limit);
 }
 
 export async function getRecentAttendance(tenantId: string, limit: number): Promise<RecentCheckIn[]> {

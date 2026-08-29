@@ -219,25 +219,25 @@ export const SettingsPage = observer(function SettingsPage() {
       <Card className="max-w-xl">
         <CardHeader>
           <CardTitle>Payment gateway</CardTitle>
-          <CardDescription>Stripe keys are configured via server environment variables, never through this UI.</CardDescription>
+          <CardDescription>Cashfree keys are configured via server environment variables, never through this UI.</CardDescription>
         </CardHeader>
         <CardContent>
           {gatewayStatusQuery.isPending ? (
             <Skeleton className="h-9 w-40" />
-          ) : gatewayStatusQuery.data?.stripeConfigured ? (
+          ) : gatewayStatusQuery.data?.cashfreeConfigured ? (
             <Badge variant="success" className="gap-1.5 text-sm">
               <CheckCircle2 className="size-3.5" />
-              Stripe is configured
+              Cashfree is configured
             </Badge>
           ) : (
             <div className="flex flex-col gap-2">
               <Badge variant="destructive" className="w-fit gap-1.5 text-sm">
                 <XCircle className="size-3.5" />
-                Stripe is not configured
+                Cashfree is not configured
               </Badge>
               <p className="text-sm text-muted-foreground">
-                Set <code className="rounded bg-muted px-1 py-0.5">STRIPE_SECRET_KEY</code> and{' '}
-                <code className="rounded bg-muted px-1 py-0.5">STRIPE_WEBHOOK_SECRET</code> in the server's environment to enable real
+                Set <code className="rounded bg-muted px-1 py-0.5">CASHFREE_APP_ID</code> and{' '}
+                <code className="rounded bg-muted px-1 py-0.5">CASHFREE_SECRET_KEY</code> in the server's environment to enable real
                 checkout sessions. Membership plans and manual "mark as paid" still work without it.
               </p>
             </div>

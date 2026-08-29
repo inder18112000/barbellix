@@ -14,11 +14,15 @@ export interface MembershipDocument {
   status: MembershipStatus;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
+  /** Last successful Cashfree order id - support/debugging reference only, no recurring-mandate
+   * concept the way Stripe's customer/subscription ids implied. */
+  gatewayOrderId?: string;
   currentPeriodEnd?: Date;
   startDate: Date;
   endDate?: Date;
+  /** Last time an admin manually sent a "payment due" push - lets the UI show "reminded 2 days
+   * ago" and rate-limits repeated reminders (see billing/service.ts's sendPaymentReminder()). */
+  lastPaymentReminderAt?: Date;
 }
 
 const membershipSchema = new Schema<MembershipDocument>({
@@ -29,11 +33,11 @@ const membershipSchema = new Schema<MembershipDocument>({
   status: { type: String, enum: MEMBERSHIP_STATUSES, required: true, default: 'incomplete' },
   paymentStatus: { type: String, enum: PAYMENT_STATUSES, required: true, default: 'due' },
   paymentMethod: { type: String, enum: PAYMENT_METHODS },
-  stripeCustomerId: { type: String },
-  stripeSubscriptionId: { type: String },
+  gatewayOrderId: { type: String },
   currentPeriodEnd: { type: Date },
   startDate: { type: Date, required: true, default: Date.now },
   endDate: { type: Date },
+  lastPaymentReminderAt: { type: Date },
 });
 
 export const MembershipModel = model<MembershipDocument>('Membership', membershipSchema);

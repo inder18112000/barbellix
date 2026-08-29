@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { format } from 'date-fns'
 import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { ArrowLeft, Trophy, Dumbbell, Scale, Flame, ClipboardList, Sparkles, CreditCard, Banknote, AlertTriangle, RefreshCcw, XCircle } from 'lucide-react'
-import { queryKeys, fetchTrainerMembers, fetchMemberProgress, fetchPaymentHistory } from '@/api/queries'
+import { ArrowLeft, Trophy, Dumbbell, Scale, Flame, ClipboardList, Sparkles, CreditCard, Banknote, AlertTriangle, RefreshCcw, XCircle, Clock, Pencil, Plus } from 'lucide-react'
+import { queryKeys, fetchTrainerMembers, fetchMemberProgress, fetchPaymentHistory, fetchMemberAttendance } from '@/api/queries'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,6 +43,11 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
   const paymentHistoryQuery = useQuery({
     queryKey: queryKeys.admin.paymentHistory(memberId ?? ''),
     queryFn: () => fetchPaymentHistory(memberId!),
+    enabled: !!memberId,
+  })
+  const attendanceHistoryQuery = useQuery({
+    queryKey: queryKeys.admin.memberAttendance(memberId ?? ''),
+    queryFn: () => fetchMemberAttendance(memberId!),
     enabled: !!memberId,
   })
 
@@ -181,9 +186,17 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Workout plans</CardTitle>
-              <CardDescription>Trainer-assigned and AI-generated plans this member has.</CardDescription>
+            <CardHeader className="flex-row items-center justify-between">
+              <div>
+                <CardTitle>Workout plans</CardTitle>
+                <CardDescription>Trainer-assigned and AI-generated plans this member has.</CardDescription>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to={`/admin/members/${memberId}/assign-plan`}>
+                  <Plus className="size-4" />
+                  Assign / create plan
+                </Link>
+              </Button>
             </CardHeader>
             <CardContent>
               {progressQuery.isPending ? (
@@ -204,10 +217,19 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
                           {plan.version > 1 && <Badge variant="secondary">v{plan.version}</Badge>}
                           {!plan.active && <Badge variant="outline">Superseded</Badge>}
                         </div>
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <ClipboardList className="size-3.5" />
-                          {plan.days.length} day{plan.days.length === 1 ? '' : 's'}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <ClipboardList className="size-3.5" />
+                            {plan.days.length} day{plan.days.length === 1 ? '' : 's'}
+                          </span>
+                          {plan.active && (
+                            <Button variant="ghost" size="icon" className="size-7" asChild>
+                              <Link to={`/admin/members/${memberId}/plans/${plan.id}/edit`}>
+                                <Pencil className="size-3.5" />
+                              </Link>
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       {plan.changeSummary && plan.changeSummary.length > 0 && (
                         <ul className="ml-6 list-disc text-xs text-muted-foreground">
@@ -226,7 +248,7 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Payment history</CardTitle>
-              <CardDescription>Real events recorded from Stripe webhooks and manual mark-as-paid actions.</CardDescription>
+              <CardDescription>Real events recorded from Cashfree webhooks and manual mark-as-paid actions.</CardDescription>
             </CardHeader>
             <CardContent>
               {paymentHistoryQuery.isPending ? (
@@ -257,6 +279,49 @@ export const MemberDetailPage = observer(function MemberDetailPage() {
                       </li>
                     )
                   })}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Check-in history</CardTitle>
+              <CardDescription>Gym visits with check-in/check-out times and duration.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {attendanceHistoryQuery.isPending ? (
+                <Skeleton className="h-24 w-full" />
+              ) : attendanceHistoryQuery.isError ? (
+                <ErrorState message="Couldn't load check-in history." />
+              ) : attendanceHistoryQuery.data.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">No check-ins yet.</p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-border">
+                  {attendanceHistoryQuery.data.map((entry) => (
+                    <li key={entry.id} className="flex items-center justify-between py-2.5 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Clock className="size-4 text-primary" />
+                        <span>{format(new Date(entry.checkedInAt), 'MMM d, yyyy · h:mm a')}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-muted-foreground">
+                        {entry.checkOutAt ? (
+                          <>
+                            <span>→ {format(new Date(entry.checkOutAt), 'h:mm a')}</span>
+                            {entry.durationMins != null && (
+                              <span className="font-medium text-foreground">
+                                {entry.durationMins >= 60
+                                  ? `${Math.floor(entry.durationMins / 60)}h ${entry.durationMins % 60}m`
+                                  : `${entry.durationMins}m`}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <Badge variant="success">Still checked in</Badge>
+                        )}
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               )}
             </CardContent>

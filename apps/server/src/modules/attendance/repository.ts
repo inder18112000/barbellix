@@ -62,8 +62,9 @@ export async function setCheckOut(recordId: string) {
   return AttendanceRecordModel.findByIdAndUpdate(recordId, { checkOutAt: new Date() }, { new: true });
 }
 
-export async function findHistory(userId: string) {
-  return AttendanceRecordModel.find({ userId }).sort({ checkedInAt: -1 });
+export async function findHistory(userId: string, limit?: number) {
+  const query = AttendanceRecordModel.find({ userId }).sort({ checkedInAt: -1 });
+  return limit ? query.limit(limit) : query;
 }
 
 export async function findThisMonthCount(userId: string, startOfMonth: Date) {

@@ -3,11 +3,14 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
   assignPlanSchema,
   memberIdParamSchema,
+  memberPlanParamSchema,
+  updateMemberPlanSchema,
   updateMemberStatusSchema,
   updateMemberInfoSchema,
   assignTrainerSchema,
   trainerIdParamSchema,
   setTrainerPermissionsSchema,
+  createStaffAccountSchema,
 } from './schemas.js';
 import * as trainerService from './service.js';
 
@@ -34,6 +37,20 @@ export default async function trainerRoutes(fastify: FastifyInstance) {
         request.user.tenantId,
         request.params.memberId,
         request.body.planId,
+      );
+    },
+  );
+
+  app.put(
+    '/trainer/members/:memberId/plans/:planId',
+    { schema: { params: memberPlanParamSchema, body: updateMemberPlanSchema }, preHandler },
+    async (request) => {
+      return trainerService.updateMemberPlan(
+        { id: request.user.sub, role: request.user.role },
+        request.user.tenantId,
+        request.params.memberId,
+        request.params.planId,
+        request.body,
       );
     },
   );
@@ -135,6 +152,27 @@ export default async function trainerRoutes(fastify: FastifyInstance) {
     },
     async (request) => {
       return trainerService.generateTrainerLoginPairingToken(request.user.tenantId, request.params.trainerId, request.user.role);
+    },
+  );
+
+  // Admin-initiated account creation - closes the gap where trainer/member accounts could only
+  // ever be self-registered (members) or seeded (trainers). The new account's first login is the
+  // returned QR pairing token, same mechanism as generateLoginPairingToken() above.
+  app.post(
+    '/admin/trainers',
+    { schema: { body: createStaffAccountSchema }, preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')] },
+    async (request, reply) => {
+      const result = await trainerService.createTrainer(request.user.tenantId, request.body);
+      return reply.status(201).send(result);
+    },
+  );
+
+  app.post(
+    '/admin/members',
+    { schema: { body: createStaffAccountSchema }, preHandler: [fastify.authenticate, fastify.requireRole('admin', 'superadmin')] },
+    async (request, reply) => {
+      const result = await trainerService.createMember(request.user.tenantId, request.body);
+      return reply.status(201).send(result);
     },
   );
 }

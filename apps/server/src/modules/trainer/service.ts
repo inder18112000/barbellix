@@ -1,8 +1,11 @@
+import { randomBytes } from 'node:crypto';
 import { Types } from 'mongoose';
 import type { TrainerMemberSummary, UserRole } from '@barbellix/shared';
-import { ForbiddenError, NotFoundError } from '../../lib/errors.js';
+import { ForbiddenError, NotFoundError, ConflictError } from '../../lib/errors.js';
 import { toDomainUser } from '../../lib/mappers.js';
 import { issuePairingToken } from '../../lib/pairingToken.js';
+import { hashPassword } from '../../lib/password.js';
+import { findUserByEmail } from '../auth/repository.js';
 import { computeSummariesForUsers } from '../attendance/service.js';
 import { getMembershipSummariesForUsers } from '../billing/service.js';
 import { updateInfo as updateUserInfo } from '../users/repository.js';
@@ -149,6 +152,30 @@ export async function assignPlan(
   return { memberId, planId: newPlan._id.toString(), success: true };
 }
 
+/** Edits an existing member's plan in place (from the requester's perspective - see
+ * repository.ts's supersedePlan for why this is actually implemented as deactivate-old +
+ * create-new under the hood, not a mutation). Same requester-scoping as assignPlan above: a
+ * trainer may only edit their own assigned members' plans, admin/superadmin can edit anyone's. */
+export async function updateMemberPlan(
+  requester: { id: string; role: UserRole },
+  tenantId: string,
+  memberId: string,
+  planId: string,
+  updates: { name?: string; goal?: string; days?: unknown; changeNote?: string },
+) {
+  const member =
+    requester.role === 'trainer'
+      ? await repo.findAssignedMemberByIdInTenant(memberId, tenantId, requester.id)
+      : await repo.findMemberByIdInTenant(memberId, tenantId);
+  if (!member) throw new NotFoundError('Member not found');
+
+  const plan = await repo.findPlanForMember(planId, memberId);
+  if (!plan) throw new NotFoundError('Plan not found for this member');
+
+  const newPlan = await repo.supersedePlan(plan, updates, requester.id, updates.changeNote);
+  return { planId: newPlan._id.toString(), version: newPlan.version, success: true };
+}
+
 /** Single-purpose, matching the established GET /admin/members/:memberId/progress convention
  * rather than a kitchen-sink member-detail endpoint. Same scope split as assignPlan() above: a
  * trainer only reaches their own assigned member's injuries, never the whole tenant's. */
@@ -210,6 +237,45 @@ export async function listAvailableTrainers(tenantId: string) {
     trainerPermissions: d.trainerPermissions,
     reportsToRole: d.reportsToRole,
   }));
+}
+
+interface CreateStaffAccountInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+}
+
+/** Shared by createTrainer()/createMember() below - both create an account with a random,
+ * never-surfaced password (the person never types it - their first login is always the QR
+ * device-pairing flow, see generateLoginPairingToken()/generateTrainerLoginPairingToken() above),
+ * then immediately issue that pairing token so the admin can hand over a working sign-in QR in
+ * the same action that created the account. */
+async function createAccountWithPairingToken(tenantId: string, role: 'trainer' | 'member', input: CreateStaffAccountInput) {
+  const existing = await findUserByEmail(input.email);
+  if (existing) throw new ConflictError('An account with this email already exists');
+
+  const passwordHash = await hashPassword(randomBytes(32).toString('hex'));
+  const doc = await repo.createStaffAccount({
+    tenantId,
+    role,
+    email: input.email,
+    firstName: input.firstName,
+    lastName: input.lastName,
+    phone: input.phone,
+    passwordHash,
+  });
+
+  const { token, expiresAt } = await issuePairingToken(doc._id, new Types.ObjectId(tenantId));
+  return { user: toDomainUser(doc), pairingToken: { token, expiresAt: expiresAt.toISOString() } };
+}
+
+export async function createTrainer(tenantId: string, input: CreateStaffAccountInput) {
+  return createAccountWithPairingToken(tenantId, 'trainer', input);
+}
+
+export async function createMember(tenantId: string, input: CreateStaffAccountInput) {
+  return createAccountWithPairingToken(tenantId, 'member', input);
 }
 
 /** Admin/superadmin only - assigns (or clears, with trainerId: null) a member's trainer. Validates

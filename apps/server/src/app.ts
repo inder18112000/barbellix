@@ -24,7 +24,7 @@ import adminRoutes from './modules/admin/routes.js';
 import messagingRoutes from './modules/messaging/routes.js';
 import aiCoachRoutes from './modules/ai-coach/routes.js';
 import billingRoutes from './modules/billing/routes.js';
-import stripeWebhookRoutes from './modules/billing/webhookRoutes.js';
+import cashfreeWebhookRoutes from './modules/billing/webhookRoutes.js';
 import sponsorsRoutes from './modules/sponsors/routes.js';
 import classesRoutes from './modules/classes/routes.js';
 import notificationsRoutes from './modules/notifications/routes.js';
@@ -67,7 +67,7 @@ export async function buildApp() {
   await app.register(messagingRoutes);
   await app.register(aiCoachRoutes);
   await app.register(billingRoutes);
-  await app.register(stripeWebhookRoutes);
+  await app.register(cashfreeWebhookRoutes);
   await app.register(sponsorsRoutes);
   await app.register(classesRoutes);
   await app.register(notificationsRoutes);

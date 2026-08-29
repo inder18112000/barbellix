@@ -8,8 +8,6 @@ export interface MembershipPlanDocument {
   priceCents: number;
   currency: string;
   billingInterval: 'month' | 'year';
-  stripeProductId?: string;
-  stripePriceId?: string;
   active: boolean;
 }
 
@@ -18,10 +16,9 @@ const membershipPlanSchema = new Schema<MembershipPlanDocument>({
   name: { type: String, required: true },
   description: { type: String },
   priceCents: { type: Number, required: true },
-  currency: { type: String, required: true, default: 'usd' },
+  // Cashfree's UPI payment method is INR-only - default new plans to INR rather than Stripe-era 'usd'.
+  currency: { type: String, required: true, default: 'inr' },
   billingInterval: { type: String, enum: ['month', 'year'], required: true },
-  stripeProductId: { type: String },
-  stripePriceId: { type: String },
   active: { type: Boolean, required: true, default: true },
 });
 

@@ -1,5 +1,5 @@
-import type { HydratedDocument } from 'mongoose';
-import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType } from '@barbellix/shared';
+import { Types, type HydratedDocument } from 'mongoose';
+import type { MembershipPlan, Membership, PaymentEvent, PaymentEventType, PaymentStatus, PaymentMethod } from '@barbellix/shared';
 import { MembershipPlanModel, type MembershipPlanDocument } from '../../db/models/MembershipPlan.js';
 import { MembershipModel, type MembershipDocument } from '../../db/models/Membership.js';
 import { PaymentEventModel, type PaymentEventDocument } from '../../db/models/PaymentEvent.js';
@@ -14,8 +14,6 @@ export function toDomainPlan(doc: HydratedDocument<MembershipPlanDocument>): Mem
     priceCents: doc.priceCents,
     currency: doc.currency,
     billingInterval: doc.billingInterval,
-    stripeProductId: doc.stripeProductId,
-    stripePriceId: doc.stripePriceId,
     active: doc.active,
   };
 }
@@ -30,11 +28,11 @@ export function toDomainMembership(doc: HydratedDocument<MembershipDocument>): M
     status: doc.status,
     paymentStatus: doc.paymentStatus,
     paymentMethod: doc.paymentMethod,
-    stripeCustomerId: doc.stripeCustomerId,
-    stripeSubscriptionId: doc.stripeSubscriptionId,
+    gatewayOrderId: doc.gatewayOrderId,
     currentPeriodEnd: isoStr(doc.currentPeriodEnd),
     startDate: isoStr(doc.startDate),
     endDate: isoStr(doc.endDate),
+    lastPaymentReminderAt: isoStr(doc.lastPaymentReminderAt),
   };
 }
 
@@ -55,8 +53,6 @@ export async function createPlan(input: {
   priceCents: number;
   currency: string;
   billingInterval: 'month' | 'year';
-  stripeProductId?: string;
-  stripePriceId?: string;
 }) {
   return MembershipPlanModel.create(input);
 }
@@ -78,14 +74,6 @@ export async function findMembershipsByUserIds(userIds: string[]) {
   return new Map(docs.map((doc) => [doc.userId.toString(), doc]));
 }
 
-export async function findMembershipByStripeCustomerId(stripeCustomerId: string) {
-  return MembershipModel.findOne({ stripeCustomerId });
-}
-
-export async function findMembershipByStripeSubscriptionId(stripeSubscriptionId: string) {
-  return MembershipModel.findOne({ stripeSubscriptionId });
-}
-
 type UpsertMembershipInput = Omit<Partial<MembershipDocument>, 'tenantId' | 'planId'> & {
   // Mongoose casts these string ids to ObjectId on write - callers deal in strings, not
   // hydrated document types.
@@ -103,6 +91,59 @@ export async function upsertMembership(userId: string, updates: UpsertMembership
   return MembershipModel.findOneAndUpdate(
     { userId },
     { $set: updates, $setOnInsert: setOnInsert },
+    { new: true, upsert: true },
+  );
+}
+
+/**
+ * Extends a membership's endDate by exactly one billing interval, computed entirely inside a
+ * single atomic MongoDB aggregation-pipeline update - never read-then-compute-then-write in
+ * application code. That matters because two payments can legitimately land at nearly the same
+ * moment (a member finishing online checkout right as an admin confirms a cash payment for them) -
+ * a naive "read endDate, add an interval, write it back" would let one of those two payments'
+ * worth of credit get silently overwritten by the other. Using MongoDB's $$NOW (a single
+ * consistent timestamp for the whole pipeline execution) and $dateAdd means every call - no
+ * matter how concurrent - always extends from the true latest stored value, not a stale read.
+ *
+ * $setOnInsert isn't available in pipeline-style updates, so "set only if missing" is expressed
+ * with $ifNull directly in the $set stage instead (used for startDate here).
+ */
+export async function extendMembershipAtomic(
+  userId: string,
+  input: {
+    tenantId: string;
+    planId?: string;
+    planName: string;
+    paymentStatus: PaymentStatus;
+    paymentMethod: PaymentMethod;
+    billingInterval: 'month' | 'year';
+    gatewayOrderId?: string;
+  },
+) {
+  return MembershipModel.findOneAndUpdate(
+    { userId },
+    [
+      {
+        $set: {
+          userId: new Types.ObjectId(userId),
+          tenantId: new Types.ObjectId(input.tenantId),
+          planId: input.planId ? new Types.ObjectId(input.planId) : '$planId',
+          planName: input.planName,
+          status: 'active',
+          paymentStatus: input.paymentStatus,
+          paymentMethod: input.paymentMethod,
+          gatewayOrderId: input.gatewayOrderId ?? '$gatewayOrderId',
+          startDate: { $ifNull: ['$startDate', '$$NOW'] },
+          endDate: {
+            $dateAdd: {
+              startDate: { $max: [{ $ifNull: ['$endDate', '$$NOW'] }, '$$NOW'] },
+              unit: input.billingInterval === 'year' ? 'year' : 'month',
+              amount: 1,
+            },
+          },
+        },
+      },
+    ],
     { new: true, upsert: true },
   );
 }

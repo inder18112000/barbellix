@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode, UserCog2 } from 'lucide-react'
+import { Search, MoreHorizontal, Users, Copy, Check, ArrowUpDown, QrCode, UserCog2, Banknote, BellRing, Plus } from 'lucide-react'
 import type { TrainerMemberSummary, SubscriptionStatus } from '@barbellix/shared'
 import {
   queryKeys,
@@ -17,6 +17,10 @@ import {
   generateLoginPairingToken,
   fetchAvailableTrainers,
   assignTrainerToMember,
+  initiateCashPayment,
+  confirmCashPayment,
+  sendPaymentReminder,
+  createMember,
 } from '@/api/queries'
 import { LoginPairingDialog } from '@/components/common/LoginPairingDialog'
 import { Input } from '@/components/ui/input'
@@ -50,8 +54,10 @@ export const MembersPage = observer(function MembersPage() {
   const [markPaidTarget, setMarkPaidTarget] = useState<TrainerMemberSummary | null>(null)
   const [datesTarget, setDatesTarget] = useState<TrainerMemberSummary | null>(null)
   const [infoTarget, setInfoTarget] = useState<TrainerMemberSummary | null>(null)
-  const [pairingTarget, setPairingTarget] = useState<TrainerMemberSummary | null>(null)
+  const [pairingTarget, setPairingTarget] = useState<{ id: string; firstName: string } | null>(null)
   const [trainerTarget, setTrainerTarget] = useState<TrainerMemberSummary | null>(null)
+  const [cashPaymentTarget, setCashPaymentTarget] = useState<TrainerMemberSummary | null>(null)
+  const [showCreateMemberDialog, setShowCreateMemberDialog] = useState(false)
 
   const isAdmin = authStore.user?.role === 'admin'
 
@@ -86,6 +92,15 @@ export const MembersPage = observer(function MembersPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
       toast.success('Marked as paid')
       setMarkPaidTarget(null)
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const reminderMutation = useMutation({
+    mutationFn: (memberId: string) => sendPaymentReminder(memberId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
+      toast.success('Payment reminder sent')
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -155,8 +170,19 @@ export const MembersPage = observer(function MembersPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Membership</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setCheckoutTarget(member)}>Send checkout link</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setMarkPaidTarget(member)}>Mark as paid</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setCashPaymentTarget(member)}>
+              <Banknote className="size-4" />
+              Collect cash payment
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setMarkPaidTarget(member)}>Mark as paid (override)</DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDatesTarget(member)}>Edit membership dates</DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={reminderMutation.isPending}
+              onClick={() => reminderMutation.mutate(member.id)}
+            >
+              <BellRing className="size-4" />
+              Send payment reminder
+            </DropdownMenuItem>
             {isAdmin && (
               <>
                 <DropdownMenuSeparator />
@@ -224,6 +250,12 @@ export const MembersPage = observer(function MembersPage() {
             <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search members…" className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
+          {isAdmin && (
+            <Button onClick={() => setShowCreateMemberDialog(true)}>
+              <Plus className="size-4" />
+              New member
+            </Button>
+          )}
         </div>
       </div>
 
@@ -244,6 +276,7 @@ export const MembersPage = observer(function MembersPage() {
       )}
 
       <SendCheckoutLinkDialog member={checkoutTarget} onClose={() => setCheckoutTarget(null)} />
+      <CashPaymentOtpDialog member={cashPaymentTarget} onClose={() => setCashPaymentTarget(null)} />
       <EditMembershipDatesDialog member={datesTarget} onClose={() => setDatesTarget(null)} />
       <EditMemberInfoDialog member={infoTarget} onClose={() => setInfoTarget(null)} />
       <AssignTrainerDialog member={trainerTarget} onClose={() => setTrainerTarget(null)} />
@@ -252,14 +285,20 @@ export const MembersPage = observer(function MembersPage() {
         onClose={() => setPairingTarget(null)}
         onGenerate={generateLoginPairingToken}
       />
+      <CreateMemberDialog
+        open={showCreateMemberDialog}
+        onClose={() => setShowCreateMemberDialog(false)}
+        onCreated={(member) => setPairingTarget(member)}
+      />
 
       <Dialog open={!!markPaidTarget} onOpenChange={(open) => !open && setMarkPaidTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mark as paid</DialogTitle>
+            <DialogTitle>Mark as paid (override)</DialogTitle>
             <DialogDescription>
-              Records {markPaidTarget?.firstName} {markPaidTarget?.lastName} as paid outside of Stripe (cash, bank transfer, etc.) - no
-              Stripe call is made.
+              Records {markPaidTarget?.firstName} {markPaidTarget?.lastName} as paid with no member confirmation and no payment
+              gateway call - for comps, or when their phone can't receive an SMS. For a normal cash payment, prefer "Collect cash
+              payment" instead, which confirms with the member by SMS code.
             </DialogDescription>
           </DialogHeader>
           <form
@@ -489,6 +528,163 @@ function AssignTrainerDialog({ member, onClose }: { member: TrainerMemberSummary
   )
 }
 
+function CashPaymentOtpDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [planId, setPlanId] = useState<string>('')
+  const [amount, setAmount] = useState<string>('')
+  const [currency, setCurrency] = useState<string>('inr')
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month')
+  const [code, setCode] = useState('')
+
+  const plansQuery = useQuery({ queryKey: queryKeys.admin.membershipPlans, queryFn: fetchMembershipPlans, enabled: !!member })
+  const activePlans = (plansQuery.data ?? []).filter((p) => p.active)
+  const selectedPlan = activePlans.find((p) => p.id === planId)
+
+  const initiateMutation = useMutation({
+    mutationFn: () => {
+      if (!member) throw new Error('No member selected')
+      const amountCents = Math.round(Number(amount) * 100)
+      if (!amountCents || amountCents < 1) throw new Error('Enter a valid amount')
+      return initiateCashPayment(member.id, {
+        planId: planId || undefined,
+        planName: selectedPlan?.name ?? 'Membership',
+        amountCents,
+        currency,
+      })
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const confirmMutation = useMutation({
+    mutationFn: () => {
+      if (!member) throw new Error('No member selected')
+      const amountCents = Math.round(Number(amount) * 100)
+      return confirmCashPayment(member.id, {
+        code,
+        planId: planId || undefined,
+        planName: selectedPlan?.name ?? 'Membership',
+        amountCents,
+        currency,
+        billingInterval,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
+      toast.success(`Payment confirmed for ${member?.firstName}`)
+      handleClose(false)
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  const handleClose = (open: boolean) => {
+    if (open) return
+    setPlanId('')
+    setAmount('')
+    setCode('')
+    initiateMutation.reset()
+    onClose()
+  }
+
+  return (
+    <Dialog open={!!member} onOpenChange={handleClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Collect cash payment</DialogTitle>
+          <DialogDescription>
+            {initiateMutation.data
+              ? `A code was sent to ${member?.firstName}'s phone - ask them for it and enter it below to confirm the payment.`
+              : `Sends a one-time code to ${member?.firstName} ${member?.lastName}'s phone. They must give it to you before the payment is recorded.`}
+          </DialogDescription>
+        </DialogHeader>
+
+        {initiateMutation.data ? (
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              confirmMutation.mutate()
+            }}
+          >
+            <p className="text-xs text-muted-foreground">Code expires at {new Date(initiateMutation.data.expiresAt).toLocaleTimeString()}</p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="otp-code">6-digit code</Label>
+              <Input
+                id="otp-code"
+                inputMode="numeric"
+                maxLength={6}
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="123456"
+              />
+            </div>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <Button type="button" variant="ghost" onClick={() => initiateMutation.reset()}>
+                Back
+              </Button>
+              <Button type="submit" disabled={code.length !== 6 || confirmMutation.isPending}>
+                {confirmMutation.isPending ? 'Confirming…' : 'Confirm payment'}
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Membership plan (optional)</Label>
+              <Select
+                value={planId}
+                onValueChange={(value) => {
+                  setPlanId(value)
+                  const plan = activePlans.find((p) => p.id === value)
+                  if (plan) {
+                    setAmount((plan.priceCents / 100).toFixed(2))
+                    setCurrency(plan.currency)
+                    setBillingInterval(plan.billingInterval)
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Custom amount (no plan)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activePlans.map((plan) => (
+                    <SelectItem key={plan.id} value={plan.id}>
+                      {plan.name} — {plan.currency.toUpperCase()} {(plan.priceCents / 100).toFixed(2)}/{plan.billingInterval}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cash-amount">Amount</Label>
+                <Input id="cash-amount" type="number" min="0" step="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cash-interval">Extends membership by</Label>
+                <Select value={billingInterval} onValueChange={(v) => setBillingInterval(v as 'month' | 'year')}>
+                  <SelectTrigger className="w-full" id="cash-interval">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">1 month</SelectItem>
+                    <SelectItem value="year">1 year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" disabled={!amount || initiateMutation.isPending} onClick={() => initiateMutation.mutate()}>
+                {initiateMutation.isPending ? 'Sending code…' : 'Send code'}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function SendCheckoutLinkDialog({ member, onClose }: { member: TrainerMemberSummary | null; onClose: () => void }) {
   const [planId, setPlanId] = useState<string>('')
   const [copied, setCopied] = useState(false)
@@ -522,7 +718,7 @@ function SendCheckoutLinkDialog({ member, onClose }: { member: TrainerMemberSumm
         <DialogHeader>
           <DialogTitle>Send checkout link</DialogTitle>
           <DialogDescription>
-            Creates a real Stripe Checkout session for {member?.firstName} {member?.lastName}. Share the link with them to collect payment.
+            Creates a real Cashfree checkout session for {member?.firstName} {member?.lastName}. Share the link with them to collect payment.
           </DialogDescription>
         </DialogHeader>
 
@@ -560,7 +756,7 @@ function SendCheckoutLinkDialog({ member, onClose }: { member: TrainerMemberSumm
                 <SelectContent>
                   {activePlans.map((plan) => (
                     <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} — ${(plan.priceCents / 100).toFixed(2)}/{plan.billingInterval}
+                      {plan.name} — {plan.currency.toUpperCase()} {(plan.priceCents / 100).toFixed(2)}/{plan.billingInterval}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -576,6 +772,80 @@ function SendCheckoutLinkDialog({ member, onClose }: { member: TrainerMemberSumm
             </DialogFooter>
           </div>
         )}
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CreateMemberDialog({
+  open,
+  onClose,
+  onCreated,
+}: {
+  open: boolean
+  onClose: () => void
+  onCreated: (member: { id: string; firstName: string }) => void
+}) {
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: (input: { firstName: string; lastName: string; email: string; phone?: string }) => createMember(input),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.trainer.members })
+      toast.success(`${result.user.firstName} added as a member`)
+      onClose()
+      onCreated({ id: result.user.id, firstName: result.user.firstName })
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>New member</DialogTitle>
+          <DialogDescription>
+            For walk-ins signing up in person - creates an account with no password. After creating, you'll get a QR code for their
+            first sign-in on the mobile app.
+          </DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const formData = new FormData(e.currentTarget)
+            mutation.mutate({
+              firstName: String(formData.get('firstName') ?? '').trim(),
+              lastName: String(formData.get('lastName') ?? '').trim(),
+              email: String(formData.get('email') ?? '').trim(),
+              phone: String(formData.get('phone') ?? '').trim() || undefined,
+            })
+          }}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="member-firstName">First name</Label>
+              <Input id="member-firstName" name="firstName" required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="member-lastName">Last name</Label>
+              <Input id="member-lastName" name="lastName" required />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="member-email">Email</Label>
+            <Input id="member-email" name="email" type="email" required />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="member-phone">Phone (recommended - needed for cash payment confirmation)</Label>
+            <Input id="member-phone" name="phone" type="tel" placeholder="+91 98765 43210" />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? 'Creating…' : 'Create member'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

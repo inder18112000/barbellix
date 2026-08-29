@@ -45,4 +45,12 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       return adminService.getMemberProgress(request.user.tenantId, request.params.memberId);
     },
   );
+
+  app.get(
+    '/admin/members/:memberId/attendance',
+    { schema: { params: memberIdParamSchema, querystring: recentAttendanceQuerySchema }, preHandler },
+    async (request) => {
+      return adminService.getMemberAttendanceHistory(request.user.tenantId, request.params.memberId, request.query.limit);
+    },
+  );
 }

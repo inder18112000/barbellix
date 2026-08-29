@@ -27,7 +27,7 @@ const plannedExerciseInputSchema = z.object({
   notes: z.string().optional(),
 });
 
-const workoutDayInputSchema = z.object({
+export const workoutDayInputSchema = z.object({
   dayLabel: z.string().min(1),
   dayOfWeek: z.number().min(0).max(6).optional(),
   exercises: z.array(plannedExerciseInputSchema).default([]),

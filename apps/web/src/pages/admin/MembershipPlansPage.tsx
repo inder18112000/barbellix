@@ -17,6 +17,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 
+const CURRENCY_SYMBOLS: Record<string, string> = { inr: '₹', usd: '$' }
+function formatPrice(priceCents: number, currency: string) {
+  const symbol = CURRENCY_SYMBOLS[currency.toLowerCase()] ?? `${currency.toUpperCase()} `
+  return `${symbol}${(priceCents / 100).toFixed(2)}`
+}
+
 export const MembershipPlansPage = observer(function MembershipPlansPage() {
   const [dialogState, setDialogState] = useState<{ mode: 'create' } | { mode: 'edit'; plan: MembershipPlan } | null>(null)
 
@@ -27,7 +33,7 @@ export const MembershipPlansPage = observer(function MembershipPlansPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Membership plans</h1>
-          <p className="mt-1 text-muted-foreground">Plans members can be checked out against via Stripe.</p>
+          <p className="mt-1 text-muted-foreground">Plans members can be checked out against via Cashfree.</p>
         </div>
         <Button onClick={() => setDialogState({ mode: 'create' })}>
           <Plus className="size-4" />
@@ -47,7 +53,7 @@ export const MembershipPlansPage = observer(function MembershipPlansPage() {
         <EmptyState
           icon={<CreditCard className="size-5" />}
           title="No membership plans yet"
-          description="Create your first plan to start charging members through Stripe."
+          description="Create your first plan to start charging members through Cashfree."
           action={
             <Button size="sm" onClick={() => setDialogState({ mode: 'create' })}>
               <Plus className="size-4" />
@@ -73,11 +79,11 @@ export const MembershipPlansPage = observer(function MembershipPlansPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-semibold tracking-tight">
-                  ${(plan.priceCents / 100).toFixed(2)}
+                  {formatPrice(plan.priceCents, plan.currency)}
                   <span className="text-sm font-normal text-muted-foreground">/{plan.billingInterval}</span>
                 </p>
-                {!plan.stripePriceId && (
-                  <p className="mt-2 text-xs text-warning">Stripe not configured yet - checkout links won't work for this plan.</p>
+                {plan.currency.toLowerCase() !== 'inr' && (
+                  <p className="mt-2 text-xs text-warning">UPI isn't available for non-INR plans - only cards will show at checkout.</p>
                 )}
               </CardContent>
             </Card>
@@ -131,9 +137,7 @@ function PlanDialog({
         <DialogHeader>
           <DialogTitle>{editingPlan ? 'Edit plan' : 'New membership plan'}</DialogTitle>
           <DialogDescription>
-            {editingPlan
-              ? 'Changing the price creates a new Stripe price and archives the old one.'
-              : 'This creates a matching product and price in Stripe automatically.'}
+            Members are checked out against this plan's price via Cashfree - choose INR if you want UPI available at checkout.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -143,21 +147,22 @@ function PlanDialog({
             const formData = new FormData(e.currentTarget)
             const name = String(formData.get('name') ?? '').trim()
             const description = String(formData.get('description') ?? '').trim()
-            const priceDollars = Number(formData.get('price'))
+            const priceAmount = Number(formData.get('price'))
+            const currency = String(formData.get('currency') ?? 'inr')
             const billingInterval = String(formData.get('billingInterval')) as 'month' | 'year'
             const active = formData.get('active') === 'on'
 
-            if (!name || Number.isNaN(priceDollars) || priceDollars < 0) {
+            if (!name || Number.isNaN(priceAmount) || priceAmount < 0) {
               toast.error('Enter a valid name and price.')
               return
             }
 
-            const priceCents = Math.round(priceDollars * 100)
+            const priceCents = Math.round(priceAmount * 100)
 
             if (editingPlan) {
               updateMutation.mutate({ name, description: description || undefined, priceCents, billingInterval, active })
             } else {
-              createMutation.mutate({ name, description: description || undefined, priceCents, billingInterval })
+              createMutation.mutate({ name, description: description || undefined, priceCents, currency, billingInterval })
             }
           }}
         >
@@ -173,7 +178,7 @@ function PlanDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="price">Price (USD)</Label>
+              <Label htmlFor="price">Price</Label>
               <Input
                 id="price"
                 name="price"
@@ -197,6 +202,21 @@ function PlanDialog({
               </Select>
             </div>
           </div>
+
+          {!editingPlan && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="currency">Currency</Label>
+              <Select name="currency" defaultValue="inr">
+                <SelectTrigger className="w-full" id="currency">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inr">INR (₹) - UPI + cards</SelectItem>
+                  <SelectItem value="usd">USD ($) - cards only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {editingPlan && (
             <div className="flex items-center justify-between rounded-md border px-3 py-2">

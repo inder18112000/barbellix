@@ -80,6 +80,16 @@ export async function getHistory(userId: string) {
   return docs.map(repo.toDomainRecord);
 }
 
+/** Admin-facing per-member history with a computed duration - see MemberAttendanceEntry's doc
+ * comment for why duration is derived here rather than stored on the record itself. */
+export async function getHistoryForMember(userId: string, limit = 50) {
+  const docs = await repo.findHistory(userId, limit);
+  return docs.map((doc) => ({
+    ...repo.toDomainRecord(doc),
+    durationMins: doc.checkOutAt ? Math.round((doc.checkOutAt.getTime() - doc.checkedInAt.getTime()) / 60000) : undefined,
+  }));
+}
+
 export async function checkIn(
   userId: string,
   tenantId: string,

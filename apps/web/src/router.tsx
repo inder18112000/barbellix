@@ -34,6 +34,13 @@ const PlatformOverviewPage = lazy(() =>
   import('@/pages/superadmin/PlatformOverviewPage').then((m) => ({ default: m.PlatformOverviewPage })),
 )
 const TrainersPage = lazy(() => import('@/pages/admin/TrainersPage').then((m) => ({ default: m.TrainersPage })))
+const AdminCreateWorkoutPlanPage = lazy(() =>
+  import('@/pages/admin/CreateWorkoutPlanPage').then((m) => ({ default: m.CreateWorkoutPlanPage })),
+)
+const AdminAssignPlanPage = lazy(() => import('@/pages/admin/AssignPlanPage').then((m) => ({ default: m.AssignPlanPage })))
+const AdminEditMemberPlanPage = lazy(() =>
+  import('@/pages/admin/EditMemberPlanPage').then((m) => ({ default: m.EditMemberPlanPage })),
+)
 const TrainerHomePage = lazy(() => import('@/pages/trainer/TrainerHomePage').then((m) => ({ default: m.TrainerHomePage })))
 const TrainerMembersPage = lazy(() => import('@/pages/trainer/MembersPage').then((m) => ({ default: m.MembersPage })))
 const MemberDetailPage = lazy(() => import('@/pages/trainer/MemberDetailPage').then((m) => ({ default: m.MemberDetailPage })))
@@ -68,6 +75,9 @@ export const router = createBrowserRouter([
               { path: 'members', element: <AdminMembersPage /> },
               { path: 'members/:memberId', element: <AdminMemberDetailPage /> },
               { path: 'trainers', element: <TrainersPage /> },
+              { path: 'workout-plans/new', element: <AdminCreateWorkoutPlanPage /> },
+              { path: 'members/:memberId/assign-plan', element: <AdminAssignPlanPage /> },
+              { path: 'members/:memberId/plans/:planId/edit', element: <AdminEditMemberPlanPage /> },
               { path: 'analytics', element: <AnalyticsPage /> },
               { path: 'attendance', element: <AttendanceFeedPage /> },
               { path: 'plans', element: <MembershipPlansPage /> },

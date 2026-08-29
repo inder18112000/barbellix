@@ -41,6 +41,7 @@ import { AICoachScreen } from '../screens/member/AICoachScreen';
 import { ProfileHomeScreen } from '../screens/member/ProfileHomeScreen';
 import { QRCheckInScreen } from '../screens/member/QRCheckInScreen';
 import { MembershipCardScreen } from '../screens/member/MembershipCardScreen';
+import { PaymentCheckoutScreen } from '../screens/member/PaymentCheckoutScreen';
 import { SettingsScreen } from '../screens/member/SettingsScreen';
 import { EditProfileScreen } from '../screens/member/EditProfileScreen';
 import { NotificationsScreen } from '../screens/member/NotificationsScreen';
@@ -132,6 +133,7 @@ function ProfileNavigator() {
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
       <ProfileStack.Screen name="ProfileHome"    component={ProfileHomeScreen} />
       <ProfileStack.Screen name="MembershipCard" component={MembershipCardScreen} />
+      <ProfileStack.Screen name="PaymentCheckout" component={PaymentCheckoutScreen} />
       <ProfileStack.Screen name="QRCheckIn"      component={QRCheckInScreen} />
       <ProfileStack.Screen name="Settings"       component={SettingsScreen} />
       <ProfileStack.Screen name="EditProfile"    component={EditProfileScreen} />
