@@ -27,20 +27,14 @@ export function isConfigured(): boolean {
 }
 
 /**
- * Cashfree's newer Orders API returns a payment_session_id, not a ready-made checkout URL - the
- * documented pattern for a server-only integration (no client-side JS SDK) is to redirect the
- * customer to this hosted-checkout URL. This is the one piece of this integration most likely to
- * have shifted across Cashfree API versions - verify against https://docs.cashfree.com if
- * checkout links stop working. Same "implemented and type-checked, unverified against a live
- * account" caveat as this codebase's GCS storage backend: this environment has no real Cashfree
- * sandbox credentials to test against.
+ * Cashfree's Orders API returns only a payment_session_id, never a ready-made checkout URL -
+ * confirmed against Cashfree's own docs (docs.cashfree.com/payments/online/web/redirect): their
+ * hosted checkout genuinely requires loading the client-side cashfree-js SDK and calling
+ * cashfree.checkout({paymentSessionId}) from a real webpage, there is no plain-URL redirect
+ * pattern for a server-only integration. See apps/web/src/pages/billing/CheckoutRedirectPage.tsx,
+ * which is that webpage - billing/service.ts builds a URL pointing at it (not at Cashfree
+ * directly) from the paymentSessionId this function returns.
  */
-function hostedCheckoutUrl(paymentSessionId: string): string {
-  const isProd = process.env.CASHFREE_ENV === 'production';
-  const domain = isProd ? 'https://payments.cashfree.com' : 'https://payments-test.cashfree.com';
-  return `${domain}/order/#${paymentSessionId}`;
-}
-
 export async function createOrder(input: {
   orderId: string;
   amountCents: number;
@@ -50,7 +44,7 @@ export async function createOrder(input: {
   customerPhoneE164: string;
   returnUrl: string;
   tags?: Record<string, string>;
-}): Promise<{ cfOrderId: string; paymentSessionId: string; checkoutUrl: string }> {
+}): Promise<{ cfOrderId: string; paymentSessionId: string }> {
   const cashfree = getClient();
   if (!cashfree) throw new CashfreeNotConfiguredError();
 
@@ -81,7 +75,6 @@ export async function createOrder(input: {
   return {
     cfOrderId: order.cf_order_id,
     paymentSessionId: order.payment_session_id,
-    checkoutUrl: hostedCheckoutUrl(order.payment_session_id),
   };
 }
 

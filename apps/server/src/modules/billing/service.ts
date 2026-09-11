@@ -206,7 +206,7 @@ export async function createCheckoutSessionForMember(
   tenantId: string,
   memberId: string,
   planId: string,
-  config: Pick<Env, 'CASHFREE_RETURN_URL'>,
+  config: Pick<Env, 'CASHFREE_RETURN_URL' | 'WEB_APP_BASE_URL' | 'CASHFREE_ENV'>,
   returnUrlOverride?: string,
 ) {
   const member = await findMemberByIdInTenant(memberId, tenantId);
@@ -240,7 +240,10 @@ export async function createCheckoutSessionForMember(
     status: 'created',
   });
 
-  return { checkoutUrl: order.checkoutUrl };
+  // Not a Cashfree URL - Cashfree's hosted checkout requires their client-side JS SDK, so this
+  // points at our own web page that loads it (see lib/cashfree.ts's createOrder doc comment).
+  const checkoutUrl = `${config.WEB_APP_BASE_URL}/billing/checkout?session=${encodeURIComponent(order.paymentSessionId)}&mode=${config.CASHFREE_ENV}`;
+  return { checkoutUrl };
 }
 
 /** Admin override with no member-side confirmation at all - kept deliberately separate from the

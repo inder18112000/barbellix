@@ -100,7 +100,7 @@ matching admin management page on the web dashboard.
 
 | Requirement | Status | Notes |
 |---|---|---|
-| Connected to an online payment gateway | ✅ | Real Stripe integration |
+| Connected to an online payment gateway | ✅ | Real Cashfree integration (UPI + cards), replacing an earlier Stripe integration - Orders API for one-time payment collection, plus SMS-OTP-confirmed cash payments taken in person |
 | View successful / pending / failed payments | ✅ | Now backed by a real per-event log (see next row), not just current status |
 | Payment history | ✅ | **New.** Every payment-relevant event (checkout completed, subscription renewed/cancelled, payment failed, manually marked paid) now writes a `PaymentEvent` row via `recordPaymentEvent()`, called from every webhook case and from manual mark-paid. Surfaced as a real history list on the admin member-detail page. Verified: marking a member paid produces exactly one new history entry with the correct type/plan/timestamp. |
 | Auto-update subscription status / auto-extend expiry after renewal | ✅ | Real, webhook-driven |
@@ -134,7 +134,7 @@ Unchanged from before — all ✅, real, webhook-driven.
 | Admin Profile | ✅ | Edit own first/last name + phone, plus change-password (verifies current password server-side) |
 | Gym Information | ✅ | `BranchSettingsPage`, now also including the grace-period field (§2.5) |
 | Membership Plans | ✅ | `MembershipPlansPage` |
-| Payment Gateway Settings | ✅ | **New.** Settings page now shows a real `stripeConfigured` boolean from `GET /admin/payment-gateway-status` — deliberately never exposes the actual key (server-side env-var-only by design, both in the route and the UI copy) |
+| Payment Gateway Settings | ✅ | Settings page shows a real `cashfreeConfigured` boolean from `GET /admin/payment-gateway-status` — deliberately never exposes the actual key (server-side env-var-only by design, both in the route and the UI copy) |
 | Notification Settings | ✅ | **New**, on the admin side — reuses the existing member-facing notification-preferences endpoints entirely rather than building a parallel admin-only version |
 | Security Settings | ⚠️ | Change-password exists; no 2FA or session management beyond that |
 | Logout | ✅ | Unchanged |

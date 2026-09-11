@@ -6,6 +6,10 @@ import { RequireRole } from '@/routes/RequireRole'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage'
+import { TermsOfServicePage } from '@/pages/legal/TermsOfServicePage'
+import { CheckoutRedirectPage } from '@/pages/billing/CheckoutRedirectPage'
+import { BillingReturnPage } from '@/pages/billing/BillingReturnPage'
 import { authStore } from '@/store/authStore'
 
 // Every page below is code-split (see DashboardShell's <Suspense> boundary) - only LoginPage,
@@ -61,6 +65,10 @@ const IndexRedirect = observer(function IndexRedirect() {
 export const router = createBrowserRouter([
   { path: '/', element: <IndexRedirect /> },
   { path: '/login', element: <LoginPage /> },
+  { path: '/privacy', element: <PrivacyPolicyPage /> },
+  { path: '/terms', element: <TermsOfServicePage /> },
+  { path: '/billing/checkout', element: <CheckoutRedirectPage /> },
+  { path: '/billing/return', element: <BillingReturnPage /> },
   {
     element: <RequireAuth />,
     children: [

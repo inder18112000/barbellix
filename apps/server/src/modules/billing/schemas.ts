@@ -21,6 +21,10 @@ export const memberIdParamSchema = z.object({ memberId: z.string() });
 
 export const checkoutSessionSchema = z.object({
   planId: z.string(),
+  // Mobile passes its own deep link (barbellix://payment-return) so Cashfree redirects back into
+  // the app after payment instead of the web app's default return page - see
+  // billing/service.ts's createCheckoutSessionForMember().
+  returnUrl: z.string().optional(),
 });
 
 export const markPaidSchema = z.object({

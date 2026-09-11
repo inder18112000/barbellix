@@ -20,6 +20,7 @@ export const styles = StyleSheet.create({
   errorBannerText: { ...typography.body, color: colors.error, flex: 1 },
   nameRow: { flexDirection: 'row', gap: spacing.md },
   terms: { ...typography.caption, color: colors.textMuted, textAlign: 'center', marginTop: spacing.md, lineHeight: 18 },
+  termsLink: { color: colors.primary },
   loginLink: { alignItems: 'center', padding: spacing.sm },
   loginLinkText: { ...typography.body, color: colors.textMuted },
 });

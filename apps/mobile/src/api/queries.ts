@@ -222,8 +222,8 @@ export interface MembershipWithStatus extends Membership {
 }
 export const fetchMembership = () => api.get<MembershipWithStatus | null>('/me/membership');
 export const fetchMembershipPlans = () => api.get<MembershipPlan[]>('/me/membership-plans');
-export const createMembershipCheckoutSession = (planId: string) =>
-  api.post<{ checkoutUrl: string }>('/me/membership/checkout-session', { planId });
+export const createMembershipCheckoutSession = (planId: string, returnUrl?: string) =>
+  api.post<{ checkoutUrl: string }>('/me/membership/checkout-session', { planId, returnUrl });
 
 export const fetchClassRoster = (sessionId: string) =>
   api.get<{ session: ClassSession; bookings: { id: string; userId: string; status: string; memberName?: string; memberEmail?: string }[] }>(

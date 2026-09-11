@@ -55,6 +55,11 @@ const envSchema = z.object({
   CASHFREE_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
   CASHFREE_WEBHOOK_SECRET: z.string().optional(),
   CASHFREE_RETURN_URL: z.string().default('http://localhost:5173/billing/return'),
+  // The web app's own origin - Cashfree's hosted checkout requires their client-side JS SDK to be
+  // loaded from a real webpage (see lib/cashfree.ts), so the "checkout URL" this server hands
+  // back to admin-web/mobile actually points at a page on the web app (billing/checkout) that
+  // loads that SDK, not at Cashfree directly.
+  WEB_APP_BASE_URL: z.string().default('http://localhost:5173'),
 });
 
 export type Env = z.infer<typeof envSchema>;

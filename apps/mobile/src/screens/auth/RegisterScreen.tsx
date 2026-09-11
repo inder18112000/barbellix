@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,6 +15,8 @@ import { register } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
 import { registerSchema, type RegisterInput as RegisterForm } from '@barbellix/shared';
 import { styles } from './RegisterScreen.styles';
+
+const WEB_BASE_URL = process.env.EXPO_PUBLIC_WEB_BASE_URL ?? 'http://localhost:5173';
 
 export function RegisterScreen() {
   const navigation = useNavigation<any>();
@@ -86,7 +88,12 @@ export function RegisterScreen() {
 
             <PrimaryButton label="Create Account" onPress={handleSubmit((data) => doRegister(data))} loading={isPending} />
 
-            <Text style={styles.terms}>By signing up you agree to our Terms of Service and Privacy Policy.</Text>
+            <Text style={styles.terms}>
+              By signing up you agree to our{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(`${WEB_BASE_URL}/terms`)}>Terms of Service</Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink} onPress={() => Linking.openURL(`${WEB_BASE_URL}/privacy`)}>Privacy Policy</Text>.
+            </Text>
           </View>
 
           <TouchableOpacity style={styles.loginLink} onPress={() => navigation.replace('Login')}>

@@ -57,6 +57,7 @@ export default async function billingRoutes(fastify: FastifyInstance) {
         request.params.memberId,
         request.body.planId,
         fastify.config,
+        request.body.returnUrl,
       );
     },
   );
@@ -142,6 +143,7 @@ export default async function billingRoutes(fastify: FastifyInstance) {
         request.user.sub,
         request.body.planId,
         fastify.config,
+        request.body.returnUrl,
       );
     },
   );

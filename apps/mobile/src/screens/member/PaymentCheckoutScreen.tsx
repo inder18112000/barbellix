@@ -33,7 +33,7 @@ export function PaymentCheckoutScreen() {
   const pollStartedAt = useRef<number | null>(null);
 
   const sessionMutation = useMutation({
-    mutationFn: () => createMembershipCheckoutSession(route.params.planId),
+    mutationFn: () => createMembershipCheckoutSession(route.params.planId, PAYMENT_RETURN_URL),
   });
 
   const membershipQuery = useQuery({
