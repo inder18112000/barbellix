@@ -27,7 +27,7 @@ The platform supports **four roles** — `member`, `trainer`, `admin` (gym owner
 
 **Where the project stands.** The core product is functionally complete and runs end to end: authentication, workout and diet planning with AI generation, attendance, progress tracking, class booking, messaging, trainer management, and payments. Payments were migrated from Stripe to **Cashfree** — India-first, covering UPI, cards, net banking and wallets — and verified against a live Cashfree sandbox account up to and including the real hosted checkout UI. A cash-payment flow with SMS OTP confirmation was added for members who pay at the front desk.
 
-**What is not finished** is covered in full in section 16. The headline items: password reset is non-functional end to end because no email capability exists anywhere in the product; four notification toggles are inert because the server has no job scheduler; iOS is not buildable because `eas.json` has no `ios` profile and `app.json` has no camera usage-description string; and the legal pages still carry `[PLACEHOLDER]` markers.
+**What is not finished** is covered in full in section 16. The headline items: four notification toggles are inert because the server has no job scheduler; iOS is not buildable because `eas.json` has no `ios` profile and `app.json` has no camera usage-description string; and the legal pages still carry `[PLACEHOLDER]` markers. Password reset (previously the top item here) is now implemented end to end — see section 16.1, item 1.
 
 ---
 
@@ -493,7 +493,8 @@ graph TD
 | POST | `/auth/pair` | public | Redeem a single-use QR pairing token for a session |
 | POST | `/auth/refresh` | refresh token is the credential | Rotate the refresh token and issue a new access token |
 | POST | `/auth/logout` | authenticated | Revoke the presented refresh token |
-| POST | `/auth/forgot-password` | public | Accepts the request. **See section 16 — no email is actually sent** |
+| POST | `/auth/forgot-password` | public | Emails a single-use reset link (Resend, see `lib/email.ts`). Always returns the same generic message, regardless of whether the account exists or the email actually sent - no user enumeration |
+| POST | `/auth/reset-password` | public | Redeems the emailed token, sets the new password, and revokes every refresh token for the account |
 
 ### 8.3 Self-service account
 
@@ -670,6 +671,7 @@ Rate limiting is registered with `global: false`, so only these routes are limit
 | `POST /auth/google` | 10 per 15 minutes | IP |
 | `POST /auth/pair` | 20 per hour | IP |
 | `POST /auth/forgot-password` | 3 per hour | IP |
+| `POST /auth/reset-password` | 10 per hour | IP |
 | `POST /ai/coach/complete` | 20 per hour | user |
 | `POST /ai/coach/generate-plan` | 8 per hour | user |
 | `POST /ai/coach/generate-diet-plan` | 8 per hour | user |
@@ -691,7 +693,7 @@ The last three are keyed by the member being acted on rather than the staff memb
 | `admin` | Gym-owner dashboard: analytics, KPIs, branch settings, per-member drill-downs | `getAttendanceAnalytics`, `getBranch`, `updateBranch`, `getDashboardStats`, `getMemberProgress`, `getMemberAttendanceHistory`, `getRecentAttendance` |
 | `ai-coach` | AI coaching: chat, structured plan generation, rule-based recommendations | `generateWorkoutPlan`, `generateDietPlan`, `generateFullPlan`, `regenerateWorkoutPlan`, `acceptRecommendation`, `completeChat` |
 | `attendance` | Gym check-in and check-out, streaks, frequency | `computeSummary`, `computeSummariesForUsers`, `getHistory`, `getHistoryForMember`, `checkIn` |
-| `auth` | Registration, password and Google sign-in, QR pairing, token rotation | `register`, `login`, `loginWithGoogle`, `pairDevice`, `refresh`, `logout`, `forgotPassword` |
+| `auth` | Registration, password and Google sign-in, QR pairing, token rotation, password reset | `register`, `login`, `loginWithGoogle`, `pairDevice`, `refresh`, `logout`, `forgotPassword`, `resetPassword` |
 | `billing` | Plans, online checkout, cash OTP, manual payment, reminders, webhook | `deriveSubscriptionStatus`, `isAccessBlocked`, `listPlans`, `listActivePlans`, `getMembershipSummary`, `getMembershipSummariesForUsers`, `getMembershipCounts`, `updateMembershipDates`, `createPlan`, `updatePlan`, `createCheckoutSessionForMember`, `markPaid`, `getPaymentGatewayStatus`, `getPaymentHistory`, `getMembershipForSelf`, `initiateCashPayment`, `confirmCashPayment`, `sendPaymentReminder`, `handleCashfreeWebhook` |
 | `classes` | Recurring templates, lazy session generation, booking and waitlist | `listTemplates`, `createTemplate`, `updateTemplate`, `listTrainers`, `getSchedule`, `bookSession`, `cancelMyBooking`, `getMyBookings`, `getRoster` |
 | `exercises` | Exercise catalog search and CRUD, demo-video upload | `searchExercises`, `getExercisesByIds`, `createExercise`, `updateExercise`, `uploadExerciseVideo`, `deleteExercise` |
@@ -1232,8 +1234,8 @@ These stop a launch. Each one is a thing a user or a reviewer will hit immediate
 
 | # | Gap | What actually happens today | What it needs |
 |---|---|---|---|
-| 1 | **Password reset does not work, end to end** | A user taps "Forgot password", gets "If an account with that email exists, a reset link has been sent", and no email is ever sent. There is no email capability anywhere in the product — no `email.ts`, no mail provider, no reset-token model, no `/auth/reset-password` endpoint, and no reset screen. **A member who forgets their password is permanently locked out.** | An email provider, a reset-token model mirroring `PairingToken`, a reset endpoint, and a reset screen on both clients |
-| 2 | **The web dashboard has no password-reset route at all** | An admin or trainer who forgets their web password has no self-service path whatsoever. The only public web routes are login, privacy, terms and the two billing pages | A `/forgot-password` and `/reset-password` route pair on web, once item 1 exists |
+| 1 | ~~Password reset does not work, end to end~~ **RESOLVED** | `lib/email.ts` (Resend, swappable via `EMAIL_PROVIDER`, same seam convention as `SMS_PROVIDER`/`STORAGE_BACKEND`) plus `PasswordResetToken` (mirrors `PairingToken` — hashed, single-use, atomic redeem, 60-minute TTL) and `POST /auth/reset-password` now exist. `forgotPassword` emails a real `${WEB_APP_BASE_URL}/reset-password?token=...` link and still returns the same generic message either way (no user enumeration, and no different behavior if email sending is unconfigured or fails — that's logged, not thrown). A successful reset revokes every refresh token for the account, the same "security" response used for detected refresh-token theft. Unit-tested (`test/lib/email.test.ts`, `test/lib/passwordResetToken.test.ts`, `test/auth/service.test.ts`); **not yet verified against a real Resend account or a live inbox** — `RESEND_API_KEY`/`EMAIL_FROM_ADDRESS` need setting and an actual send needs to be watched land, same caveat this document already carries for Twilio SMS. |
+| 2 | ~~The web dashboard has no password-reset route at all~~ **RESOLVED** | `/forgot-password` and `/reset-password` pages now exist on web (`pages/auth/ForgotPasswordPage.tsx`, `pages/auth/ResetPasswordPage.tsx`), linked from a new "Forgot password?" link on `LoginPage`. Mobile's existing `ForgotPasswordScreen` needed no server-contract change; the reset itself happens by opening the emailed link in a browser (which lands on the web page above) rather than a native mobile screen — deep-linking a custom `barbellix://` scheme out of an email client isn't reliable without Universal Links/App Links, which is out of scope here. |
 | 3 | **Legal pages ship with `[PLACEHOLDER]` markers** | `/privacy` and `/terms` render with `[PLACEHOLDER: legal entity name]`, `[PLACEHOLDER: registered address]` and `[PLACEHOLDER: support email]` visible on the page. This blocks public launch and app-store review for an app that collects health data | Real legal entity name, registered address and support email |
 | 4 | **iOS cannot be built or submitted** | `eas.json` has three build profiles, all Android-only — there is no `ios` key in the file. An iOS build would fall back to `http://localhost:4000` for its API base URL and be silently non-functional. `app.json` has no `ios.infoPlist`, so no `NSCameraUsageDescription` — **Apple rejects any build that opens the camera without one**, and this app has two camera screens | An `ios` profile in `eas.json` with the API and web base URLs, `ios.infoPlist` with camera and photo usage strings, `ios.buildNumber`, and `expo.extra.eas.projectId` |
 | 5 | **File uploads do not survive a redeploy** | `STORAGE_BACKEND` defaults to `local`, which writes avatars and exercise videos to `apps/server/uploads/` — an ephemeral filesystem on the documented serverless host. Uploads can disappear on the next request | A Google Cloud project and bucket, `STORAGE_BACKEND=gcs`, `GCS_BUCKET_NAME`, `GCS_CREDENTIALS_JSON`. The GCS code path is written and typechecked but has never run against a live bucket |

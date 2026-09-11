@@ -29,7 +29,7 @@ anything, but the app will misbehave in ways that matter:
 | `STORAGE_BACKEND` | `local` | **Must be `gcs` in production.** `local` writes uploaded avatars/exercise videos to `apps/server/uploads/` on disk — Vercel's serverless functions have an ephemeral filesystem, so anything written this way is lost, possibly on the very next request. Set `STORAGE_BACKEND=gcs` plus `GCS_BUCKET_NAME` and `GCS_CREDENTIALS_JSON` (a Google Cloud service-account key JSON, inline) once you have a GCP project and bucket. |
 | `PUBLIC_URL` | `http://localhost:${PORT}` | Set to the server's real public origin — used to build URLs for locally-stored uploads. Only matters if `STORAGE_BACKEND=local` is ever used in production (not recommended, see above); GCS-backed uploads build their own `storage.googleapis.com` URLs and ignore this. |
 | `CASHFREE_RETURN_URL` | `http://localhost:5173/billing/return` | The URL Cashfree redirects a member to after checkout completes (web flow only - mobile passes its own `barbellix://payment-return` deep link per-request instead). Set to your real web app's origin + `/billing/return`. |
-| `WEB_APP_BASE_URL` | `http://localhost:5173` | **Set to your real web app's origin.** Cashfree's hosted checkout has no plain-URL redirect - it requires loading their client-side JS SDK from a real webpage (confirmed against Cashfree's own docs during testing). This server hands back a checkout URL pointing at `${WEB_APP_BASE_URL}/billing/checkout` (a page that loads the SDK), not at Cashfree directly - both admin-web and mobile open that URL. Verified working end-to-end against a real Cashfree sandbox account: order creation, the correct ₹ amount, and the real hosted payment UI (UPI/cards/net banking/wallets) all render correctly. |
+| `WEB_APP_BASE_URL` | `http://localhost:5173` | **Set to your real web app's origin.** Cashfree's hosted checkout has no plain-URL redirect - it requires loading their client-side JS SDK from a real webpage (confirmed against Cashfree's own docs during testing). This server hands back a checkout URL pointing at `${WEB_APP_BASE_URL}/billing/checkout` (a page that loads the SDK), not at Cashfree directly - both admin-web and mobile open that URL. Verified working end-to-end against a real Cashfree sandbox account: order creation, the correct ₹ amount, and the real hosted payment UI (UPI/cards/net banking/wallets) all render correctly. Also used to build the password-reset link emailed by `POST /auth/forgot-password` (`${WEB_APP_BASE_URL}/reset-password?token=...`) - mobile members reset via that same web page (tapping the emailed link opens a browser), not an in-app screen, so this must be right before real users rely on password reset from the mobile app too. |
 
 ## 3. Bootstrapping the first admin account
 
@@ -48,24 +48,26 @@ This creates one admin account in the default tenant. Log in with it on the web 
 use the "New trainer" / "New member" buttons to onboard everyone else — those accounts get a QR
 sign-in code instead of a password.
 
-## 4. Payment and SMS gateways — later gate, not required to deploy
+## 4. Payment, SMS and email gateways — later gate, not required to deploy
 
-Both are fully coded and fail with a clear error when unset — nothing crashes without them, but
-online checkout and cash-payment OTP confirmation won't work until real accounts exist:
+All three are fully coded and fail with a clear error (or, for email, a silent server-side log)
+when unset — nothing crashes without them, but online checkout, cash-payment OTP confirmation and
+the "forgot password" email won't work until real accounts exist:
 
 | Variable | Needed for |
 |---|---|
 | `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY` | Real Cashfree checkout sessions. Get these from the Cashfree merchant dashboard once that account exists. Set `CASHFREE_ENV=production` (default is `sandbox`) once you're ready to accept real payments, not before. |
 | `CASHFREE_WEBHOOK_SECRET` | Verifying that a webhook delivery genuinely came from Cashfree — set once you configure the webhook URL in the Cashfree dashboard. |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | SMS delivery for the cash-payment OTP flow. `TWILIO_FROM_NUMBER` must be a real number you've purchased/verified in Twilio, in E.164 format. |
+| `RESEND_API_KEY`, `EMAIL_FROM_ADDRESS` | Password-reset emails (`POST /auth/forgot-password`). Get the API key from the Resend dashboard; `EMAIL_FROM_ADDRESS` must be on a domain verified with Resend. Left unset, forgot-password still responds normally (no user enumeration either way) — it just logs a warning server-side instead of sending. |
 
 **Cashfree order creation is verified against a real sandbox account** — order creation, the
 ₹ amount conversion, and the real hosted payment UI (UPI/cards/net banking/wallets) all confirmed
 working end-to-end in a browser. **Not yet verified**: an actual completed payment and the
 resulting webhook delivery (`CASHFREE_WEBHOOK_SECRET`) — that needs the server to be reachable
 from the public internet (a real deployment, or a tunnel like ngrok pointed at localhost), which
-wasn't set up during this test. **Twilio SMS is still completely untested** — no real code has
-been sent. Test both further, and Twilio from scratch, before flipping to production.
+wasn't set up during this test. **Twilio SMS and Resend email are still completely untested** — no
+real code or reset email has been sent. Test all three further before flipping to production.
 
 ## 5. Optional, genuinely optional — safe to leave unset indefinitely
 

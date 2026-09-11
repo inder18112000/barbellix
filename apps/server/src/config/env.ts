@@ -45,6 +45,16 @@ const envSchema = z.object({
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_FROM_NUMBER: z.string().optional(),
+  // Email delivery for the "forgot password" reset-link flow - swappable backend, same
+  // convention as SMS_PROVIDER above; only 'resend' exists today (a plain HTTP API, no SDK
+  // needed - see lib/email.ts). Absent credentials means forgot-password still responds with its
+  // generic "if an account exists" message (no user enumeration), it just logs instead of
+  // actually sending - see auth/service.ts's forgotPassword().
+  EMAIL_PROVIDER: z.enum(['resend']).default('resend'),
+  RESEND_API_KEY: z.string().optional(),
+  // Must be a domain verified with Resend. EMAIL_FROM_NAME defaults to "BarBellix".
+  EMAIL_FROM_ADDRESS: z.string().optional(),
+  EMAIL_FROM_NAME: z.string().optional(),
   // Cashfree payment gateway (replaces Stripe) - Orders API for one-time payment collection, not
   // their Subscriptions product (this app's philosophy is lazy/on-demand checks, not
   // scheduled-job-driven auto-renewal - see billing/service.ts's isAccessBlocked()). Absent means

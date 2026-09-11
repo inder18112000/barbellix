@@ -25,6 +25,20 @@ export const forgotPasswordSchema = z.object({
 });
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
+/** token is the opaque value from the emailed reset link's ?token= query param - see
+ * lib/passwordResetToken.ts on the server for how it's issued and redeemed. */
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Missing reset token'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmNewPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmNewPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  });
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
 /** The idToken is a Google-signed JWT from the client-side Google Sign-In SDK (web) or
  * expo-auth-session (mobile) - the server verifies its signature itself (see
  * lib/googleAuth.ts), so nothing else needs to be trusted from the client here. */

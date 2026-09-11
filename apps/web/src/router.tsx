@@ -6,6 +6,8 @@ import { RequireRole } from '@/routes/RequireRole'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { TrainerLayout } from '@/layouts/TrainerLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { PrivacyPolicyPage } from '@/pages/legal/PrivacyPolicyPage'
 import { TermsOfServicePage } from '@/pages/legal/TermsOfServicePage'
 import { CheckoutRedirectPage } from '@/pages/billing/CheckoutRedirectPage'
@@ -65,6 +67,8 @@ const IndexRedirect = observer(function IndexRedirect() {
 export const router = createBrowserRouter([
   { path: '/', element: <IndexRedirect /> },
   { path: '/login', element: <LoginPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/privacy', element: <PrivacyPolicyPage /> },
   { path: '/terms', element: <TermsOfServicePage /> },
   { path: '/billing/checkout', element: <CheckoutRedirectPage /> },

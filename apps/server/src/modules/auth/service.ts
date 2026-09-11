@@ -3,9 +3,11 @@ import type { FastifyInstance } from 'fastify';
 import type { HydratedDocument } from 'mongoose';
 import type { UserRole } from '@barbellix/shared';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
-import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken } from '../../lib/refreshToken.js';
+import { issueRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllRefreshTokens } from '../../lib/refreshToken.js';
 import { redeemPairingToken } from '../../lib/pairingToken.js';
+import { issuePasswordResetToken, redeemPasswordResetToken } from '../../lib/passwordResetToken.js';
 import { verifyGoogleIdToken } from '../../lib/googleAuth.js';
+import { sendEmail } from '../../lib/email.js';
 import { ConflictError, UnauthorizedError, ForbiddenError } from '../../lib/errors.js';
 import { findMembershipByUserId } from '../billing/repository.js';
 import { isAccessBlocked } from '../billing/service.js';
@@ -167,11 +169,42 @@ export async function logout(refreshToken: string) {
   await revokeRefreshToken(refreshToken);
 }
 
-/** Always returns the same message regardless of whether the email exists, to prevent user enumeration. */
+/** Always returns the same message regardless of whether the email exists, to prevent user
+ * enumeration - and regardless of whether email sending is actually configured or the send
+ * itself fails, so a misconfigured RESEND_API_KEY can't be probed from the response either. Any
+ * delivery problem is logged, not thrown, for the same reason. */
 export async function forgotPassword(fastify: FastifyInstance, email: string) {
   const user = await repo.findUserByEmail(email);
   if (user) {
-    fastify.log.info({ email }, 'Password reset requested (no email sending configured yet)');
+    const { token } = await issuePasswordResetToken(user._id);
+    const resetUrl = `${fastify.config.WEB_APP_BASE_URL}/reset-password?token=${token}`;
+
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Reset your BarBellix password',
+        text: `We received a request to reset your BarBellix password. Reset it here: ${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email.`,
+        html: `<p>We received a request to reset your BarBellix password.</p><p><a href="${resetUrl}">Reset your password</a></p><p>This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>`,
+      });
+    } catch (err) {
+      fastify.log.warn({ email, err }, 'Failed to send password reset email');
+    }
   }
   return { message: 'If an account with that email exists, a reset link has been sent.' };
+}
+
+/** Redeems a one-time password-reset token from the emailed link (see
+ * lib/passwordResetToken.ts) and sets a new password. Every active refresh token for the account
+ * is revoked afterwards - the same "security" response rotateRefreshToken() uses for detected
+ * token theft - since a password reset is itself a strong signal that every existing session
+ * should require the new password to continue. */
+export async function resetPassword(token: string, newPassword: string) {
+  const redeemed = await redeemPasswordResetToken(token);
+  if (!redeemed) throw new UnauthorizedError('This reset link is invalid or has expired');
+
+  const passwordHash = await hashPassword(newPassword);
+  await repo.updatePasswordHash(redeemed.userId, passwordHash);
+  await revokeAllRefreshTokens(redeemed.userId);
+
+  return { message: 'Your password has been reset. Please log in again.' };
 }

@@ -23,6 +23,10 @@ export async function createUser(input: {
   return UserModel.create(input);
 }
 
+export async function updatePasswordHash(userId: Types.ObjectId, passwordHash: string) {
+  await UserModel.updateOne({ _id: userId }, { $set: { passwordHash } });
+}
+
 /** Every self-serve registration attaches to a single seeded default tenant (no gym-selection UI yet). */
 export async function getOrCreateDefaultTenant() {
   const existing = await TenantModel.findOne({ name: 'BarBellix Default' });

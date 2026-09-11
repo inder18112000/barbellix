@@ -1,7 +1,14 @@
 import { z } from 'zod';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { loginSchema, registerSchema, forgotPasswordSchema, redeemPairingTokenSchema, loginWithGoogleSchema } from '@barbellix/shared';
+import {
+  loginSchema,
+  registerSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  redeemPairingTokenSchema,
+  loginWithGoogleSchema,
+} from '@barbellix/shared';
 import * as authService from './service.js';
 
 const refreshBodySchema = z.object({ refreshToken: z.string().min(1) });
@@ -69,6 +76,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
     { schema: { body: forgotPasswordSchema }, config: { rateLimit: { max: 3, timeWindow: '1 hour' } } },
     async (request) => {
       return authService.forgotPassword(fastify, request.body.email);
+    },
+  );
+
+  // Public - identity is proven by possessing the (single-use, short-lived) emailed reset token
+  // itself, same trust model as /pair above. Rate-limited a bit more generously than
+  // forgot-password since a legitimate user may retry after a typo'd password.
+  app.post(
+    '/reset-password',
+    { schema: { body: resetPasswordSchema }, config: { rateLimit: { max: 10, timeWindow: '1 hour' } } },
+    async (request) => {
+      return authService.resetPassword(request.body.token, request.body.newPassword);
     },
   );
 }
